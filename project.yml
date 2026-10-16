@@ -1,0 +1,37 @@
+name: Denko
+options:
+  bundleIdPrefix: com.haru
+  developmentLanguage: ja
+  deploymentTarget:
+    macOS: "14.0"
+packages:
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    from: "2.6.0"
+targets:
+  Denko:
+    type: application
+    platform: macOS
+    sources: [Denko]
+    dependencies:
+      - package: Sparkle
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.haru.Denko
+        SWIFT_VERSION: "5.0"
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_FILE: Denko/App/Info.plist
+        INFOPLIST_KEY_CFBundleDevelopmentRegion: ja
+        CODE_SIGN_ENTITLEMENTS: Denko/App/Denko.entitlements
+        # Sparkle: update feed (GitHub Releases の最新版に添付する appcast.xml) と公開鍵
+        SPARKLE_FEED_URL: https://github.com/oriharu-heaven/Denko/releases/latest/download/appcast.xml
+        SPARKLE_PUBLIC_KEY: RgJ+kq244bom08xNhqwnjhqYb4xgarscb3mJm/Dzl0o=
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        INFOPLIST_KEY_LSUIElement: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Denko
+        ENABLE_HARDENED_RUNTIME: YES
+        ENABLE_APP_SANDBOX: NO
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "-"

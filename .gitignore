@@ -1,0 +1,8 @@
+build/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+*.DS_Store
+sparkle-private-key.txt
+*.md
+!README.md
