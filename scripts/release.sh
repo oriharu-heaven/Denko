@@ -6,6 +6,10 @@
 #   TEAM_ID=XXXXXXXXXX ./scripts/release.sh 1.0.0            # DMG を作るまで
 #   TEAM_ID=XXXXXXXXXX ./scripts/release.sh 1.0.0 --publish  # GitHub Release も作る
 #   TEAM_ID=XXXXXXXXXX ./scripts/release.sh 1.1.0-beta.1 --publish --prerelease  # ベータ配布
+#
+# 公証の途中で止まったら（通信が切れたなど）、表示された提出 ID を付けて同じコマンドを
+# 実行すると、ビルドと提出を飛ばして続きから再開します:
+#   NOTARY_ID=xxxxxxxx-… TEAM_ID=XXXXXXXXXX ./scripts/release.sh 1.0.0 --publish
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -30,6 +34,9 @@ DMG="$BUILD/$APP_NAME-$VERSION.dmg"
 SPM="$BUILD/spm"
 REPO="${GITHUB_REPO:-oriharu-heaven/Denko}"
 
+NOTARY_ID="${NOTARY_ID:-}"
+
+if [[ -z "$NOTARY_ID" ]]; then
 rm -rf "$BUILD"
 mkdir -p "$BUILD"
 xcodegen generate >/dev/null
@@ -64,8 +71,27 @@ ln -s /Applications "$STAGE/Applications"
 hdiutil create -volname "$APP_NAME" -srcfolder "$STAGE" -ov -format UDZO "$DMG" >/dev/null
 codesign --sign "Developer ID Application" --timestamp "$DMG"
 
-echo "▶ 公証（数分かかります）"
-xcrun notarytool submit "$DMG" --keychain-profile "$NOTARY_PROFILE" --wait
+fi
+
+echo "▶ 公証（ふだんは数分、初回は数時間かかることもあります）"
+if [[ -z "$NOTARY_ID" ]]; then
+  NOTARY_ID=$(xcrun notarytool submit "$DMG" --keychain-profile "$NOTARY_PROFILE" --output-format json \
+    | /usr/bin/python3 -c 'import json, sys; print(json.load(sys.stdin)["id"])')
+fi
+echo "  提出 ID: $NOTARY_ID（止まったら NOTARY_ID=$NOTARY_ID を付けて再実行すると続きから再開します）"
+# 通信が一瞬切れても、結果が出るまで確認し直す
+while true; do
+  xcrun notarytool wait "$NOTARY_ID" --keychain-profile "$NOTARY_PROFILE" >/dev/null 2>&1 || true
+  STATUS=$(xcrun notarytool info "$NOTARY_ID" --keychain-profile "$NOTARY_PROFILE" --output-format json 2>/dev/null \
+    | /usr/bin/python3 -c 'import json, sys; print(json.load(sys.stdin).get("status", ""))' 2>/dev/null || true)
+  case "$STATUS" in
+    Accepted) echo "  公証に通りました"; break ;;
+    "In Progress"|"") echo "  まだ処理中です（または通信できません）。1分後にもう一度確認します…"; sleep 60 ;;
+    *) echo "  公証に通りませんでした（$STATUS）。理由:" >&2
+       xcrun notarytool log "$NOTARY_ID" --keychain-profile "$NOTARY_PROFILE" >&2 || true
+       exit 1 ;;
+  esac
+done
 xcrun stapler staple "$DMG"
 spctl --assess --type open --context context:primary-signature -v "$DMG"
 
