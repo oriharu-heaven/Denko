@@ -100,9 +100,19 @@ struct OnboardingView: View {
 }
 
 extension AppDelegate {
+    /// Bumped when はじめに gains a step existing users should see (2: Claude's usage via the
+    /// status line). Earlier builds only stored `onboardingShown`, which counts as version 1.
+    static let onboardingVersion = 2
+
+    var needsOnboarding: Bool {
+        let d = UserDefaults.standard
+        let seen = d.object(forKey: "onboardingVersion") as? Int ?? (d.bool(forKey: "onboardingShown") ? 1 : 0)
+        return seen < Self.onboardingVersion
+    }
+
     /// Applies the choices from はじめに.
     func applyOnboarding(_ c: OnboardingView.Choices) {
-        UserDefaults.standard.set(true, forKey: "onboardingShown")
+        UserDefaults.standard.set(Self.onboardingVersion, forKey: "onboardingVersion")
         if c.launchAtLogin { try? SMAppService.mainApp.register() } else { try? SMAppService.mainApp.unregister() }
         let s = settings
         s.infoWeather = c.today

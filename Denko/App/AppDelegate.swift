@@ -42,7 +42,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         hub.settings = settings
         // はじめに until the user finishes it (closing it just brings it back next launch).
         // Starting at login is one of its choices, so it's never turned on without asking.
-        if !UserDefaults.standard.bool(forKey: "onboardingShown") {
+        if needsOnboarding {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in self?.showOnboarding() }
         }
         Keychain.migrateLegacy(accounts: [GitHubSource.keychainAccount, TrainFeed.keychainAccount])
