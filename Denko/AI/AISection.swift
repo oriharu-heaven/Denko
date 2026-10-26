@@ -128,10 +128,17 @@ private struct Legend: View {
                 Text(note).font(.caption).foregroundStyle(.tertiary)
             }
             if let w = window, w.resetsAt != nil {
-                Text("リセット \(TimeText.untilReset(w.resetsAt, now: now))")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .help(TimeText.absolute(w.resetsAt))
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text("リセット \(TimeText.untilReset(w.resetsAt, now: now))")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    if let pace = w.paceStatus(now: now) {
+                        Text("（\(pace.text)）")
+                            .font(.caption2.monospacedDigit())
+                            .foregroundStyle(pace.isHigh ? accent : .secondary)
+                    }
+                }
+                .help(TimeText.absolute(w.resetsAt))
             }
         }
         .accessibilityElement(children: .combine)
@@ -177,7 +184,7 @@ private struct AIPromo: View {
                     .foregroundStyle(accent)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("AI の使用量を掲示板に").font(.headline)
-                    Text("Claude・Codex・Gemini の利用枠（5時間・1週間）を二重のリングで表示し、残りが少なくなったら掲示板でお知らせします。")
+                    Text("Claude・Codex の利用枠（5時間・1週間）を二重のリングで表示し、残りが少なくなったら掲示板でお知らせします。")
                         .font(.caption).foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }

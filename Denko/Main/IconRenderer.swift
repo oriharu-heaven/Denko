@@ -49,6 +49,7 @@ struct NetGauge: Equatable {
     var app: String?
 }
 
+@MainActor
 enum IconRenderer {
     static let height: CGFloat = 18
 
@@ -136,7 +137,7 @@ enum IconRenderer {
     ]
 
     /// Which character is drawn (set from the settings before rendering).
-    nonisolated(unsafe) static var character: CharacterKind = .frog
+    static var character: CharacterKind = .frog
 
     private static var frames: [(rows: [String], top: Int)] {
         switch character {
@@ -181,79 +182,81 @@ enum IconRenderer {
                        icon: (String) -> NSImage? = { _ in nil }) -> Rendered {
         var result: Rendered!
         appearance.performAsCurrentDrawingAppearance {
-            let palette = Palette(label: .labelColor, accent: c.accent.nsColor)
-            let pieces = makePieces(c, palette: palette, hasIcon: { icon($0) != nil })
-            let width = max(1, ceil(pieces.reduce(0) { $0 + $1.leading + $1.width }))
-            // Click regions: consecutive pieces of the same region are merged (gaps split evenly).
-            var regions: [(IconRegion, ClosedRange<CGFloat>)] = []
-            var cursor: CGFloat = 0
-            for p in pieces {
-                let start = cursor + p.leading
-                cursor = start + p.width
-                guard let r = p.region else { continue }
-                if let last = regions.last, last.0 == r {
-                    regions[regions.count - 1].1 = last.1.lowerBound...cursor
-                } else {
-                    regions.append((r, (start - p.leading / 2)...cursor))
-                }
-            }
-            let charRect = NSRect(x: 0, y: (height - characterSize.height) / 2,
-                                  width: characterSize.width, height: characterSize.height)
-            let charColor = c.awake ? palette.accent : palette.label
-            let animated = c.showCharacter
-
-            func drawBase(frogFrame: Int?) {
-                var x: CGFloat = 0
+            MainActor.assumeIsolated {
+                let palette = Palette(label: .labelColor, accent: c.accent.nsColor)
+                let pieces = makePieces(c, palette: palette, hasIcon: { icon($0) != nil })
+                let width = max(1, ceil(pieces.reduce(0) { $0 + $1.leading + $1.width }))
+                // Click regions: consecutive pieces of the same region are merged (gaps split evenly).
+                var regions: [(IconRegion, ClosedRange<CGFloat>)] = []
+                var cursor: CGFloat = 0
                 for p in pieces {
-                    x += p.leading
-                    switch p.kind {
-                    case .character:
-                        if let f = frogFrame { drawFrog(frame: f, origin: NSPoint(x: x, y: charRect.minY), color: charColor) }
-                    case .ring(let g):
-                        drawRing(outer: g.outer, inner: g.inner, x: x, palette: palette)
-                    case .gauge(let letter, let percent):
-                        drawGauge(letter: letter, percent: percent, x: x, palette: palette)
-                    case .bar(let letter, let percent):
-                        drawBar(letter: letter, percent: percent, x: x, palette: palette)
-                    case .pie(let letter, let percent):
-                        drawPie(letter: letter, percent: percent, x: x, palette: palette)
-                    case .net(let up, let down):
-                        drawNet(up: up, down: down, x: x, width: p.width, palette: palette)
-                    case .appIcon(let id):
-                        if !id.isEmpty, let img = icon(id) { drawAppIcon(img, x: x, color: c.colorIcons, label: palette.label) }
-                    case .text(let segments):
-                        var tx = x
-                        for s in segments { drawText(s, x: tx); tx += s.width }
+                    let start = cursor + p.leading
+                    cursor = start + p.width
+                    guard let r = p.region else { continue }
+                    if let last = regions.last, last.0 == r {
+                        regions[regions.count - 1].1 = last.1.lowerBound...cursor
+                    } else {
+                        regions.append((r, (start - p.leading / 2)...cursor))
                     }
-                    x += p.width
                 }
-            }
+                let charRect = NSRect(x: 0, y: (height - characterSize.height) / 2,
+                                      width: characterSize.width, height: characterSize.height)
+                let charColor = c.awake ? palette.accent : palette.label
+                let animated = c.showCharacter
 
-            if compatible && animated {
-                let full = (0..<frameCount).map { f in
-                    bitmap(size: NSSize(width: width, height: height)) { drawBase(frogFrame: f) }
-                }
-                result = Rendered(base: full[0], characterFrames: [], characterRect: charRect, fullFrames: full,
-                                  regions: regions)
-                return
-            }
-            // Animated frog goes in its own layer; a still fallback frog is baked into the base.
-            let base = bitmap(size: NSSize(width: width, height: height)) { drawBase(frogFrame: animated ? nil : 0) }
-            var chars: [CGImage] = []
-            if animated {
-                let key = "\(appearance.name.rawValue)|\(c.accent.rawValue)|\(c.awake)|\(c.character.rawValue)"
-                if let cached = frogCache, cached.key == key {
-                    chars = cached.frames
-                } else {
-                    for f in 0..<frameCount {
-                        let img = bitmap(size: characterSize) { drawFrog(frame: f, origin: .zero, color: charColor) }
-                        if let cg = img.cgImage(forProposedRect: nil, context: nil, hints: nil) { chars.append(cg) }
+                @MainActor func drawBase(frogFrame: Int?) {
+                    var x: CGFloat = 0
+                    for p in pieces {
+                        x += p.leading
+                        switch p.kind {
+                        case .character:
+                            if let f = frogFrame { drawFrog(frame: f, origin: NSPoint(x: x, y: charRect.minY), color: charColor) }
+                        case .ring(let g):
+                            drawRing(outer: g.outer, inner: g.inner, x: x, palette: palette)
+                        case .gauge(let letter, let percent):
+                            drawGauge(letter: letter, percent: percent, x: x, palette: palette)
+                        case .bar(let letter, let percent):
+                            drawBar(letter: letter, percent: percent, x: x, palette: palette)
+                        case .pie(let letter, let percent):
+                            drawPie(letter: letter, percent: percent, x: x, palette: palette)
+                        case .net(let up, let down):
+                            drawNet(up: up, down: down, x: x, width: p.width, palette: palette)
+                        case .appIcon(let id):
+                            if !id.isEmpty, let img = icon(id) { drawAppIcon(img, x: x, color: c.colorIcons, label: palette.label) }
+                        case .text(let segments):
+                            var tx = x
+                            for s in segments { drawText(s, x: tx); tx += s.width }
+                        }
+                        x += p.width
                     }
-                    frogCache = (key, chars)
                 }
+
+                if compatible && animated {
+                    let full = (0..<frameCount).map { f in
+                        bitmap(size: NSSize(width: width, height: height)) { drawBase(frogFrame: f) }
+                    }
+                    result = Rendered(base: full[0], characterFrames: [], characterRect: charRect, fullFrames: full,
+                                      regions: regions)
+                    return
+                }
+                // Animated frog goes in its own layer; a still fallback frog is baked into the base.
+                let base = bitmap(size: NSSize(width: width, height: height)) { drawBase(frogFrame: animated ? nil : 0) }
+                var chars: [CGImage] = []
+                if animated {
+                    let key = "\(appearance.name.rawValue)|\(c.accent.rawValue)|\(c.awake)|\(c.character.rawValue)"
+                    if let cached = frogCache, cached.key == key {
+                        chars = cached.frames
+                    } else {
+                        for f in 0..<frameCount {
+                            let img = bitmap(size: characterSize) { drawFrog(frame: f, origin: .zero, color: charColor) }
+                            if let cg = img.cgImage(forProposedRect: nil, context: nil, hints: nil) { chars.append(cg) }
+                        }
+                        frogCache = (key, chars)
+                    }
+                }
+                result = Rendered(base: base, characterFrames: chars, characterRect: charRect, fullFrames: [],
+                                  regions: regions)
             }
-            result = Rendered(base: base, characterFrames: chars, characterRect: charRect, fullFrames: [],
-                              regions: regions)
         }
         return result
     }

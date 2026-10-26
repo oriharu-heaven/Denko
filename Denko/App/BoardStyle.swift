@@ -118,16 +118,16 @@ enum PerformanceMode: String, CaseIterable, Identifiable {
     }
     var detail: String {
         switch self {
-        case .saver: return "メニューバーは5秒ごと、ニュースと運行情報は10分ごとに更新します。バッテリーに優しい設定です。"
-        case .standard: return "メニューバーは3秒ごと、ニュースと運行情報は5分ごとに更新します。"
-        case .performance: return "メニューバーは1秒ごと、ニュースと運行情報は3分ごとに更新し、キャラクターもなめらかに動きます。"
+        case .saver: return "メニューバーは5秒ごと、ニュースは30分・運行情報は15分ごとに更新します。バッテリーに優しい設定です。"
+        case .standard: return "メニューバーは3秒ごと、ニュースは15分・運行情報は10分ごとに更新します。"
+        case .performance: return "メニューバーは1秒ごと、ニュースと運行情報は10分ごとに更新し、キャラクターもなめらかに動きます。"
         }
     }
     var menuBarInterval: Double { [5, 3, 1][index] }
     var panelInterval: Double { [2, 1, 0.5][index] }
     var animation: AnimationMode { self == .performance ? .smooth : .eco }
-    var newsSeconds: TimeInterval { [600, 300, 180][index] }
-    var trainSeconds: TimeInterval { [600, 300, 180][index] }
+    var newsSeconds: TimeInterval { [1800, 900, 600][index] }
+    var trainSeconds: TimeInterval { [900, 600, 600][index] }
     var disasterWarningSeconds: TimeInterval { [300, 180, 60][index] }
     private var index: Int { Self.allCases.firstIndex(of: self) ?? 0 }
 }

@@ -1,68 +1,61 @@
 import Foundation
 import SwiftUI
 
+/// Claude's usage limits as Claude Code last reported them to its status line
+/// (see ClaudeStatusLine). Nothing is fetched over the network; the latest report is kept
+/// across launches.
 @MainActor
 final class UsageStore: ObservableObject {
     @Published private(set) var snapshot: UsageSnapshot?
-    @Published private(set) var source: UsageSource?
-    @Published private(set) var lastError: String?
     @Published private(set) var lastUpdated: Date?
-    @Published private(set) var isLoading = false
 
+    /// How often Codex's local logs are re-read (Claude updates whenever Claude Code reports).
     @Published var refreshMinutes: Int {
-        didSet {
-            UserDefaults.standard.set(refreshMinutes, forKey: "refreshMinutes")
-            scheduleTimer()
-        }
+        didSet { UserDefaults.standard.set(refreshMinutes, forKey: "refreshMinutes") }
     }
 
-    private var timer: Timer?
-    /// Fetch only while Claude is enabled under AI usage.
-    var isEnabled: Bool = (UserDefaults.standard.stringArray(forKey: "aiProviders") ?? []).contains("claude") {
-        didSet { if isEnabled && !oldValue { Task { await refresh() } } }
+    var lastError: String? {
+        snapshot == nil ? "Claude Code を使うと表示されます（Pro・Max プランのとき、Claude Code が使用量を知らせます）。" : nil
     }
+
+    private static let storeKey = "claudeStatusLineUsage"
+    private static let dateKey = "claudeStatusLineUpdated"
 
     init() {
         let d = UserDefaults.standard
         refreshMinutes = d.object(forKey: "refreshMinutes") as? Int ?? 1
-        scheduleTimer()
-        Task { await refresh() }
-    }
-
-    func scheduleTimer() {
-        timer?.invalidate()
-        let interval = TimeInterval(max(1, refreshMinutes) * 60)
-        timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
-            Task { await self?.refresh() }
+        if let data = d.data(forKey: Self.storeKey) {
+            snapshot = try? JSONDecoder().decode(UsageSnapshot.self, from: data)
         }
-        timer?.tolerance = 10
+        lastUpdated = d.object(forKey: Self.dateKey) as? Date
     }
 
-    func refresh() async {
-        guard isEnabled, !isLoading, !Snapshot.isActive else { return }
-        isLoading = true
-        defer { isLoading = false }
-        do {
-            let (snap, src) = try await UsageService.fetch()
-            snapshot = snap
-            source = src
-            lastError = nil
-            lastUpdated = Date()
-        } catch {
-            lastError = error.localizedDescription
-        }
+    /// A status line report from Claude Code (the JSON it passes to its status line).
+    func receive(statusLine json: [String: Any]) {
+        guard let snap = UsageSnapshot(statusLine: json) else { return }
+        lastUpdated = Date()
+        if snap != snapshot { snapshot = snap }
+        let d = UserDefaults.standard
+        d.set(try? JSONEncoder().encode(snap), forKey: Self.storeKey)
+        d.set(lastUpdated, forKey: Self.dateKey)
     }
-
-    func setSessionKey(_ key: String) {
-        let trimmed = key.trimmingCharacters(in: .whitespacesAndNewlines)
-        UsageService.setSessionKey(trimmed.isEmpty ? nil : trimmed)
-        Task { await refresh() }
-    }
-
-    var hasSessionKey: Bool { UsageService.cachedSessionKey != nil }
 }
 
 enum TimeText {
+    private static let todayFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "ja_JP")
+        f.dateFormat = "HH:mm"
+        return f
+    }()
+
+    private static let dateTimeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "ja_JP")
+        f.dateFormat = "M/d(E) HH:mm"
+        return f
+    }()
+
     static func untilReset(_ date: Date?, now: Date = Date()) -> String {
         guard let date else { return "—" }
         let s = Int(date.timeIntervalSince(now))
@@ -75,9 +68,7 @@ enum TimeText {
 
     static func absolute(_ date: Date?) -> String {
         guard let date else { return "" }
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "ja_JP")
-        f.dateFormat = Calendar.current.isDateInToday(date) ? "HH:mm" : "M/d(E) HH:mm"
+        let f = Calendar.current.isDateInToday(date) ? todayFormatter : dateTimeFormatter
         return f.string(from: date)
     }
 }

@@ -30,12 +30,10 @@ struct BoardLookPane: View {
                     Text("ふつう").tag(30.0)
                     Text("はやい").tag(45.0)
                 }
-                if settings.showAdvanced {
-                    Picker("1 件あたりの表示回数", selection: $settings.tickerRepeat) {
-                        ForEach(1...3, id: \.self) { Text("\($0) 回").tag($0) }
-                    }
-                    Toggle("流す前に見出し（◆ 天気 ◆ など）を出す", isOn: $settings.showHeading)
+                Picker("1 件あたりの表示回数", selection: $settings.tickerRepeat) {
+                    ForEach(1...3, id: \.self) { Text("\($0) 回").tag($0) }
                 }
+                Toggle("流す前に見出し（◆ 天気 ◆ など）を出す", isOn: $settings.showHeading)
                 Picker("メニューバー全体に流す", selection: Binding(
                     get: { !settings.fullBarUrgent ? 0 : (settings.fullBarAll ? 2 : 1) },
                     set: { settings.fullBarUrgent = $0 > 0; settings.fullBarAll = $0 == 2 })) {
@@ -43,6 +41,13 @@ struct BoardLookPane: View {
                     Text("緊急だけ").tag(1)
                     Text("流さない").tag(0)
                 }
+                Picker("緊急のお知らせの速さ", selection: $settings.urgentSpeed) {
+                    Text("ふつうと同じ").tag(1.0)
+                    Text("1.5 倍").tag(1.5)
+                    Text("2.5 倍").tag(2.5)
+                    Text("4 倍").tag(4.0)
+                }
+                Toggle("緊急のお知らせを点滅させる", isOn: $settings.urgentBlink)
             } header: {
                 Text("流し方")
             } footer: {
@@ -73,19 +78,10 @@ struct BoardLookPane: View {
                             settings.boardBase = .custom
                         })
                 }
-            } header: {
-                Text("色")
-            } footer: {
-                Text("光の色はパネルや設定の強調にも使います。盤面は文字が読みやすいよう、選んだ色を暗くして使います。")
-                    .font(.caption).foregroundStyle(.secondary)
-            }
-
-            Section {
                 Picker("ドットの形", selection: $settings.dotShape) {
                     ForEach(DotShape.allCases) { Text($0.label).tag($0) }
                 }
                 .pickerStyle(.segmented)
-                if settings.showAdvanced {
                 Picker("ドットの大きさ", selection: $settings.dotSize) {
                     Text("小").tag(0.68)
                     Text("中").tag(0.87)
@@ -98,29 +94,29 @@ struct BoardLookPane: View {
                     Text("はっきり").tag(0.16)
                 }
                 .pickerStyle(.segmented)
-                }
             } header: {
-                Text("ドット")
-            }
-
-            Section {
-                Picker("緊急の速さ", selection: $settings.urgentSpeed) {
-                    Text("ふつうと同じ").tag(1.0)
-                    Text("1.5 倍").tag(1.5)
-                    Text("2.5 倍").tag(2.5)
-                    Text("4 倍").tag(4.0)
-                }
-                Toggle("「緊急のお知らせ」を点滅させる", isOn: $settings.urgentBlink)
-            } header: {
-                Text("緊急のお知らせ")
+                Text("見た目")
+            } footer: {
+                Text("光の色はパネルや設定の強調にも使います。盤面は文字が読みやすいよう、選んだ色を暗くして使います。")
+                    .font(.caption).foregroundStyle(.secondary)
             }
 
             NoticeLevelsSection(settings: settings)
 
             Section {
+                Picker("集中モード中の動作", selection: $settings.focusBehavior) {
+                    ForEach(FocusBehavior.allCases) { Text($0.label).tag($0) }
+                }
+                if !FocusWatcher.isAuthorized && settings.focusBehavior != .same {
+                    Button("集中モードの連動を許可…") {
+                        FocusWatcher.requestAuthorization { _ in }
+                    }
+                }
                 LabeledContent("いまの状態") {
-                    Text(FocusChoice.current == .same ? "いつもどおり流しています"
-                         : FocusChoice.current == .urgentOnly ? "集中モード：緊急だけ流しています" : "集中モード：流していません")
+                    let effective = FocusChoice.current != .same ? FocusChoice.current
+                        : (FocusWatcher.isFocused ? settings.focusBehavior : .same)
+                    Text(effective == .same ? "いつもどおり流しています"
+                         : effective == .urgentOnly ? "集中モード：緊急だけ流しています" : "集中モード：流していません")
                         .foregroundStyle(.secondary)
                 }
                 Button("集中モードの設定を開く…") {
@@ -130,7 +126,7 @@ struct BoardLookPane: View {
             } header: {
                 Text("集中モード")
             } footer: {
-                Text("会議の間だけ静かにしたいときは、パネル下か右クリックの「お知らせを止める」がいちばん手軽です。集中モードに Denko のフィルタを追加すると、集中モードに合わせて自動で切り替わります。")
+                Text("会議の間だけ静かにしたいときは、パネル下か右クリックの「お知らせを止める」がいちばん手軽です。集中モードに Denko のフィルタを追加すると、集中モードごとに細かく切り替えられます。")
                     .font(.caption).foregroundStyle(.secondary)
             }
 

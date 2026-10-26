@@ -53,8 +53,8 @@ enum NoticeKind: String, CaseIterable, Identifiable, Codable {
         case .todayRoll: return "今日の情報（定期的に流すもの）"
         case .awakeEnded: return "スリープ防止の終了"
         case .other: return "その他"
-        case .quakeStrong: return "強い地震（震度5弱以上・地元で震度3以上）"
-        case .quakeOther: return "震度4の地震"
+        case .quakeStrong: return "強い地震（震度5弱以上・地元で震度4以上）"
+        case .quakeOther: return "震度4の地震・地元で震度3の地震"
         case .tsunami: return "津波警報・注意報、噴火速報"
         case .weatherWarning: return "地元の気象警報・土砂災害警戒情報など"
         }
@@ -62,10 +62,12 @@ enum NoticeKind: String, CaseIterable, Identifiable, Codable {
 
     var defaultLevel: NoticeLevel {
         switch self {
-        // 緊急 is for things that can't wait: it fills the menu bar and still plays while paused.
-        // Rain, breaking news and FX moves are useful but not urgent, so they play normally.
-        case .claudeWaiting, .trainDelay, .quakeStrong, .tsunami, .weatherWarning:
+        // 緊急 is only for danger to the user: it fills the menu bar and still plays while paused
+        // or in a Focus. Everything else plays normally, and chatty kinds stay in the history.
+        case .quakeStrong, .tsunami:
             return .urgent
+        case .newsNew, .trainRecovered, .githubOther, .rss:
+            return .off
         default:
             return .normal
         }

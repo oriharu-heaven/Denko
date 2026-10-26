@@ -45,8 +45,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         if !UserDefaults.standard.bool(forKey: "onboardingShown") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in self?.showOnboarding() }
         }
-        Keychain.migrateLegacy(accounts: [Keychain.sessionAccount, GitHubSource.keychainAccount,
-                                          TrainFeed.keychainAccount])
+        Keychain.migrateLegacy(accounts: [GitHubSource.keychainAccount, TrainFeed.keychainAccount])
+        // Earlier builds could keep a claude.ai session key; this version never uses one.
+        if Keychain.exists(account: "claude.ai-sessionKey") { Keychain.save(nil, account: "claude.ai-sessionKey") }
         // New status items are inserted to the left of existing ones, so creation order
         // gives the initial layout: [always-hidden ┆ hidden ┊ ‹] [LED board] [frog + Claude]
         // Notifications play on the main item itself (board takeover), so there's no
@@ -90,10 +91,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private func wireSources() {
         // The endpoint always runs so coding agents keep reaching the board; the Webhook
         // switch only decides whether plain script / Shortcuts posts are accepted.
+        notifyServer.onClaudeStatusLine = { [weak self] in self?.usageStore.receive(statusLine: $0) }
         settings.$notifyPort.removeDuplicates()
             .sink { [weak self] port in
                 guard let self else { return }
                 if let p = UInt16(exactly: port) { self.notifyServer.start(port: p) } else { self.notifyServer.stop() }
+                // Point an installed status line script at the (new) port.
+                if ClaudeStatusLine.isOurs, !ClaudeStatusLine.isInstalled(endpoint: self.notifyServer.endpoint) {
+                    try? ClaudeStatusLine.install(endpoint: self.notifyServer.endpoint)
+                }
             }
             .store(in: &bag)
         settings.$notifyServerEnabled.removeDuplicates()
@@ -139,12 +145,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     @objc func menuOpenSettings() { openSettings() }
 
-    func openSettings() {
+    /// `tab`: the toolbar tab to show (its title, e.g. "情報連携").
+    func openSettings(tab: String? = nil) {
         if settingsWindow == nil {
             let window = SettingsWindow.make(settings: settings, ai: ai, awake: awake, hider: hider)
             window.delegate = self
             window.center()
             settingsWindow = window
+        }
+        if let tab, let tabs = settingsWindow?.contentViewController as? NSTabViewController,
+           let index = tabs.tabViewItems.firstIndex(where: { $0.label == tab }) {
+            tabs.selectedTabViewItemIndex = index
         }
         settingsWindow?.makeKeyAndOrderFront(nil)
         MainMenu.updateActivationPolicy()

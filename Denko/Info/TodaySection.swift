@@ -153,7 +153,17 @@ struct TodaySection: View {
                 statusRow(icon: trouble.isEmpty ? "tram" : "tram.fill", alert: !trouble.isEmpty,
                           text: info.trains == nil
                             ? (info.failed.contains("trains") ? "運行情報を取得できませんでした" : "運行情報を読み込み中…")
+                            : settings.trainLines.isEmpty ? "見る路線を設定で選んでください"
                             : (trouble.isEmpty ? "見ている路線は平常運転" : trouble.prefix(3).joined(separator: "\n")))
+                .contextMenu {
+                    // Quick way to drop a line that keeps showing up.
+                    let names = Array(Set((info.trains ?? []).filter(\.isTrouble).map(\.name))).sorted()
+                    ForEach(names, id: \.self) { name in
+                        Button("「\(name)」を見ない") { info.unwatch(name) }
+                    }
+                    if !names.isEmpty { Divider() }
+                    Button("見る路線を選ぶ…") { AppDelegate.shared.openSettings(tab: "情報連携") }
+                }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -251,12 +261,12 @@ struct TodaySection: View {
             }
             ForEach(Array(hub.history.prefix(5))) { msg in
                 Button {
-                    if let url = msg.url { NSWorkspace.shared.open(url) }
+                    msg.open()
                 } label: {
                     HStack(alignment: .firstTextBaseline, spacing: 6) {
                         Image(systemName: msg.source.symbol).font(.caption).foregroundStyle(accent).frame(width: 14)
                         Text(msg.title).font(.caption).lineLimit(1)
-                        if msg.url != nil {
+                        if msg.canOpen {
                             Image(systemName: "arrow.up.forward").font(.caption2).foregroundStyle(.tertiary)
                         }
                         Spacer(minLength: 4)
@@ -265,7 +275,8 @@ struct TodaySection: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .disabled(msg.url == nil)
+                .disabled(!msg.canOpen)
+                .help(msg.url?.absoluteString ?? (msg.canOpen ? msg.openLabel : ""))
             }
         }
     }

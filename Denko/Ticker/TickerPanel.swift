@@ -53,7 +53,7 @@ private struct MessageRow: View {
 
     var body: some View {
         Button {
-            if let url = msg.url { NSWorkspace.shared.open(url) }
+            msg.open()
         } label: {
             HStack(alignment: .top, spacing: 10) {
                 Image(systemName: msg.source.symbol)
@@ -76,6 +76,7 @@ private struct MessageRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .help(msg.url?.absoluteString ?? "")
+        .disabled(!msg.canOpen)
+        .help(msg.url?.absoluteString ?? (msg.canOpen ? msg.openLabel : ""))
     }
 }

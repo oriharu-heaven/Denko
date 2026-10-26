@@ -4,17 +4,18 @@ import AppKit
 ///
 /// Text is rasterized once at 1 px per dot with antialiasing off (so Japanese works
 /// with the system font), then every lit pixel becomes a round LED.
+@MainActor
 enum LEDRenderer {
     /// Dot rows; set from the menu bar item's height so the board fills it (19 on a 22pt item).
-    nonisolated(unsafe) static var rows = 16
+    static var rows = 16
     static let pitch: CGFloat = 1.125       // pt between dot centres
     /// Board look (set from the settings via `apply`).
-    nonisolated(unsafe) static var dot: CGFloat = 0.98
-    nonisolated(unsafe) static var square = false
-    nonisolated(unsafe) static var unlitAlpha: CGFloat = 0.07
-    nonisolated(unsafe) static var baseColor: NSColor = .black
+    static var dot: CGFloat = 0.98
+    static var square = false
+    static var unlitAlpha: CGFloat = 0.07
+    static var baseColor: NSColor = .black
     /// Bumped whenever the look changes, so cached dot images get redrawn.
-    nonisolated(unsafe) static private(set) var styleVersion = 0
+    static private(set) var styleVersion = 0
 
     static func apply(dotSize: Double, square: Bool, unlit: Double, base: NSColor) {
         let d = pitch * CGFloat(dotSize)
@@ -95,7 +96,7 @@ enum LEDRenderer {
         }
     }
 
-    nonisolated(unsafe) private static var glyphCache: [Character: [[Bool]]] = [:]
+    private static var glyphCache: [Character: [[Bool]]] = [:]
 
     private static func fontGlyph(_ ch: Character) -> [[Bool]] {
         if let cached = glyphCache[ch] { return cached }
@@ -224,7 +225,7 @@ enum LEDRenderer {
 
     /// Dot mask of `text` in a mid-size font (for numbers on the dashboard): columns of
     /// `rows` dots, vertically centred on the cap height.
-    nonisolated(unsafe) private static var numberCache: [String: [[Bool]]] = [:]
+    private static var numberCache: [String: [[Bool]]] = [:]
 
     static func numberMask(_ text: String, size: CGFloat) -> [[Bool]] {
         let key = "\(text)|\(size)|\(rows)"

@@ -358,6 +358,13 @@ final class AppUsageMonitor: ObservableObject {
 
     // MARK: - Network (nettop snapshot, ~10 ms, off the main thread)
 
+    /// Triggers an on-demand nettop snapshot if network per-app rates are stale (e.g. when hovering for tooltip).
+    func sampleNetworkIfNeeded() {
+        if prevNetAt.map({ Date().timeIntervalSince($0) > 5 }) ?? true {
+            sampleNetwork()
+        }
+    }
+
     private func sampleNetwork() {
         guard !netTaskRunning else { return }
         netTaskRunning = true

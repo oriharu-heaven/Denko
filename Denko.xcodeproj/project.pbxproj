@@ -20,7 +20,6 @@
 		3063EF888D6E4DAD52B9555B /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9868812F1A2229DDCA888AB0 /* SettingsView.swift */; };
 		35C8C8D882C51F251F68FD9E /* TickerPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B852D1D274825CD50A1FF66F /* TickerPanel.swift */; };
 		3DBD3B851613112EED5E21E4 /* StorageSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B94A8F070CAD835F098D4133 /* StorageSection.swift */; };
-		42AC2C2B9F769B21A2BA841F /* UsageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E572A85E9927EC0010CAFF9 /* UsageService.swift */; };
 		4C2147A00F38A6D778570870 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C4C02A0F16E89660131D1C8 /* main.swift */; };
 		4C250B5025FA85BDFA1D39FC /* SleepPreventer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7D8B26615C09DACB309F15C /* SleepPreventer.swift */; };
 		55C0A9FE71A43EE2CA61BE04 /* ClaudeCodeHooks.swift in Sources */ = {isa = PBXBuildFile; fileRef = C937154FBBC1A2E1B5742BCA /* ClaudeCodeHooks.swift */; };
@@ -33,6 +32,7 @@
 		6E437FA2EFA62207973FB950 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9FDB264E72B9BA6794B69F7 /* Theme.swift */; };
 		7133274F5EDD3406EBB89F24 /* Snapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 529B976EEB119447105A29E9 /* Snapshot.swift */; };
 		73A6722670A65B08052F7537 /* NotificationHub.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89D4FFDC2E044161F77E0221 /* NotificationHub.swift */; };
+		8175A115109742F2EB4C34AB /* ClaudeStatusLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54ED06690183BC53C424ED2F /* ClaudeStatusLine.swift */; };
 		8993F80210B111EA0FFBE2DB /* UsageModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6452A996FF284124E02A2C5 /* UsageModels.swift */; };
 		8AC02A891FC9116E32B9D32D /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F2850A66D2693A96206363A /* Keychain.swift */; };
 		8B4AA79FECE1E826BF8C9E61 /* MainStatusController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF50972730C74BF2A3E954E9 /* MainStatusController.swift */; };
@@ -78,11 +78,11 @@
 		508C784545B811DD16E5DC5B /* NoticeKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoticeKind.swift; sourceTree = "<group>"; };
 		529B976EEB119447105A29E9 /* Snapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Snapshot.swift; sourceTree = "<group>"; };
 		52F81A6EA211680E40DEDD04 /* MainMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainMenu.swift; sourceTree = "<group>"; };
+		54ED06690183BC53C424ED2F /* ClaudeStatusLine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeStatusLine.swift; sourceTree = "<group>"; };
 		54F53D4FDE400D828880FDFC /* MainPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainPanel.swift; sourceTree = "<group>"; };
 		578CE4BDD4666B31D9C875B1 /* Onboarding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Onboarding.swift; sourceTree = "<group>"; };
 		5A01B24F2053A722A2D66454 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		5D706A4CC5FDEFEB2619F2E6 /* StorageAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageAnalyzer.swift; sourceTree = "<group>"; };
-		5E572A85E9927EC0010CAFF9 /* UsageService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageService.swift; sourceTree = "<group>"; };
 		62648E8059E6F60644DAE73A /* FullBarAnnouncer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullBarAnnouncer.swift; sourceTree = "<group>"; };
 		62C570BF989E567C0E312FCC /* LEDDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LEDDashboard.swift; sourceTree = "<group>"; };
 		64176ECFD8BD7B76BA85CBFF /* TransitFX.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransitFX.swift; sourceTree = "<group>"; };
@@ -220,7 +220,6 @@
 			children = (
 				2F2850A66D2693A96206363A /* Keychain.swift */,
 				B6452A996FF284124E02A2C5 /* UsageModels.swift */,
-				5E572A85E9927EC0010CAFF9 /* UsageService.swift */,
 				1B8B08991014069545CF65FC /* UsageStore.swift */,
 			);
 			path = Claude;
@@ -242,6 +241,7 @@
 			isa = PBXGroup;
 			children = (
 				C937154FBBC1A2E1B5742BCA /* ClaudeCodeHooks.swift */,
+				54ED06690183BC53C424ED2F /* ClaudeStatusLine.swift */,
 				493883BBA71443D2AA072091 /* CodexNotify.swift */,
 				47C1764BC317078329FCE731 /* FeedSources.swift */,
 			);
@@ -382,6 +382,7 @@
 				0CCDBA3D583C505345ACFCE5 /* BoardLookPane.swift in Sources */,
 				F19139F641ABE037519A831C /* BoardStyle.swift in Sources */,
 				55C0A9FE71A43EE2CA61BE04 /* ClaudeCodeHooks.swift in Sources */,
+				8175A115109742F2EB4C34AB /* ClaudeStatusLine.swift in Sources */,
 				15CC6598AF4B0F719862A2DA /* CodexNotify.swift in Sources */,
 				AE74B438ABD0E2054A0BD618 /* DisasterFeed.swift in Sources */,
 				AE72E37D3B5A1162CE800877 /* FeedSources.swift in Sources */,
@@ -420,7 +421,6 @@
 				AB0B10321FB1137604FCBB38 /* TransitFX.swift in Sources */,
 				A534B7C8FF093E0F2478E60E /* Updater.swift in Sources */,
 				8993F80210B111EA0FFBE2DB /* UsageModels.swift in Sources */,
-				42AC2C2B9F769B21A2BA841F /* UsageService.swift in Sources */,
 				AC3124555FA723B6B4791216 /* UsageStore.swift in Sources */,
 				4C2147A00F38A6D778570870 /* main.swift in Sources */,
 			);

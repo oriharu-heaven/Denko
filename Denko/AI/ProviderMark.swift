@@ -7,7 +7,6 @@ enum ProviderMark {
     private static func monogram(_ provider: AIProvider) -> String {
         switch provider {
         case .claude: return "C"
-        case .gemini: return "G"
         case .codex: return ">_"
         }
     }

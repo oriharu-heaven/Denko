@@ -114,13 +114,8 @@ final class AppSettings: ObservableObject {
     @Published var announceRain: Bool { didSet { d.set(announceRain, forKey: "announceRain") } }
     @Published var announceMorning: Bool { didSet { d.set(announceMorning, forKey: "announceMorning") } }
     @Published var infoTrains: Bool { didSet { d.set(infoTrains, forKey: "infoTrains") } }
-    /// Lines to watch, by name (e.g. "山手線"). Empty = every line.
+    /// Lines to watch, by name (e.g. "山手線"). Empty = none (the user picks their own lines).
     @Published var trainLines: [String] { didSet { d.set(trainLines, forKey: "trainLines") } }
-    /// Region watched when no lines are picked ("" = from the weather place's prefecture).
-    @Published var trainRegion: String { didSet { d.set(trainRegion, forKey: "trainRegion") } }
-    var effectiveTrainRegion: String {
-        trainRegion.isEmpty ? TrainFeed.region(forPrefecture: weatherPrefecture) : trainRegion
-    }
     @Published var announceTrains: Bool { didSet { d.set(announceTrains, forKey: "announceTrains") } }
     @Published var infoFX: Bool { didSet { d.set(infoFX, forKey: "infoFX") } }
     /// e.g. ["USDJPY", "EURJPY"]
@@ -141,8 +136,6 @@ final class AppSettings: ObservableObject {
     @Published var focusBehavior: FocusBehavior { didSet { d.set(focusBehavior.rawValue, forKey: "focusBehavior") } }
     /// Treat a full-screen app in front (presentations, video) like a Focus.
     @Published var quietInFullScreen: Bool { didSet { d.set(quietInFullScreen, forKey: "quietInFullScreen") } }
-    /// Show the detailed settings (refresh rates, Webhook, tokens …).
-    @Published var showAdvanced: Bool { didSet { d.set(showAdvanced, forKey: "showAdvanced") } }
 
     func level(for kind: NoticeKind) -> NoticeLevel {
         noticeLevels[kind.rawValue].flatMap(NoticeLevel.init(rawValue:)) ?? kind.defaultLevel
@@ -211,6 +204,11 @@ final class AppSettings: ObservableObject {
     /// Changes whenever anything that affects how the board is drawn changes.
     var boardStyleKey: String {
         "\(accent.rawValue)|\(dotShape.rawValue)|\(dotSize)|\(unlitDots)|\(boardBase.rawValue)|\(boardCustomColor)|\(boardBaseCustom)|\(boardIdle.rawValue)|\(idleMessage)"
+    }
+
+    /// Changes whenever any setting that affects the menu bar item's content, sampling, or animation changes.
+    var menuBarConfigKey: String {
+        "\(showCharacter)|\(character.rawValue)|\(showCPUGauge)|\(showMemoryGauge)|\(showNetworkGauge)|\(gaugeNumbers)|\(gaugeStyle.rawValue)|\(displayStyle.rawValue)|\(menuBarInterval)|\(panelInterval)|\(showTopApp)|\(colorAppIcons)|\(aiProviders.map(\.rawValue).joined(separator: ","))|\(menuBarAI.map(\.rawValue).joined(separator: ","))|\(claudeNumbers.rawValue)|\(animationMode.rawValue)|\(pauseOnBattery)|\(compatibleCatRendering)|\(boardStyleKey)"
     }
 
     // Board sources
@@ -290,7 +288,7 @@ final class AppSettings: ObservableObject {
 
         tickerEnabled = bool("tickerEnabled", true)
         tickerSpeed = d.object(forKey: "tickerSpeed") as? Double ?? 30
-        tickerRepeat = d.object(forKey: "tickerRepeat") as? Int ?? 2
+        tickerRepeat = d.object(forKey: "tickerRepeat") as? Int ?? 1
 
 
         infoWeather = bool("infoWeather", true)
@@ -304,15 +302,14 @@ final class AppSettings: ObservableObject {
         announceRain = bool("announceRain", true)
         announceMorning = bool("announceMorning", true)
         infoTrains = bool("infoTrains", true)
-        trainLines = d.stringArray(forKey: "trainLines") ?? TrainFeed.defaultLines
+        trainLines = d.stringArray(forKey: "trainLines") ?? []
         announceTrains = bool("announceTrains", true)
-        trainRegion = d.string(forKey: "trainRegion") ?? ""
         infoFX = bool("infoFX", true)
         fxPairs = d.stringArray(forKey: "fxPairs") ?? ["USDJPY", "EURJPY"]
         fxAlertPercent = d.object(forKey: "fxAlertPercent") as? Double ?? 1.0
-        infoRollMinutes = d.object(forKey: "infoRollMinutes") as? Int ?? 15
+        infoRollMinutes = d.object(forKey: "infoRollMinutes") as? Int ?? 60
         fullBarUrgent = bool("fullBarUrgent", true)
-        fullBarAll = bool("fullBarAll", true)
+        fullBarAll = bool("fullBarAll", false)
 
         infoDisaster = bool("infoDisaster", true)
         weatherPrefecture = d.string(forKey: "weatherPrefecture") ?? "東京都"
@@ -320,7 +317,6 @@ final class AppSettings: ObservableObject {
         noticeLevels = d.dictionary(forKey: "noticeLevels") as? [String: String] ?? [:]
         focusBehavior = FocusBehavior(rawValue: d.string(forKey: "focusBehavior") ?? "") ?? .urgentOnly
         quietInFullScreen = bool("quietInFullScreen", true)
-        showAdvanced = bool("showAdvanced", false)
         storageMode = StorageMode(rawValue: d.string(forKey: "storageMode") ?? "") ?? .basic
         dotShape = DotShape(rawValue: d.string(forKey: "dotShape") ?? "") ?? .round
         dotSize = d.object(forKey: "dotSize") as? Double ?? 0.87
@@ -330,7 +326,7 @@ final class AppSettings: ObservableObject {
         AccentPreset.customHex = customHex
         boardBaseCustom = d.string(forKey: "boardBaseCustom") ?? "#102040"
         boardBase = BoardBase(rawValue: d.string(forKey: "boardBase") ?? "") ?? .black
-        urgentSpeed = d.object(forKey: "urgentSpeed") as? Double ?? 2.5
+        urgentSpeed = d.object(forKey: "urgentSpeed") as? Double ?? 1.5
         urgentBlink = bool("urgentBlink", true)
         showHeading = bool("showHeading", true)
         boardIdle = BoardIdle(rawValue: d.string(forKey: "boardIdle") ?? "") ?? .dashboard

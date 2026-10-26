@@ -58,7 +58,7 @@ struct OnboardingView: View {
                 Section {
                     row("terminal.fill", .brown, "コーディングエージェント",
                         agentsConnected ? "Claude Code とはすでにつながっています" : "Claude Code・Codex などの許可待ちと作業完了（設定を変える前に確認します）", $c.dev)
-                    row("gauge.with.dots.needle.67percent", .pink, "AI の使用量", "Claude・Codex・Gemini の利用枠", $c.ai)
+                    row("gauge.with.dots.needle.67percent", .pink, "AI の使用量", "Claude・Codex の利用枠", $c.ai)
                 }
                 Section {
                     Toggle("ログイン時に Denko を起動", isOn: $c.launchAtLogin)
@@ -129,17 +129,22 @@ extension AppDelegate {
         // Coding agents: these change the tools' own settings files, so ask first.
         let endpoint = notifyServer.endpoint
         var tools: [(String, String, () throws -> Void)] = []
-        if AIProvider.claude.isDetected && !ClaudeCodeHooks.isInstalled(endpoint: endpoint) {
+        if c.dev && AIProvider.claude.isDetected && !ClaudeCodeHooks.isInstalled(endpoint: endpoint) {
             tools.append(("Claude Code", "~/.claude/settings.json", { try ClaudeCodeHooks.install(endpoint: endpoint) }))
         }
-        if CodexNotify.isAvailable && !CodexNotify.isInstalled(endpoint: endpoint) {
+        if c.dev && CodexNotify.isAvailable && !CodexNotify.isInstalled(endpoint: endpoint) {
             tools.append(("Codex", "~/.codex/config.toml", { try CodexNotify.install(endpoint: endpoint) }))
         }
+        // Claude's usage arrives through Claude Code's status line.
+        if s.aiProviders.contains(.claude) && !ClaudeStatusLine.isInstalled(endpoint: endpoint) {
+            tools.append(("Claude の使用量", "~/.claude/settings.json のステータスライン",
+                          { try ClaudeStatusLine.install(endpoint: endpoint) }))
+        }
         FullBarAnnouncer.debugLog("onboarding dev=\(c.dev) tools=\(tools.map(\.0)) claudeDetected=\(AIProvider.claude.isDetected)")
-        if c.dev && !tools.isEmpty {
+        if !tools.isEmpty {
             let alert = NSAlert()
             alert.messageText = "\(tools.map(\.0).joined(separator: "・")) と連携しますか？"
-            alert.informativeText = "\(tools.map(\.1).joined(separator: "、")) に、許可待ちや作業完了を Denko に知らせる設定を追加します。元のファイルは同じフォルダにバックアップされます。あとから 設定 → 情報連携 で解除できます。"
+            alert.informativeText = "\(tools.map(\.1).joined(separator: "、")) に、Denko に知らせる設定（許可待ち・作業完了・使用量）を追加します。元のファイルは同じフォルダにバックアップされます。あとから 設定 → 情報連携 で解除できます。"
             alert.addButton(withTitle: "連携する")
             alert.addButton(withTitle: "あとで")
             if alert.runModal() == .alertFirstButtonReturn {

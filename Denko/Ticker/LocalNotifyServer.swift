@@ -16,6 +16,8 @@ final class LocalNotifyServer {
     let token: String
     /// Plain posts from scripts / Shortcuts (設定 → 情報連携 → Webhook). Coding agents are always accepted.
     var acceptsWebhook = true
+    /// Claude Code's status line JSON (forwarded by ClaudeStatusLine's script): usage limits.
+    var onClaudeStatusLine: (([String: Any]) -> Void)?
 
     init(hub: NotificationHub) {
         self.hub = hub
@@ -53,6 +55,10 @@ final class LocalNotifyServer {
 
     private func handle(_ conn: NWConnection) {
         conn.start(queue: .main)
+        // Drop idle / half-open connections after 5 seconds so descriptors never leak.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+            if conn.state != .cancelled { conn.cancel() }
+        }
         receive(conn, buffer: Data())
     }
 
@@ -62,13 +68,18 @@ final class LocalNotifyServer {
                 guard let self else { conn.cancel(); return }
                 var buf = buffer
                 if let data { buf.append(data) }
-                if let request = Self.parse(buf) {
+                switch Self.parse(buf) {
+                case .ok(let request):
                     let status = self.route(request)
                     self.respond(conn, status: status)
-                } else if isComplete || error != nil || buf.count > 256 * 1024 {
+                case .invalid:
                     self.respond(conn, status: 400)
-                } else {
-                    self.receive(conn, buffer: buf)
+                case .needMore:
+                    if isComplete || error != nil || buf.count > 256 * 1024 {
+                        self.respond(conn, status: 400)
+                    } else {
+                        self.receive(conn, buffer: buf)
+                    }
                 }
             }
         }
@@ -83,38 +94,60 @@ final class LocalNotifyServer {
     private struct Request {
         let method: String
         let path: String
+        let headers: [String: String]
         let query: [String: String]
         let body: Data
     }
 
-    /// Returns nil until the full request (headers + Content-Length body) has arrived.
-    private static func parse(_ data: Data) -> Request? {
-        guard let headerEnd = data.range(of: Data("\r\n\r\n".utf8)) else { return nil }
+    private enum ParseResult {
+        case needMore
+        case invalid
+        case ok(Request)
+    }
+
+    /// Parses an HTTP/1.x request once headers + Content-Length body have arrived.
+    private static func parse(_ data: Data) -> ParseResult {
+        guard let headerEnd = data.range(of: Data("\r\n\r\n".utf8)) else {
+            return data.count > 16 * 1024 ? .invalid : .needMore
+        }
         let head = String(decoding: data[..<headerEnd.lowerBound], as: UTF8.self)
         let lines = head.components(separatedBy: "\r\n")
         let parts = lines.first?.split(separator: " ") ?? []
-        guard parts.count >= 2 else { return nil }
+        guard parts.count >= 2 else { return .invalid }
         var length = 0
+        var headers: [String: String] = [:]
         for line in lines.dropFirst() {
             let kv = line.split(separator: ":", maxSplits: 1)
-            if kv.count == 2, kv[0].lowercased() == "content-length" {
-                length = Int(kv[1].trimmingCharacters(in: .whitespaces)) ?? 0
+            guard kv.count == 2 else { continue }
+            let key = kv[0].trimmingCharacters(in: .whitespaces).lowercased()
+            let val = kv[1].trimmingCharacters(in: .whitespaces)
+            headers[key] = val
+            if key == "content-length" {
+                guard let parsed = Int(val), parsed >= 0, parsed <= 256 * 1024 else { return .invalid }
+                length = parsed
             }
         }
         let body = data[headerEnd.upperBound...]
-        guard body.count >= length else { return nil }
+        guard body.count >= length else { return .needMore }
         let comps = URLComponents(string: String(parts[1]))
         var query: [String: String] = [:]
         for q in comps?.queryItems ?? [] { query[q.name] = q.value ?? "" }
-        return Request(method: String(parts[0]), path: comps?.path ?? "", query: query,
-                       body: Data(body.prefix(length)))
+        return .ok(Request(method: String(parts[0]), path: comps?.path ?? "", headers: headers,
+                           query: query, body: Data(body.prefix(length))))
     }
 
     private func route(_ r: Request) -> Int {
-        guard r.method == "POST" || r.method == "GET", r.path == "/notify/\(token)" else { return 404 }
+        let validAuth = r.path == "/notify/\(token)"
+            || (r.path == "/notify" && r.headers["x-denko-token"] == token)
+        guard (r.method == "POST" || r.method == "GET"), validAuth else { return 404 }
         let source = r.query["source"] ?? ""
         let json = (try? JSONSerialization.jsonObject(with: r.body)) as? [String: Any]
 
+        // Checked first: the status line JSON also carries a hook_event_name ("Status").
+        if source == "claude-statusline" {
+            if let json { onClaudeStatusLine?(json) }
+            return 200
+        }
         if source == "claude-code" || json?["hook_event_name"] != nil {
             postClaudeCode(json ?? [:])
             return 200
@@ -145,35 +178,38 @@ final class LocalNotifyServer {
 
     /// Maps Claude Code hook payloads (Notification / Stop / …) to board messages.
     private func postClaudeCode(_ j: [String: Any]) {
-        let project = (j["cwd"] as? String).map { URL(fileURLWithPath: $0).lastPathComponent }
+        let cwd = j["cwd"] as? String
+        let project = cwd.map { URL(fileURLWithPath: $0).lastPathComponent }
         let where_ = project.map { "（\($0)）" } ?? ""
         switch j["hook_event_name"] as? String {
         case "Notification":
             let raw = j["message"] as? String ?? "通知があります"
             // Waiting for input / permission needs the user: make it stand out.
-            hub.post(.claudeCode, kind: .claudeWaiting, title: "\(Self.translate(raw))\(where_)")
+            hub.post(.claudeCode, kind: .claudeWaiting, title: "\(Self.translate(raw))\(where_)", projectPath: cwd)
         case "Stop":
             // The answer is ready and Claude is waiting on the user: worth the whole bar.
-            hub.post(.claudeCode, kind: .claudeDone, title: "応答が完了しました\(where_)")
+            hub.post(.claudeCode, kind: .claudeDone, title: "応答が完了しました\(where_)", projectPath: cwd)
         case "SubagentStop":
-            hub.post(.claudeCode, kind: .claudeDone, title: "サブエージェントが完了しました\(where_)")
+            hub.post(.claudeCode, kind: .claudeDone, title: "サブエージェントが完了しました\(where_)", projectPath: cwd)
         case let other?:
-            hub.post(.claudeCode, title: "\(other)\(where_)")
+            hub.post(.claudeCode, title: "\(other)\(where_)", projectPath: cwd)
         case nil:
-            hub.post(.claudeCode, title: "通知があります\(where_)")
+            hub.post(.claudeCode, title: "通知があります\(where_)", projectPath: cwd)
         }
     }
 
     /// Codex `notify` payload: {"type": "agent-turn-complete", "cwd": …, "last-assistant-message": …}.
     private func postCodex(_ j: [String: Any]) {
-        let project = (j["cwd"] as? String).map { URL(fileURLWithPath: $0).lastPathComponent }
+        let cwd = j["cwd"] as? String
+        let project = cwd.map { URL(fileURLWithPath: $0).lastPathComponent }
         let where_ = project.map { "（\($0)）" } ?? ""
         let type = j["type"] as? String ?? ""
         if type.contains("approval") || type.contains("input") {
-            hub.post(.codex, kind: .claudeWaiting, title: "許可を求めています\(where_)")
+            hub.post(.codex, kind: .claudeWaiting, title: "許可を求めています\(where_)", projectPath: cwd)
         } else {
             hub.post(.codex, kind: .claudeDone, title: "作業が完了しました\(where_)",
-                     body: (j["last-assistant-message"] as? String).map { String($0.prefix(120)) })
+                     body: (j["last-assistant-message"] as? String).map { String($0.prefix(120)) },
+                     projectPath: cwd)
         }
     }
 
@@ -184,7 +220,8 @@ final class LocalNotifyServer {
         let where_ = project.map { "（\(URL(fileURLWithPath: $0).lastPathComponent)）" } ?? ""
         let waiting = ["waiting", "permission", "input", "approval"].contains { event.lowercased().contains($0) }
         hub.post(source, kind: waiting ? .claudeWaiting : .claudeDone,
-                 title: who + (title ?? (waiting ? "許可を求めています" : "作業が完了しました")) + where_)
+                 title: who + (title ?? (waiting ? "許可を求めています" : "作業が完了しました")) + where_,
+                 projectPath: project)
     }
 
     private static func translate(_ s: String) -> String {

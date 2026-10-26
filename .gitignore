@@ -6,3 +6,4 @@ xcuserdata/
 sparkle-private-key.txt
 *.md
 !README.md
+!INTEGRATIONS.md

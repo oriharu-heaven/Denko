@@ -5,7 +5,7 @@ import Foundation
 /// a timestamped backup is written first.
 enum ClaudeCodeHooks {
     static let events = ["Notification", "Stop"]
-    private static var settingsURL: URL {
+    static var settingsURL: URL {
         FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".claude/settings.json")
     }
 
@@ -63,22 +63,29 @@ enum ClaudeCodeHooks {
         }
     }
 
-    private static func readSettings() -> [String: Any]? {
+    static func readSettings() -> [String: Any]? {
         guard let data = try? Data(contentsOf: settingsURL) else { return nil }
         return (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
     }
 
-    private static func backup() throws {
+    static func backup() throws {
         let fm = FileManager.default
         guard fm.fileExists(atPath: settingsURL.path) else { return }
         let f = DateFormatter()
         f.dateFormat = "yyyyMMdd-HHmmss"
-        let dest = settingsURL.deletingLastPathComponent()
-            .appendingPathComponent("settings.json.backup-\(f.string(from: Date()))")
+        let base = "settings.json.backup-\(f.string(from: Date()))"
+        let folder = settingsURL.deletingLastPathComponent()
+        // Hooks and the status line can be changed in the same second (はじめに does both).
+        var dest = folder.appendingPathComponent(base)
+        var n = 2
+        while fm.fileExists(atPath: dest.path) {
+            dest = folder.appendingPathComponent("\(base)-\(n)")
+            n += 1
+        }
         try fm.copyItem(at: settingsURL, to: dest)
     }
 
-    private static func write(_ root: [String: Any]) throws {
+    static func write(_ root: [String: Any]) throws {
         try FileManager.default.createDirectory(at: settingsURL.deletingLastPathComponent(),
                                                 withIntermediateDirectories: true)
         let data = try JSONSerialization.data(withJSONObject: root,

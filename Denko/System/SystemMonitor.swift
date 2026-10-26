@@ -30,6 +30,8 @@ final class SystemMonitor: ObservableObject {
     /// Light mode (panel closed): CPU only, every 3s — just enough to drive the cat.
     /// Detailed mode (panel open): everything, every 1.5s.
     private var detailed = false
+    /// Paused while displays are asleep or the session is locked.
+    private var paused = false
     /// Seconds between samples with only the menu bar / with the panel open (user-adjustable).
     private var lightInterval: TimeInterval = 3
     private var detailedInterval: TimeInterval = 2
@@ -70,8 +72,24 @@ final class SystemMonitor: ObservableObject {
         schedule()
     }
 
+    func setPaused(_ on: Bool) {
+        guard on != paused else { return }
+        paused = on
+        if on {
+            timer?.invalidate()
+            timer = nil
+            prevTicks = nil
+            prevNet = nil
+        } else {
+            sample()
+            schedule()
+        }
+    }
+
     private func schedule() {
         timer?.invalidate()
+        timer = nil
+        guard !paused else { return }
         let interval: TimeInterval = detailed ? detailedInterval : lightInterval
         let t = Timer(timeInterval: interval, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.sample() }
@@ -221,6 +239,21 @@ final class SystemMonitor: ObservableObject {
 }
 
 enum ByteText {
+    private static let sizeFormatter: ByteCountFormatter = {
+        let f = ByteCountFormatter()
+        f.countStyle = .memory
+        f.allowsNonnumericFormatting = false
+        return f
+    }()
+
+    private static let rateFormatter: ByteCountFormatter = {
+        let f = ByteCountFormatter()
+        f.countStyle = .decimal
+        f.allowedUnits = [.useKB, .useMB, .useGB]
+        f.allowsNonnumericFormatting = false
+        return f
+    }()
+
     /// Very short rate for the menu bar: "0K", "34K", "1.2M".
     static func compactRate(_ bytesPerSec: Double) -> String {
         // Two significant digits so the text (and the menu bar image) changes less often.
@@ -236,18 +269,11 @@ enum ByteText {
     }
 
     static func size(_ bytes: Int64) -> String {
-        let f = ByteCountFormatter()
-        f.countStyle = .memory
-        f.allowsNonnumericFormatting = false
-        return f.string(fromByteCount: bytes)
+        sizeFormatter.string(fromByteCount: bytes)
     }
 
     static func rate(_ bytesPerSec: Double) -> String {
         if bytesPerSec > 0 && bytesPerSec < 1000 { return "1 KB/s 未満" }
-        let f = ByteCountFormatter()
-        f.countStyle = .decimal
-        f.allowedUnits = [.useKB, .useMB, .useGB]
-        f.allowsNonnumericFormatting = false
-        return f.string(fromByteCount: Int64(bytesPerSec)) + "/s"
+        return rateFormatter.string(fromByteCount: Int64(bytesPerSec)) + "/s"
     }
 }

@@ -3,6 +3,7 @@ import AppKit
 /// Announcements in the standard style: system type like the dashboard, not LED dots.
 /// A small square tag names the source (filled with the board color when urgent),
 /// followed by the message in the menu bar's label color.
+@MainActor
 enum TextStrip {
     struct Style {
         var height: CGFloat

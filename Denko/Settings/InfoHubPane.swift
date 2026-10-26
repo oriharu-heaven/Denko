@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// 情報連携: everything that flows into Denko — today's info, coding agents & AI, and (in the
-/// detailed settings) GitHub / RSS / Webhook. Each is a tile; the selected tile's options
+/// 情報連携: everything that flows into Denko — today's info, coding agents & AI, and
+/// GitHub / RSS / Webhook. Each is a tile; the selected tile's options
 /// open right under its group.
 struct InfoHubPane: View {
     @ObservedObject var settings: AppSettings
@@ -18,7 +18,8 @@ struct InfoHubPane: View {
     @State private var githubToken = ""
     @State private var hasGitHubToken = AppDelegate.shared.github.hasToken
     @State private var newFeed = ""
-    @State private var sessionKey = ""
+    @State private var statusLineInstalled = false
+    @State private var statusLineError: String?
     @State private var copied: String?
     @State private var lineSearch = ""
 
@@ -88,14 +89,14 @@ struct InfoHubPane: View {
             switch self {
             case .weather: return "いまの天気と、この先の雨をお知らせします。"
             case .disaster: return "気象庁の情報から、強い揺れ・津波・地元の警報をすぐに流します。"
-            case .news: return "選んだ配信元の見出しを流します。NHK の速報は常に1分ごとに確認します。"
+            case .news: return "選んだ配信元の見出しを一覧に表示します。"
             case .trends: return "いま検索が急に増えている言葉を表示します。"
             case .trains: return "見ている路線で遅延や運転見合わせが出たら、すぐに流します。"
             case .fx: return "主な通貨の参考レートと、大きな値動きをお知らせします。"
             case .claudeCode: return "許可待ち・入力待ちと、応答の完了を掲示板に流します。"
             case .codex: return "作業の完了を掲示板に流します。"
             case .otherAgents: return "フックや作業後のコマンドから、どのエージェントでもつなげられます。"
-            case .aiUsage: return "Claude・Codex・Gemini の利用枠を読み取ります。"
+            case .aiUsage: return "Claude・Codex の利用枠を表示します。"
             case .github: return "レビュー依頼やメンションを流します。"
             case .rss: return "好きなサイトの新着を流します。"
             case .webhook: return "スクリプトやショートカットから掲示板に送れます（コーディングエージェントの連携とは別です）。"
@@ -148,6 +149,7 @@ struct InfoHubPane: View {
         }
         .onAppear {
             hooksInstalled = ClaudeCodeHooks.isInstalled(endpoint: server.endpoint)
+            statusLineInstalled = ClaudeStatusLine.isInstalled(endpoint: server.endpoint)
             codexInstalled = CodexNotify.isInstalled(endpoint: server.endpoint)
         }
     }
@@ -195,7 +197,7 @@ struct InfoHubPane: View {
                         Text("防災: \(DisasterFeed.attribution)")
                         Text("ニュース: 選んだ配信元（NHK・Yahoo!ニュース・Google ニュース・BBC など）")
                         Text("トレンド: Google トレンド")
-                        Text("運行情報: JR東日本 運行情報ページ、公共交通オープンデータセンター")
+                        Text("運行情報: 公共交通オープンデータセンター")
                         Text(TrainFeed.attribution).foregroundStyle(.tertiary)
                         Text("為替: Frankfurter（欧州中央銀行の参考レート）")
                     }
@@ -390,7 +392,7 @@ struct InfoHubPane: View {
         case .disaster: return "地震・津波・\(settings.weatherPrefecture)の警報"
         case .news: return settings.newsFeed.label
         case .trends: return "Google 急上昇ワード"
-        case .trains: return settings.trainLines.isEmpty ? "\(settings.effectiveTrainRegion)の全路線" : "\(settings.trainLines.count) 路線"
+        case .trains: return settings.trainLines.isEmpty ? "路線を選んでください" : "\(settings.trainLines.count) 路線"
         case .fx: return settings.fxPairs.isEmpty ? "通貨ペア未選択" : settings.fxPairs.map { "\($0.prefix(3))/\($0.suffix(3))" }.joined(separator: "・")
         case .claudeCode, .codex: return "連携済み"
         case .otherAgents: return "Gemini CLI・Antigravity・Cursor など"
@@ -450,6 +452,7 @@ struct InfoHubPane: View {
                         if !settings.menuBarAI.contains(p) { settings.menuBarAI.append(p) }
                     }
                     else { settings.aiProviders.removeAll { $0 == p }; settings.menuBarAI.removeAll { $0 == p } }
+                    if p == .claude { setStatusLine(on) }
                 })) {
                 Text(p.name)
                 Text(p.isDetected ? "この Mac で使われています" : "この Mac では見つかりません")
@@ -458,20 +461,26 @@ struct InfoHubPane: View {
                 Text(e).font(.caption).foregroundStyle(.secondary)
             }
         }
-        if settings.showAdvanced && settings.aiProviders.contains(.claude) {
-            LabeledContent("claude.ai セッションキー") {
-                HStack {
-                    SecureField("セッションキー", text: $sessionKey,
-                                prompt: Text(claude.hasSessionKey ? "保存済み" : "任意"))
-                        .labelsHidden()
-                    Button("保存") { claude.setSessionKey(sessionKey); sessionKey = "" }
-                        .disabled(sessionKey.isEmpty)
-                    if claude.hasSessionKey { Button("削除") { claude.setSessionKey("") } }
-                }
+        if settings.aiProviders.contains(.claude) && !statusLineInstalled {
+            HStack {
+                Text("Claude Code から使用量を受け取る設定がまだです。").font(.callout)
+                Spacer()
+                Button("設定する") { setStatusLine(true) }
             }
-            note("Claude Code を使っていない場合だけ必要です。ブラウザで claude.ai にログインし、開発者ツールの Cookie にある「sessionKey」の値を貼り付けると、claude.ai の使用量を読み取ります。")
         }
-        note("ログイン情報は読み取るだけで、外部には送りません。オンにした AI はメニューバーとパネルに表示されます（メニューバータブで個別に隠せます）。")
+        if let statusLineError { Text(statusLineError).font(.caption).foregroundStyle(.secondary) }
+        note("Claude は、Claude Code がステータスラインに知らせる使用量を受け取ります（Pro・Max プラン）。そのため ~/.claude/settings.json のステータスラインを Denko の小さなスクリプトにします。もとのステータスラインはそのまま表示され、オフにすると元に戻ります（settings.json はバックアップしてから変更します）。")
+        note("Codex は、この Mac にある Codex CLI の記録を読むだけです。ログイン情報は読み取らず、外部にも送りません。")
+    }
+
+    private func setStatusLine(_ on: Bool) {
+        do {
+            if on { try ClaudeStatusLine.install(endpoint: server.endpoint) } else { try ClaudeStatusLine.uninstall() }
+            statusLineError = nil
+        } catch {
+            statusLineError = "Claude Code の設定を変更できませんでした: \(error.localizedDescription)"
+        }
+        statusLineInstalled = ClaudeStatusLine.isInstalled(endpoint: server.endpoint)
     }
 
     // MARK: - そのほか
@@ -615,13 +624,18 @@ struct InfoHubPane: View {
         LabeledContent("緊急で流すもの") {
             VStack(alignment: .trailing, spacing: 2) {
                 Text("震度5弱以上の地震")
-                Text("\(settings.weatherPrefecture)で震度3以上の地震")
+                Text("\(settings.weatherPrefecture)で震度4以上の地震")
                 Text("津波警報・注意報、噴火速報")
+            }
+            .foregroundStyle(.secondary)
+        }
+        LabeledContent("ふつうに流すもの") {
+            VStack(alignment: .trailing, spacing: 2) {
+                Text("震度4の地震、\(settings.weatherPrefecture)で震度3の地震")
                 Text("\(settings.weatherPrefecture)の気象警報・土砂災害警戒情報")
             }
             .foregroundStyle(.secondary)
         }
-        LabeledContent("ふつうに流すもの") { Text("震度4の地震").foregroundStyle(.secondary) }
         note("気象庁の情報を1分ごとに確認します。緊急地震速報（揺れる前の警報）には対応していません。流し方は「掲示板」タブで変えられます。")
     }
 
@@ -654,33 +668,50 @@ struct InfoHubPane: View {
 
     @ViewBuilder
     private var trainOptions: some View {
-        Picker("見る路線", selection: Binding(
-            get: { settings.trainLines.isEmpty },
-            set: { settings.trainLines = $0 ? [] : TrainFeed.defaultLines })) {
-            Text("地域の全路線").tag(true)
-            Text("選んだ路線だけ").tag(false)
-        }
-        if settings.trainLines.isEmpty {
-            Picker("地域", selection: Binding(
-                get: { settings.effectiveTrainRegion },
-                set: { settings.trainRegion = $0; Task { await info.refreshTrains() } })) {
-                ForEach(TrainFeed.regions, id: \.self) { Text($0).tag($0) }
-            }
-        } else {
-            linePicker
-        }
-        note("JR東日本・JR西日本・東京メトロ・都営・京王・京急・近鉄の公式の運行情報を使います（京王・京急・近鉄は会社ごとにまとめて表示）。")
-        if settings.showAdvanced { odptKeyRow }
+        watchedLines
+        linePicker
+        note("公共交通オープンデータセンターの公開データを使います。都営はそのまま、東京メトロ・横浜市営などは下のアクセストークン（無料登録）で見られます。")
+        DisclosureGroup("アクセストークン（任意）") { odptKeyRow }
     }
 
-    /// Picked lines first, then a search field, then region → company → line.
+    /// The lines being watched, each with a button to stop watching it.
+    @ViewBuilder
+    private var watchedLines: some View {
+        if settings.trainLines.isEmpty {
+            note("見る路線を下から選んでください。選んだ路線で遅れや運転見合わせが出たときだけ流します。")
+        } else {
+            LabeledContent("見ている路線（\(settings.trainLines.count)）") {
+                Button("すべて外す") { settings.trainLines = [] }.controlSize(.small)
+            }
+        }
+        ForEach(settings.trainLines, id: \.self) { name in
+            let line = info.allTrainLines.first { $0.name == name }
+            HStack {
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(name)
+                    if let line {
+                        Text("\(line.company)・\(line.status)").font(.caption).foregroundStyle(.secondary)
+                    } else if !info.allTrainLines.isEmpty {
+                        Text("公開データがない路線です（外してかまいません）")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+                Spacer()
+                Button {
+                    settings.trainLines.removeAll { $0 == name }
+                } label: {
+                    Image(systemName: "minus.circle.fill").foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help("この路線を見ない")
+                .accessibilityLabel("\(name)を見ない")
+            }
+        }
+    }
+
+    /// A search field, then region → company → line.
     @ViewBuilder
     private var linePicker: some View {
-        LabeledContent("選んだ路線（\(settings.trainLines.count)）") {
-            Text(settings.trainLines.prefix(4).joined(separator: "・") + (settings.trainLines.count > 4 ? " ほか" : ""))
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-        }
         TextField("路線を探す", text: $lineSearch, prompt: Text("路線名（例: 山手線、大阪環状線、銀座線）"))
         if info.allTrainLines.isEmpty {
             HStack(spacing: 8) {

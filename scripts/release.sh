@@ -86,9 +86,49 @@ APPCAST="$OUT/appcast.xml"
 echo "✅ $DMG"
 echo "✅ $APPCAST"
 
+echo "▶ Homebrew cask 作成"
+CASK="$OUT/denko.rb"
+cat > "$CASK" <<RUBY
+cask "denko" do
+  version "$VERSION"
+  sha256 "$(shasum -a 256 "$DMG" | cut -d' ' -f1)"
+
+  url "https://github.com/$REPO/releases/download/v#{version}/$APP_NAME-#{version}.dmg"
+  name "$APP_NAME"
+  desc "Menu bar that turns into a station LED board"
+  homepage "https://github.com/$REPO"
+
+  # アプリ自身が Sparkle で更新するので、brew upgrade では入れ替えない
+  auto_updates true
+  depends_on macos: :sonoma
+
+  app "$APP_NAME.app"
+
+  uninstall quit: "com.haru.Denko"
+
+  zap trash: [
+    "~/Library/Application Support/$APP_NAME",
+    "~/Library/Caches/com.haru.Denko",
+    "~/Library/HTTPStorages/com.haru.Denko",
+    "~/Library/Preferences/com.haru.Denko.plist",
+  ]
+end
+RUBY
+echo "✅ $CASK"
+
 if $PUBLISH; then
   echo "▶ GitHub Release"
   # appcast.xml は「最新リリース」から配信される（ベータ＝prerelease は既存ユーザーに届かない）
   gh release create "v$VERSION" "$DMG" "$APPCAST" --repo "$REPO" --title "$APP_NAME $VERSION" \
     --generate-notes $PRERELEASE
+
+  # 正式版だけ tap を更新する（ベータを brew で配ると、既存ユーザーに届いてしまう）
+  if [[ -z "$PRERELEASE" && -n "${HOMEBREW_TAP_DIR:-}" ]]; then
+    echo "▶ Homebrew tap 更新"
+    mkdir -p "$HOMEBREW_TAP_DIR/Casks"
+    cp "$CASK" "$HOMEBREW_TAP_DIR/Casks/denko.rb"
+    git -C "$HOMEBREW_TAP_DIR" add Casks/denko.rb
+    git -C "$HOMEBREW_TAP_DIR" commit -m "denko $VERSION"
+    git -C "$HOMEBREW_TAP_DIR" push -u origin HEAD
+  fi
 fi

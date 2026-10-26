@@ -128,15 +128,34 @@ final class MainStatusController: NSObject, NSPopoverDelegate, NSViewToolTipOwne
         rebuild(force: true)
     }
 
+    deinit {
+        if let m = pressMonitor { NSEvent.removeMonitor(m) }
+    }
+
     // MARK: - Observation
 
+    private var lastMenuBarConfigKey = ""
+
     private func observe() {
+        lastMenuBarConfigKey = settings.menuBarConfigKey
         // objectWillChange fires before the value changes, so hop to the next runloop turn.
         ai.objectWillChange
-            .merge(with: settings.objectWillChange, awake.objectWillChange)
+            .merge(with: awake.objectWillChange)
             .receive(on: RunLoop.main)
             .sink { [weak self] in
                 guard let self else { return }
+                self.updateSampling()
+                self.rebuild(force: false)
+                self.updateAnimation()
+            }
+            .store(in: &bag)
+        settings.objectWillChange
+            .receive(on: RunLoop.main)
+            .sink { [weak self] in
+                guard let self else { return }
+                let key = self.settings.menuBarConfigKey
+                guard key != self.lastMenuBarConfigKey else { return }
+                self.lastMenuBarConfigKey = key
                 self.updateSampling()
                 self.rebuild(force: false)
                 self.updateAnimation()
@@ -168,6 +187,7 @@ final class MainStatusController: NSObject, NSPopoverDelegate, NSViewToolTipOwne
             ws.publisher(for: name)
                 .sink { [weak self] _ in
                     self?.screensAsleep = asleep
+                    self?.updateSampling()
                     self?.updateAnimation()
                 }
                 .store(in: &bag)
@@ -188,14 +208,16 @@ final class MainStatusController: NSObject, NSPopoverDelegate, NSViewToolTipOwne
 
     /// Only sample what is actually on screen.
     private func updateSampling() {
+        monitor.setPaused(screensAsleep)
         monitor.sampleMemoryAlways = settings.showMemoryGauge
         monitor.sampleNetworkAlways = settings.showNetworkGauge
         let gauges = settings.showCPUGauge || settings.showMemoryGauge || settings.showNetworkGauge
         monitor.setIntervals(menuBar: settings.menuBarInterval, panel: settings.panelInterval)
-        // Scan apps whenever gauges are shown: the hover tooltip lists the top apps.
-        apps.configure(menuBar: gauges,
-                       menuBarNetwork: settings.showNetworkGauge,
-                       detailed: popover != nil,
+        // Scan apps for CPU/Memory when gauges are shown; only run background nettop when the
+        // top-app icon is actually displayed on the menu bar (otherwise sample on tooltip hover).
+        apps.configure(menuBar: !screensAsleep && gauges,
+                       menuBarNetwork: !screensAsleep && settings.showNetworkGauge && settings.showTopApp,
+                       detailed: !screensAsleep && popover != nil,
                        menuBarInterval: max(6, settings.menuBarInterval * 2),
                        panelInterval: settings.panelInterval)
     }
@@ -321,11 +343,15 @@ final class MainStatusController: NSObject, NSPopoverDelegate, NSViewToolTipOwne
         clockTimer = t
     }
 
-    /// Idle board showing a clock or a fixed message instead of the dashboard.
-    private func renderIdleText(button: NSStatusBarButton) {
+    private static let clockFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "H:mm"
-        let text = settings.boardIdle == .clock ? f.string(from: Date())
+        return f
+    }()
+
+    /// Idle board showing a clock or a fixed message instead of the dashboard.
+    private func renderIdleText(button: NSStatusBarButton) {
+        let text = settings.boardIdle == .clock ? Self.clockFormatter.string(from: Date())
             : (settings.idleMessage.isEmpty ? "DENKO" : String(settings.idleMessage.prefix(40)))
         let m = LEDRenderer.mask(for: text)
         let width = CGFloat(max(m.columns + 8, 26)) * LEDRenderer.pitch
@@ -437,6 +463,7 @@ final class MainStatusController: NSObject, NSPopoverDelegate, NSViewToolTipOwne
             if !t.isEmpty { s += "\n" + t }
             return s + "\n" + hint
         case .network:
+            apps.sampleNetworkIfNeeded()
             var s = "受信 \(ByteText.rate(monitor.netDown))　送信 \(ByteText.rate(monitor.netUp))"
             let t = top(apps.topNetwork) { ByteText.rate($0.net) }
             if !t.isEmpty { s += "\n" + t }
@@ -568,14 +595,14 @@ final class MainStatusController: NSObject, NSPopoverDelegate, NSViewToolTipOwne
         beginAnnouncement(msg)
     }
 
-    /// While a notice is on the board: open its link, or close it.
+    /// While a notice is on the board: open its link / coding agent host, or close it.
     private func announcementMenuItems() -> [NSMenuItem] {
         guard let msg = announcing else { return [] }
         var items: [NSMenuItem] = []
         let header = NSMenuItem(title: "流れているお知らせ：\(msg.title.prefix(24))", action: nil, keyEquivalent: "")
         items.append(header)
-        if msg.url != nil {
-            let open = NSMenuItem(title: "記事を開く", action: #selector(openAnnouncement), keyEquivalent: "")
+        if msg.canOpen {
+            let open = NSMenuItem(title: msg.openLabel, action: #selector(openAnnouncement), keyEquivalent: "")
             open.target = self
             items.append(open)
         }
@@ -586,7 +613,7 @@ final class MainStatusController: NSObject, NSPopoverDelegate, NSViewToolTipOwne
     }
 
     @objc private func openAnnouncement() {
-        if let url = announcing?.url { NSWorkspace.shared.open(url) }
+        announcing?.open()
         closeAnnouncement()
     }
 
@@ -613,10 +640,9 @@ final class MainStatusController: NSObject, NSPopoverDelegate, NSViewToolTipOwne
             contentLayer.isHidden = !fullFrames.isEmpty
             characterLayer.isHidden = characterFrames.isEmpty
             announcing = msg
-            // Click: open the article if the message links somewhere (news etc.), otherwise
-            // the board just closes.
+            // Click: open the article or jump to the coding agent's terminal/editor if available.
             fullBar.onClick = {
-                if let url = msg.url { NSWorkspace.shared.open(url) }
+                msg.open()
             }
             fullBar.textStyle = !isLED
             fullBar.play(msg, accent: settings.boardNSColor, speed: settings.tickerSpeed * settings.urgentSpeed,

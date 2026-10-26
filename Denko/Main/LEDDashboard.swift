@@ -2,6 +2,7 @@ import AppKit
 
 /// The dashboard drawn natively on the 16-row LED board (frog, pies, network, AI ring),
 /// laid out on the dot grid instead of down-sampling the normal icon, so it stays legible.
+@MainActor
 enum LEDDashboard {
     struct Output {
         let content: CGImage?          // everything except the frog (lit dots only)
@@ -16,10 +17,11 @@ enum LEDDashboard {
     private static var gauge: Int { (rows - 2) | 1 }
     /// Top row of an 8-row line of small text, vertically centred.
     private static var midRow: Int { (rows - 8) / 2 }
-    @MainActor private static var frogCache: (color: NSColor, rows: Int, style: Int, kind: CharacterKind, frames: [CGImage])?
+    private static var frogCache: (color: NSColor, rows: Int, style: Int, kind: CharacterKind, frames: [CGImage])?
     private static let pad = 2         // empty columns at both ends
 
     /// Dot canvas: brightness per dot (0 = off, 0.3 = dim, 1 = lit), row 0 at the top.
+    @MainActor
     private struct Canvas {
         var columns: Int
         var levels: [CGFloat]
@@ -30,7 +32,6 @@ enum LEDDashboard {
         }
     }
 
-    @MainActor
     static func render(_ c: IconContent, accent: NSColor) -> Output {
         // 1. Measure each piece in columns.
         enum Piece { case frog, pie(String, Int, IconRegion), net(String, String), ai(AIGauge, String?) }

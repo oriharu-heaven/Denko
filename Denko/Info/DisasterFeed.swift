@@ -67,10 +67,10 @@ final class DisasterFeed {
         let level = Self.intensityValue(maxInt)
         let prefs = Self.all("Name", after: "<Pref>", in: xml)
         let local = prefs.contains(prefecture)
-        // 震度5弱以上 anywhere, or 3以上 where the user is → strong; 震度4 → other; below → nothing.
+        // 震度5弱以上 anywhere, or 4以上 where the user is → strong; 震度4, or 3 locally → other.
         let kind: NoticeKind
-        if level >= 5 || (local && level >= 3) { kind = .quakeStrong }
-        else if level >= 4 { kind = .quakeOther }
+        if level >= 5 || (local && level >= 4) { kind = .quakeStrong }
+        else if level >= 4 || (local && level >= 3) { kind = .quakeOther }
         else { return nil }
         guard seenEvents.insert(event).inserted else { return nil }
         let area = Self.first("Name", after: "<Hypocenter>", in: xml)

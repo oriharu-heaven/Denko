@@ -117,11 +117,13 @@ struct GeneralPane: View {
                 Text("アップデート")
             }
             Section {
-                Toggle(isOn: $settings.showAdvanced) {
-                    Text("詳細な設定を表示")
-                    Text("更新頻度・ドットの細かい見た目・アクセストークンなど、細かい項目も表示します。")
+                Toggle(isOn: $settings.compatibleCatRendering) {
+                    Text("互換描画")
+                    Text("メニューバーのキャラクターが表示されないときだけオンにしてください（負荷が少し上がります）。")
                 }
                 Button("はじめにの画面をもう一度表示…") { AppDelegate.shared.showOnboarding() }
+            } header: {
+                Text("困ったとき")
             }
         }
         .formStyle(.grouped)
@@ -184,6 +186,7 @@ struct MenuBarPane: View {
                         ForEach(CharacterKind.allCases) { Text($0.label).tag($0) }
                     }
                     .pickerStyle(.segmented)
+                    Toggle("バッテリー駆動中は動きを止める", isOn: $settings.pauseOnBattery)
                 }
                 Toggle(isOn: $settings.openTabAtClick) {
                     Text("クリックした部分のタブを開く")
@@ -237,12 +240,10 @@ struct MenuBarPane: View {
                     Picker("リング横の数値", selection: $settings.claudeNumbers) {
                         ForEach(ClaudeNumbers.allCases) { Text($0.label).tag($0) }
                     }
-                    if settings.showAdvanced {
-                        Picker("AI の更新間隔", selection: Binding(
-                            get: { AppDelegate.shared.ai.claude.refreshMinutes },
-                            set: { AppDelegate.shared.ai.claude.refreshMinutes = $0 })) {
-                            ForEach([1, 2, 5, 10, 15, 30], id: \.self) { Text("\($0)分").tag($0) }
-                        }
+                    Picker("更新間隔", selection: Binding(
+                        get: { AppDelegate.shared.ai.claude.refreshMinutes },
+                        set: { AppDelegate.shared.ai.claude.refreshMinutes = $0 })) {
+                        ForEach([1, 2, 5, 10, 15, 30], id: \.self) { Text("\($0)分").tag($0) }
                     }
                 }
             } header: {
@@ -252,46 +253,6 @@ struct MenuBarPane: View {
                     .font(.caption).foregroundStyle(.secondary)
             }
 
-            if settings.showAdvanced {
-            Section {
-                Picker("メニューバー", selection: $settings.menuBarInterval) {
-                    Text("1秒（頻繁）").tag(1.0)
-                    Text("2秒").tag(2.0)
-                    Text("3秒（標準）").tag(3.0)
-                    Text("5秒").tag(5.0)
-                    Text("10秒（省電力）").tag(10.0)
-                }
-                Picker("パネルを開いているとき", selection: $settings.panelInterval) {
-                    Text("0.5秒（非常に頻繁）").tag(0.5)
-                    Text("1秒（頻繁）").tag(1.0)
-                    Text("2秒（標準）").tag(2.0)
-                    Text("5秒").tag(5.0)
-                }
-            } header: {
-                Text("更新頻度")
-            } footer: {
-                Text("短いほど反応が早くなり、そのぶん負荷が少し上がります。一般タブの「動作の軽さ」を変えると、ここも合わせて変わります。")
-                    .font(.caption).foregroundStyle(.secondary)
-            }
-
-            Section {
-                Picker("アニメーション", selection: $settings.animationMode) {
-                    ForEach(AnimationMode.allCases) { Text($0.label).tag($0) }
-                }
-                Toggle("バッテリー駆動中は止める", isOn: $settings.pauseOnBattery)
-                    .disabled(settings.animationMode == .still)
-                Toggle(isOn: $settings.compatibleCatRendering) {
-                    Text("互換描画")
-                    Text("キャラクターが表示されないときだけオンにしてください（負荷が少し上がります）。")
-                }
-            } header: {
-                Text("キャラクターのアニメーション")
-            } footer: {
-                Text("フルスクリーン中・画面スリープ中・低電力モードでは自動で止まります。")
-                    .font(.caption).foregroundStyle(.secondary)
-            }
-            .disabled(!settings.showCharacter)
-            }
         }
         .formStyle(.grouped)
     }

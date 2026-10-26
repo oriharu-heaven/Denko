@@ -118,7 +118,7 @@ struct MainPanel: View {
                     }
                     .menuStyle(.borderlessButton)
                     .fixedSize()
-                    .help("止めている間も、「緊急」にしたお知らせ（地震・津波・警報・見ている路線の遅延など）は流れます")
+                    .help("止めている間も、「緊急」にしたお知らせ（初期設定では強い地震・津波）は流れます")
                 }
             }
             .buttonStyle(.borderless)
@@ -143,7 +143,7 @@ private struct PanelTabBar: View {
 
     var body: some View {
         HStack(spacing: 2) {
-            ForEach(tabs) { t in
+            ForEach(Array(tabs.enumerated()), id: \.element.id) { index, t in
                 let on = t == selection
                 Button { selection = t } label: {
                     VStack(spacing: 2) {
@@ -159,6 +159,8 @@ private struct PanelTabBar: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .keyboardShortcut(KeyEquivalent(Character("\(index + 1)")), modifiers: .command)
+                .help("\(t.label)（⌘\(index + 1)）")
                 .accessibilityLabel(t.label)
                 .accessibilityAddTraits(on ? .isSelected : [])
             }

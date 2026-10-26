@@ -403,9 +403,13 @@ final class StorageAnalyzer: ObservableObject {
         return folder
     }
 
-    private static func relative(_ date: Date) -> String {
+    private static let relativeFormatter: RelativeDateTimeFormatter = {
         let f = RelativeDateTimeFormatter()
         f.locale = Locale(identifier: "ja_JP")
-        return f.localizedString(for: date, relativeTo: Date())
+        return f
+    }()
+
+    private static func relative(_ date: Date) -> String {
+        relativeFormatter.localizedString(for: date, relativeTo: Date())
     }
 }
