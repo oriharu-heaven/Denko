@@ -50,9 +50,6 @@ struct BoardLookPane: View {
                 Toggle("緊急のお知らせを点滅させる", isOn: $settings.urgentBlink)
             } header: {
                 Text("流し方")
-            } footer: {
-                Text("メニューバー全体に流れている間も、マウスを近づけると掲示板がよけて、下のメニューを操作できます。")
-                    .font(.caption).foregroundStyle(.secondary)
             }
 
             Section {
@@ -96,9 +93,6 @@ struct BoardLookPane: View {
                 .pickerStyle(.segmented)
             } header: {
                 Text("見た目")
-            } footer: {
-                Text("光の色はパネルや設定の強調にも使います。盤面は文字が読みやすいよう、選んだ色を暗くして使います。")
-                    .font(.caption).foregroundStyle(.secondary)
             }
 
             NoticeLevelsSection(settings: settings)
@@ -125,9 +119,6 @@ struct BoardLookPane: View {
                 Toggle("全画面のアプリ（発表・動画など）の間は緊急だけ流す", isOn: $settings.quietInFullScreen)
             } header: {
                 Text("集中モード")
-            } footer: {
-                Text("会議の間だけ静かにしたいときは、パネル下か右クリックの「お知らせを止める」がいちばん手軽です。集中モードに Denko のフィルタを追加すると、集中モードごとに細かく切り替えられます。")
-                    .font(.caption).foregroundStyle(.secondary)
             }
 
 
@@ -158,9 +149,6 @@ private struct NoticeLevelsSection: View {
             }
         } header: {
             Text("お知らせの種類ごとの流し方")
-        } footer: {
-            Text("「緊急」はメニューバー全体で目立たせて、「ふつう」は通常どおり流し、「流さない」は履歴にだけ残します。")
-                .font(.caption).foregroundStyle(.secondary)
         }
     }
 }

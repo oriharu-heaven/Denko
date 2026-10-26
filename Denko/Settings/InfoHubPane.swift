@@ -162,9 +162,6 @@ struct InfoHubPane: View {
                 locationRow
             } header: {
                 Text("地域")
-            } footer: {
-                Text("天気と防災情報に使います。")
-                    .font(.caption).foregroundStyle(.secondary)
             }
 
             Section("今日の情報") {
@@ -177,9 +174,6 @@ struct InfoHubPane: View {
                     ForEach([5, 15, 30, 60], id: \.self) { Text("\($0)分ごと").tag($0) }
                 }
                 Button("今すぐ流す") { info.roll() }
-            } footer: {
-                Text("オンにした情報を、掲示板に順番に流します。")
-                    .font(.caption).foregroundStyle(.secondary)
             }
 
             Section("コーディング・AI") {
@@ -265,15 +259,16 @@ struct InfoHubPane: View {
                     SettingsIcon(symbol: f.filledSymbol, color: f.tint)
                     VStack(alignment: .leading, spacing: 1) {
                         Text(f.title)
-                        Text(on || f.isGuide ? summary(f) : offText(f))
-                            .font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                        if let caption = on || f.isGuide ? summary(f) : offText(f) {
+                            Text(caption).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                        }
                     }
                     Spacer(minLength: 0)
                 }
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("\(f.title)、\(on || f.isGuide ? summary(f) : offText(f))")
+            .accessibilityLabel([f.title, on || f.isGuide ? summary(f) : offText(f)].compactMap { $0 }.joined(separator: "、"))
             .accessibilityHint("詳しい設定を開きます")
             if !f.isGuide {
                 Toggle(f.title, isOn: isOn(f)).toggleStyle(.switch).labelsHidden().controlSize(.small)
@@ -313,14 +308,11 @@ struct InfoHubPane: View {
                     case .weather: weatherOptions
                     case .disaster: disasterOptions
                     case .news: newsOptions
-                    case .trends:
-                        note("Google トレンドの急上昇ワードを使います（X のトレンドは公式に取得できないため使っていません）。")
+                    case .trends: EmptyView()
                     case .trains: trainOptions
                     case .fx: fxOptions
-                    case .claudeCode:
-                        note("連携すると ~/.claude/settings.json にフックを追加します。変更前に同じフォルダへバックアップを作ります。")
-                    case .codex:
-                        note("連携すると ~/.codex/config.toml に notify の設定を1行追加します。すでに別の notify 設定がある場合は上書きしません。")
+                    case .claudeCode: LabeledContent("変更するファイル", value: "~/.claude/settings.json")
+                    case .codex: LabeledContent("変更するファイル", value: "~/.codex/config.toml")
                     case .otherAgents: otherAgentsOptions
                     case .aiUsage: aiOptions
                     case .github: githubOptions
@@ -385,21 +377,17 @@ struct InfoHubPane: View {
         }
     }
 
-    private func summary(_ f: Feed) -> String {
+    /// What's on, chosen or wrong — nil when the row's title and switch already say it.
+    private func summary(_ f: Feed) -> String? {
         switch f {
         case .weather:
             return info.weather.map { "\(settings.weatherPlace)　\(Int($0.temperature.rounded()))° \(WeatherCode.text($0.code))" } ?? settings.weatherPlace
-        case .disaster: return "地震・津波・\(settings.weatherPrefecture)の警報"
+        case .disaster, .trends, .claudeCode, .codex, .otherAgents, .github, .webhook: return nil
         case .news: return settings.newsFeed.label
-        case .trends: return "Google 急上昇ワード"
         case .trains: return settings.trainLines.isEmpty ? "路線を選んでください" : "\(settings.trainLines.count) 路線"
         case .fx: return settings.fxPairs.isEmpty ? "通貨ペア未選択" : settings.fxPairs.map { "\($0.prefix(3))/\($0.suffix(3))" }.joined(separator: "・")
-        case .claudeCode, .codex: return "連携済み"
-        case .otherAgents: return "Gemini CLI・Antigravity・Cursor など"
         case .aiUsage: return settings.aiProviders.map(\.name).joined(separator: "・")
-        case .github: return "レビュー依頼・メンション"
         case .rss: return "\(settings.rssFeeds.count) 件のフィード"
-        case .webhook: return "この Mac から受け付け"
         }
     }
 
@@ -413,12 +401,12 @@ struct InfoHubPane: View {
         }
     }
 
-    private func offText(_ f: Feed) -> String {
+    private func offText(_ f: Feed) -> String? {
         switch f {
         case .claudeCode: return AIProvider.claude.isDetected ? "未連携" : "この Mac では見つかりません"
         case .codex: return CodexNotify.isAvailable ? "未連携" : "この Mac では見つかりません"
         case .github: return hasGitHubToken ? "オフ" : "トークンが未設定"
-        default: return "オフ"
+        default: return nil
         }
     }
 
@@ -429,7 +417,6 @@ struct InfoHubPane: View {
 
     private var otherAgentsOptions: some View {
         VStack(alignment: .leading, spacing: 8) {
-            note("Gemini CLI・Antigravity・Cursor などは、フックや作業後に実行するコマンドから Denko に送れます。")
             HStack {
                 Button(copyLabel("受け付け用の URL をコピー", server.endpoint)) { copy(server.endpoint) }
                 Button(copyLabel("完了を送るコマンドをコピー", "curl -s -X POST '\(server.endpoint)?source=agent&agent=Gemini&event=done'")) {
@@ -455,22 +442,19 @@ struct InfoHubPane: View {
                     if p == .claude { setStatusLine(on) }
                 })) {
                 Text(p.name)
-                Text(p.isDetected ? "この Mac で使われています" : "この Mac では見つかりません")
             }
+            .disabled(!p.isDetected && !settings.aiProviders.contains(p))
             if settings.aiProviders.contains(p), let e = ai.errors[p] {
                 Text(e).font(.caption).foregroundStyle(.secondary)
             }
         }
-        if settings.aiProviders.contains(.claude) && !statusLineInstalled {
-            HStack {
-                Text("Claude Code から使用量を受け取る設定がまだです。").font(.callout)
-                Spacer()
-                Button("設定する") { setStatusLine(true) }
+        if settings.aiProviders.contains(.claude) {
+            LabeledContent("Claude Code のステータスライン") {
+                if statusLineInstalled { Text("連携済み").foregroundStyle(.secondary) }
+                else { Button("連携する") { setStatusLine(true) } }
             }
         }
         if let statusLineError { Text(statusLineError).font(.caption).foregroundStyle(.secondary) }
-        note("Claude は、Claude Code がステータスラインに知らせる使用量を受け取ります（Pro・Max プラン）。そのため ~/.claude/settings.json のステータスラインを Denko の小さなスクリプトにします。もとのステータスラインはそのまま表示され、オフにすると元に戻ります（settings.json はバックアップしてから変更します）。")
-        note("Codex は、この Mac にある Codex CLI の記録を読むだけです。ログイン情報は読み取らず、外部にも送りません。")
     }
 
     private func setStatusLine(_ on: Bool) {
@@ -506,7 +490,6 @@ struct InfoHubPane: View {
                     }
                 }
             }
-            note("notifications 権限のある Personal Access Token を入れると、レビュー依頼やメンションが流れます。キーチェーンに保存されます。")
         }
     }
 
@@ -547,7 +530,6 @@ struct InfoHubPane: View {
                 Spacer()
                 Link("やり方を見る", destination: Integrations.docs(anchor: nil))
             }
-            note("この Mac の中からだけ受け付けます（127.0.0.1）。オフにしても、Claude Code・Codex などコーディングエージェントからのお知らせは届きます。")
         }
     }
 
@@ -615,7 +597,6 @@ struct InfoHubPane: View {
                     }
                 }
             }
-            note("雨が近づくと掲示板でお知らせします。地域は前の画面の「地域」で変えられます。")
         }
     }
 
@@ -636,7 +617,7 @@ struct InfoHubPane: View {
             }
             .foregroundStyle(.secondary)
         }
-        note("気象庁の情報を1分ごとに確認します。緊急地震速報（揺れる前の警報）には対応していません。流し方は「掲示板」タブで変えられます。")
+        note("緊急地震速報には対応していません")
     }
 
     @ViewBuilder
@@ -670,15 +651,13 @@ struct InfoHubPane: View {
     private var trainOptions: some View {
         watchedLines
         linePicker
-        note("公共交通オープンデータセンターの公開データを使います。都営はそのまま、東京メトロ・横浜市営などは下のアクセストークン（無料登録）で見られます。")
-        DisclosureGroup("アクセストークン（任意）") { odptKeyRow }
+        DisclosureGroup("東京メトロ・横浜市営など") { odptKeyRow }
     }
 
     /// The lines being watched, each with a button to stop watching it.
     @ViewBuilder
     private var watchedLines: some View {
         if settings.trainLines.isEmpty {
-            note("見る路線を下から選んでください。選んだ路線で遅れや運転見合わせが出たときだけ流します。")
         } else {
             LabeledContent("見ている路線（\(settings.trainLines.count)）") {
                 Button("すべて外す") { settings.trainLines = [] }.controlSize(.small)
@@ -692,7 +671,7 @@ struct InfoHubPane: View {
                     if let line {
                         Text("\(line.company)・\(line.status)").font(.caption).foregroundStyle(.secondary)
                     } else if !info.allTrainLines.isEmpty {
-                        Text("公開データがない路線です（外してかまいません）")
+                        Text("公開データなし")
                             .font(.caption).foregroundStyle(.secondary)
                     }
                 }
@@ -807,7 +786,6 @@ struct InfoHubPane: View {
             Text("流さない").tag(0.0)
             ForEach([0.5, 1.0, 2.0], id: \.self) { Text(String(format: "前日比 %.1f%% 以上", $0)).tag($0) }
         }
-        note("欧州中央銀行の参考レート（営業日ごとに1回更新）を使います。")
     }
 
     // MARK: - Small parts

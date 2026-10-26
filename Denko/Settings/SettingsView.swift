@@ -65,9 +65,6 @@ struct GeneralPane: View {
                 .pickerStyle(.segmented)
             } header: {
                 Text("パフォーマンス")
-            } footer: {
-                Text(settings.performance.detail + "地震・津波の情報は、どの設定でも1分ごとに確認します。")
-                    .font(.caption).foregroundStyle(.secondary)
             }
             Section {
                 Toggle("ログイン時に起動", isOn: $launchAtLogin)
@@ -85,7 +82,7 @@ struct GeneralPane: View {
                 }
             }
             Section {
-                Picker("ストレージの分析", selection: $settings.storageMode) {
+                Picker("分析", selection: $settings.storageMode) {
                     ForEach(StorageMode.allCases) { Text($0.label).tag($0) }
                 }
                 if settings.storageMode == .full {
@@ -95,16 +92,11 @@ struct GeneralPane: View {
                 }
             } header: {
                 Text("ストレージ")
-            } footer: {
-                Text(settings.storageMode == .full
-                     ? "書類・デスクトップ・ダウンロードや他のアプリのデータも調べるため、macOS がアクセスの確認を出します。システム設定 → プライバシーとセキュリティ → フルディスクアクセス で Denko をオンにすると、確認が出なくなります。"
-                     : "「かんたん」はアクセスの確認が出ない範囲（アプリ・キャッシュ・開発ツールなど）だけを調べます。「使わない」にするとパネルのディスクのタブを隠します。")
-                    .font(.caption).foregroundStyle(.secondary)
             }
             Section {
-                Toggle("アップデートを自動で確認", isOn: Binding(
+                Toggle("自動で確認", isOn: Binding(
                     get: { updater.automaticallyChecks }, set: { updater.automaticallyChecks = $0 }))
-                Toggle("アップデートを自動でダウンロード", isOn: Binding(
+                Toggle("自動でダウンロード", isOn: Binding(
                     get: { updater.automaticallyDownloads }, set: { updater.automaticallyDownloads = $0 }))
                     .disabled(!updater.automaticallyChecks)
                 HStack {
@@ -117,10 +109,7 @@ struct GeneralPane: View {
                 Text("アップデート")
             }
             Section {
-                Toggle(isOn: $settings.compatibleCatRendering) {
-                    Text("互換描画")
-                    Text("メニューバーのキャラクターが表示されないときだけオンにしてください（負荷が少し上がります）。")
-                }
+                Toggle("キャラクターを互換描画にする", isOn: $settings.compatibleCatRendering)
                 Button("はじめにの画面をもう一度表示…") { AppDelegate.shared.showOnboarding() }
             } header: {
                 Text("困ったとき")
@@ -151,36 +140,19 @@ struct MenuBarPane: View {
                     ForEach(DisplayStyle.allCases) { Text($0.label).tag($0) }
                 }
                 .pickerStyle(.segmented)
-            } footer: {
-                Text("「アイコン」はふつうのメニューバーアイコンで、「電光掲示板」は使用状況も掲示板のドットで表示します。お知らせはどちらでも掲示板で流れます。")
-                    .font(.caption).foregroundStyle(.secondary)
-            }
-
-            Section {
-                Picker("お知らせがないとき", selection: $settings.boardIdle) {
-                    ForEach(BoardIdle.allCases) { Text($0.label).tag($0) }
-                }
-                .pickerStyle(.segmented)
-                .disabled(settings.displayStyle != .led)
-                if settings.boardIdle == .message {
-                    TextField("ひとこと", text: $settings.idleMessage, prompt: Text("DENKO"))
-                }
-            } header: {
-                Text("待機中の表示")
-            } footer: {
                 if settings.displayStyle == .led {
-                    Text("「Mac の使用状況」は CPU・メモリなどの使用量を掲示板に映します。")
-                        .font(.caption).foregroundStyle(.secondary)
-                } else {
-                    Text("表示スタイルが「電光掲示板」のときに使えます。").font(.caption).foregroundStyle(.secondary)
+                    Picker("お知らせがないとき", selection: $settings.boardIdle) {
+                        ForEach(BoardIdle.allCases) { Text($0.label).tag($0) }
+                    }
+                    .pickerStyle(.segmented)
+                    if settings.boardIdle == .message {
+                        TextField("ひとこと", text: $settings.idleMessage, prompt: Text("DENKO"))
+                    }
                 }
             }
 
             Section {
-                Toggle(isOn: $settings.showCharacter) {
-                    Text("キャラクター")
-                    Text(settings.character.motion)
-                }
+                Toggle("キャラクター", isOn: $settings.showCharacter)
                 if settings.showCharacter {
                     Picker("種類", selection: $settings.character) {
                         ForEach(CharacterKind.allCases) { Text($0.label).tag($0) }
@@ -188,12 +160,7 @@ struct MenuBarPane: View {
                     .pickerStyle(.segmented)
                     Toggle("バッテリー駆動中は動きを止める", isOn: $settings.pauseOnBattery)
                 }
-                Toggle(isOn: $settings.openTabAtClick) {
-                    Text("クリックした部分のタブを開く")
-                    Text(settings.openTabAtClick
-                         ? "CPU・メモリ・通信・AI のどこをクリックしたかで、パネルの対応するタブが開きます。"
-                         : "どこをクリックしても、前回見ていたタブで開きます。")
-                }
+                Toggle("クリックした部分のタブを開く", isOn: $settings.openTabAtClick)
             } header: {
                 Text("メニューバーに表示する情報")
             }
@@ -208,21 +175,15 @@ struct MenuBarPane: View {
                 .disabled(!settings.showCPUGauge && !settings.showMemoryGauge)
                 Toggle("数値（%）も表示", isOn: $settings.gaugeNumbers)
                     .disabled(!settings.showCPUGauge && !settings.showMemoryGauge)
-                Toggle(isOn: $settings.showTopApp) {
-                    Text("いちばん使っているアプリのアイコン")
-                    Text("CPU・メモリ・通信の横に、いちばん使っているアプリを表示します。")
-                }
+                Toggle("いちばん使っているアプリ", isOn: $settings.showTopApp)
                 Toggle("アプリアイコンをカラーで表示", isOn: $settings.colorAppIcons)
                     .disabled(!settings.showTopApp)
             } header: {
                 Text("Mac 全体の使用状況")
             }
 
+            if !settings.aiProviders.isEmpty {
             Section {
-                if settings.aiProviders.isEmpty {
-                    Text("AI の使用量は「情報連携」タブの「AI の使用量」でオンにできます。")
-                        .font(.callout).foregroundStyle(.secondary)
-                }
                 ForEach(settings.aiProviders) { p in
                     Toggle(isOn: Binding(
                         get: { settings.menuBarAI.contains(p) },
@@ -232,15 +193,16 @@ struct MenuBarPane: View {
                         })) {
                         HStack(spacing: 6) {
                             ProviderMarkView(provider: p, color: settings.accent.color).frame(width: 14, height: 14)
-                            Text("\(p.name) を表示")
+                            Text(p.name)
                         }
                     }
                 }
-                if !settings.aiProviders.isEmpty {
-                    Picker("リング横の数値", selection: $settings.claudeNumbers) {
-                        ForEach(ClaudeNumbers.allCases) { Text($0.label).tag($0) }
-                    }
-                    Picker("更新間隔", selection: Binding(
+                Picker("リング横の数値", selection: $settings.claudeNumbers) {
+                    ForEach(ClaudeNumbers.allCases) { Text($0.label).tag($0) }
+                }
+                // Claude arrives with every Claude Code reply; only Codex's logs are re-read.
+                if settings.aiProviders.contains(.codex) {
+                    Picker("Codex の更新間隔", selection: Binding(
                         get: { AppDelegate.shared.ai.claude.refreshMinutes },
                         set: { AppDelegate.shared.ai.claude.refreshMinutes = $0 })) {
                         ForEach([1, 2, 5, 10, 15, 30], id: \.self) { Text("\($0)分").tag($0) }
@@ -248,9 +210,7 @@ struct MenuBarPane: View {
                 }
             } header: {
                 Text("AI の使用量")
-            } footer: {
-                Text("オンにした AI を、メニューバーとパネルに表示します。リングの外側は短い枠（5時間など）、内側は長い枠（1週間など）です。")
-                    .font(.caption).foregroundStyle(.secondary)
+            }
             }
 
         }
@@ -317,18 +277,12 @@ private struct AwakePane: View {
         Form {
             Section {
                 LabeledContent("現在の状態", value: awake.remainingText())
-                Picker("ワンクリックで防止する時間", selection: $settings.keepAwakeDefaultMinutes) {
+                Picker("⌥クリックで防止する時間", selection: $settings.keepAwakeDefaultMinutes) {
                     ForEach(SleepPreventer.durations, id: \.self) { Text(SleepPreventer.label(minutes: $0)).tag($0) }
                 }
-            } footer: {
-                Text("メニューバーのアイコンを ⌥クリックすると、この時間でオン / オフを切り替えます。")
-                    .font(.caption).foregroundStyle(.secondary)
             }
             Section {
-                Toggle(isOn: $settings.allowDisplaySleep) {
-                    Text("ディスプレイのスリープは許可する")
-                    Text("画面は消えますが、Mac 本体はスリープしません。")
-                }
+                Toggle("ディスプレイのスリープは許可する", isOn: $settings.allowDisplaySleep)
                 .onChange(of: settings.allowDisplaySleep) { _, _ in awake.reapplyIfActive() }
                 Picker("バッテリー残量で自動解除", selection: $settings.keepAwakeBatteryLimit) {
                     Text("しない").tag(0)
@@ -354,14 +308,6 @@ private struct HiderPane: View {
                 if !MenuBarHider.isModernMenuBar {
                     Toggle("「常に隠す」セクションを使う", isOn: $settings.alwaysHiddenEnabled)
                 }
-            } footer: {
-                if MenuBarHider.isModernMenuBar {
-                    Text("macOS 26 以降は、アクセシビリティを許可したときだけ隠します（アイコンの正確な位置が必要なため）。隠すときもアプリのメニューの右端までしか広げないので、メニューが欠けることはありません。入りきらない項目は macOS の「»」メニューに入ります。")
-                        .font(.caption).foregroundStyle(.secondary)
-                } else {
-                    Text("‹ をクリックで「隠す」項目を表示、⌥クリックで「常に隠す」項目も表示します。")
-                        .font(.caption).foregroundStyle(.secondary)
-                }
             }
 
             Group {
@@ -385,9 +331,6 @@ private struct HiderPane: View {
                     .disabled(!settings.autoArrange)
                 } header: {
                     Text("自動配置")
-                } footer: {
-                    Text("アプリがメニューバーに項目を出したとき、上の一覧で決めた場所へ移動します。")
-                        .font(.caption).foregroundStyle(.secondary)
                 }
             }
             .disabled(!settings.hiderEnabled)
@@ -404,12 +347,10 @@ private struct HiderPane: View {
     private var itemsSection: some View {
         Section {
             if !hider.isTrusted {
-                HStack(alignment: .firstTextBaseline) {
-                    Image(systemName: "hand.raised")
-                    Text("項目の一覧と移動にはアクセシビリティの許可が必要です。")
-                        .font(.callout)
-                    Spacer()
+                LabeledContent {
                     Button("許可…") { hider.requestAccessibility() }
+                } label: {
+                    Label("アクセシビリティ", systemImage: "hand.raised")
                 }
             } else if hider.items.isEmpty {
                 Text("項目が見つかりません").foregroundStyle(.secondary)
@@ -445,7 +386,7 @@ private struct HiderPane: View {
             }
             .controlSize(.small)
         } footer: {
-            Text("選ぶとその場で ⌘ドラッグ相当の操作で移動します（移動中はマウスに触れないでください）。時計など一部のシステム項目は動かせません。")
+            Text("移動中はマウスに触れないでください")
                 .font(.caption).foregroundStyle(.secondary)
         }
         .disabled(hider.isArranging)

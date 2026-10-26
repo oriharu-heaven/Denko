@@ -15,7 +15,7 @@ final class UsageStore: ObservableObject {
     }
 
     var lastError: String? {
-        snapshot == nil ? "Claude Code を使うと表示されます（Pro・Max プランのとき、Claude Code が使用量を知らせます）。" : nil
+        snapshot == nil ? "まだ届いていません" : nil
     }
 
     private static let storeKey = "claudeStatusLineUsage"

@@ -30,7 +30,7 @@ struct OnboardingView: View {
                     .resizable()
                     .frame(width: 72, height: 72)
                 Text("Denko へようこそ").font(.title.weight(.semibold))
-                Text("メニューバーが小さな電光掲示板になります。\n流したいものを選んでください。あとから設定で変えられます。")
+                Text("流したいものを選んでください")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -43,28 +43,23 @@ struct OnboardingView: View {
                     // Asked up front: weather and disaster info both depend on it, and a grey
                     // placeholder alone read as if it were already filled in.
                     LabeledContent {
-                        TextField("住んでいる地域", text: $c.place, prompt: Text("例: 渋谷区、大阪市"))
+                        TextField("住んでいる地域", text: $c.place, prompt: Text(settings.weatherPlace))
                             .textFieldStyle(.roundedBorder)
                             .labelsHidden()
                             .frame(width: 200)
                     } label: {
                         Text("住んでいる地域")
-                        Text("空欄のときは「\(settings.weatherPlace)」").font(.caption).foregroundStyle(.secondary)
                     }
-                    row("cloud.sun.fill", .blue, "天気とニュース", "天気・雨の予報・ニュース速報・話題のワード", $c.today)
-                    row("tram.fill", .green, "電車の運行情報", "JR・地下鉄・私鉄の遅延（関東・関西など。路線はあとで選べます）", $c.trains)
-                    row("cpu", .gray, "Mac の状態", "CPU・メモリ・通信と、使っているアプリ", $c.mac)
+                    row("cloud.sun.fill", .blue, "天気とニュース", $c.today)
+                    row("tram.fill", .green, "電車の運行情報", $c.trains)
+                    row("cpu", .gray, "Mac の状態", $c.mac)
                 }
                 Section {
-                    row("terminal.fill", .brown, "コーディングエージェント",
-                        agentsConnected ? "Claude Code とはすでにつながっています" : "Claude Code・Codex などの許可待ちと作業完了（設定を変える前に確認します）", $c.dev)
-                    row("gauge.with.dots.needle.67percent", .pink, "AI の使用量", "Claude・Codex の利用枠", $c.ai)
+                    row("terminal.fill", .brown, "コーディングエージェント", $c.dev)
+                    row("gauge.with.dots.needle.67percent", .pink, "AI の使用量", $c.ai)
                 }
                 Section {
                     Toggle("ログイン時に Denko を起動", isOn: $c.launchAtLogin)
-                } footer: {
-                    Text("地震・津波の情報は常に届きます。集中モードに合わせて流すお知らせを絞ることもできます（設定 → 掲示板）。")
-                        .font(.caption).foregroundStyle(.secondary)
                 }
             }
             .formStyle(.grouped)
@@ -78,22 +73,15 @@ struct OnboardingView: View {
             .keyboardShortcut(.defaultAction)
             .padding(.bottom, 24)
         }
-        .frame(width: 480, height: 690)
+        .frame(width: 480, height: 580)
         .tint(settings.accent.color)
     }
 
-    private var agentsConnected: Bool {
-        ClaudeCodeHooks.isInstalled(endpoint: AppDelegate.shared.notifyServer.endpoint)
-    }
-
-    private func row(_ symbol: String, _ color: Color, _ title: String, _ detail: String, _ on: Binding<Bool>) -> some View {
+    private func row(_ symbol: String, _ color: Color, _ title: String, _ on: Binding<Bool>) -> some View {
         Toggle(isOn: on) {
             HStack(spacing: 10) {
                 SettingsIcon(symbol: symbol, color: color, size: 26)
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(title)
-                    Text(detail).font(.caption).foregroundStyle(.secondary)
-                }
+                Text(title)
             }
         }
     }

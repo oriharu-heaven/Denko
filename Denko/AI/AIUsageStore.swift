@@ -140,7 +140,11 @@ final class AIUsageStore: ObservableObject {
         timer?.invalidate()
         let interval = TimeInterval(max(1, claude.refreshMinutes) * 60)
         let t = Timer(timeInterval: interval, repeats: true) { [weak self] _ in
-            Task { await self?.refreshOthers() }
+            Task { @MainActor in
+                // Claude's windows reset on the clock even when no new report arrives.
+                self?.syncClaude()
+                await self?.refreshOthers()
+            }
         }
         t.tolerance = 10
         RunLoop.main.add(t, forMode: .common)
