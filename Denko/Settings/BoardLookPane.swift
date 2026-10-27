@@ -1,10 +1,8 @@
 import SwiftUI
 
-/// 掲示板: how the LED board looks and moves — Denko's main settings.
+/// 掲示板: how the LED board looks and moves — Denko's main feature, so it gets the detail.
 struct BoardLookPane: View {
     @ObservedObject var settings: AppSettings
-
-    @State private var showLevels = false
 
     var body: some View {
         Form {
@@ -24,29 +22,6 @@ struct BoardLookPane: View {
                 }
             }
 
-            Section(String(localized: "流し方")) {
-                Picker(String(localized: "速さ"), selection: $settings.tickerSpeed) {
-                    Text(String(localized: "ゆっくり")).tag(30.0)
-                    Text(String(localized: "ふつう")).tag(45.0)
-                    Text(String(localized: "はやい")).tag(60.0)
-                }
-                .pickerStyle(.segmented)
-                Picker(String(localized: "メニューバー全体"), selection: Binding(
-                    get: { !settings.fullBarUrgent ? 0 : (settings.fullBarAll ? 2 : 1) },
-                    set: { settings.fullBarUrgent = $0 > 0; settings.fullBarAll = $0 == 2 })) {
-                    Text(String(localized: "すべて")).tag(2)
-                    Text(String(localized: "緊急だけ")).tag(1)
-                    Text(String(localized: "使わない")).tag(0)
-                }
-                .pickerStyle(.segmented)
-                Picker(String(localized: "今日の情報"), selection: $settings.infoRollMinutes) {
-                    Text(String(localized: "流さない")).tag(0)
-                    Text(String(localized: "15分ごと")).tag(15)
-                    Text(String(localized: "1時間ごと")).tag(60)
-                }
-                .pickerStyle(.segmented)
-            }
-
             Section(String(localized: "見た目")) {
                 LabeledContent(String(localized: "光の色")) {
                     SwatchRow(
@@ -59,16 +34,94 @@ struct BoardLookPane: View {
                             settings.accent = .custom
                         })
                 }
+                LabeledContent(String(localized: "盤面の色")) {
+                    SwatchRow(
+                        items: BoardBase.presets.map { ($0.rawValue, Color(nsColor: $0.color(customHex: "")), $0.label) },
+                        selected: settings.boardBase.rawValue,
+                        customColor: NSColor(hexString: settings.boardBaseCustom) ?? .black,
+                        select: { settings.boardBase = BoardBase(rawValue: $0) ?? .black },
+                        pickCustom: { color in
+                            settings.boardBaseCustom = color.hexString
+                            settings.boardBase = .custom
+                        })
+                }
+                Picker(String(localized: "文字"), selection: $settings.boardWeight) {
+                    Text(String(localized: "細い")).tag(0)
+                    Text(String(localized: "ふつう")).tag(1)
+                    Text(String(localized: "太い")).tag(2)
+                }
+                .pickerStyle(.segmented)
                 Picker(String(localized: "ドットの形"), selection: $settings.dotShape) {
                     ForEach(DotShape.allCases) { Text($0.label).tag($0) }
                 }
                 .pickerStyle(.segmented)
+                Picker(String(localized: "ドットの大きさ"), selection: $settings.dotSize) {
+                    Text(String(localized: "小")).tag(0.68)
+                    Text(String(localized: "中")).tag(0.87)
+                    Text(String(localized: "大")).tag(1.0)
+                }
+                .pickerStyle(.segmented)
+                Picker(String(localized: "消えているドット"), selection: $settings.unlitDots) {
+                    Text(String(localized: "見せない")).tag(0.0)
+                    Text(String(localized: "うっすら")).tag(0.07)
+                    Text(String(localized: "はっきり")).tag(0.16)
+                }
+                .pickerStyle(.segmented)
             }
 
-            Section(String(localized: "お知らせ")) {
-                LabeledContent(String(localized: "種類ごとの流し方")) {
-                    Button(String(localized: "変更…")) { showLevels = true }
+            Section(String(localized: "流し方")) {
+                Picker(String(localized: "速さ"), selection: $settings.tickerSpeed) {
+                    Text(String(localized: "ゆっくり")).tag(30.0)
+                    Text(String(localized: "ふつう")).tag(45.0)
+                    Text(String(localized: "はやい")).tag(60.0)
                 }
+                .pickerStyle(.segmented)
+                Picker(String(localized: "くり返し"), selection: $settings.tickerRepeat) {
+                    Text(String(localized: "1回")).tag(1)
+                    Text(String(localized: "2回")).tag(2)
+                    Text(String(localized: "3回")).tag(3)
+                }
+                .pickerStyle(.segmented)
+                Toggle(String(localized: "見出し（◆ 天気 ◆）"), isOn: $settings.showHeading)
+            }
+
+            Section(String(localized: "緊急のお知らせ")) {
+                Picker(String(localized: "メニューバー全体"), selection: Binding(
+                    get: { !settings.fullBarUrgent ? 0 : (settings.fullBarAll ? 2 : 1) },
+                    set: { settings.fullBarUrgent = $0 > 0; settings.fullBarAll = $0 == 2 })) {
+                    Text(String(localized: "すべて")).tag(2)
+                    Text(String(localized: "緊急だけ")).tag(1)
+                    Text(String(localized: "使わない")).tag(0)
+                }
+                .pickerStyle(.segmented)
+                Picker(String(localized: "速さ"), selection: $settings.urgentSpeed) {
+                    Text(String(localized: "ふつう")).tag(1.0)
+                    Text(String(localized: "1.5倍")).tag(1.5)
+                    Text(String(localized: "2.5倍")).tag(2.5)
+                }
+                .pickerStyle(.segmented)
+                Toggle(String(localized: "点滅"), isOn: $settings.urgentBlink)
+            }
+        }
+        .formStyle(.grouped)
+    }
+}
+
+/// お知らせ: which notices play and when — per type, during Focus, and the periodic 今日の情報.
+struct NoticesPane: View {
+    @ObservedObject var settings: AppSettings
+
+    var body: some View {
+        Form {
+            Section {
+                Picker(String(localized: "今日の情報"), selection: $settings.infoRollMinutes) {
+                    Text(String(localized: "流さない")).tag(0)
+                    Text(String(localized: "15分ごと")).tag(15)
+                    Text(String(localized: "1時間ごと")).tag(60)
+                }
+                .pickerStyle(.segmented)
+            }
+            Section(String(localized: "集中モード")) {
                 Picker(String(localized: "集中モード中"), selection: $settings.focusBehavior) {
                     ForEach(FocusBehavior.allCases) { Text($0.label).tag($0) }
                 }
@@ -80,19 +133,9 @@ struct BoardLookPane: View {
                 }
                 Toggle(String(localized: "全画面のアプリの間は緊急だけ"), isOn: $settings.quietInFullScreen)
             }
+            NoticeLevelsSection(settings: settings)
         }
         .formStyle(.grouped)
-        .sheet(isPresented: $showLevels) {
-            VStack(spacing: 0) {
-                Form { NoticeLevelsSection(settings: settings) }.formStyle(.grouped)
-                HStack {
-                    Spacer()
-                    Button(String(localized: "完了")) { showLevels = false }.keyboardShortcut(.defaultAction)
-                }
-                .padding(12)
-            }
-            .frame(width: 480, height: 520)
-        }
     }
 }
 
@@ -138,7 +181,7 @@ struct BoardPreview: View {
 
     private func render() -> NSImage {
         LEDRenderer.apply(dotSize: settings.dotSize, square: settings.dotShape == .square,
-                          unlit: settings.unlitDots, base: settings.boardBaseColor)
+                          unlit: settings.unlitDots, base: settings.boardBaseColor, weight: settings.boardWeight)
         let color = settings.boardNSColor
         // The user's own weather when it's loaded, so the preview reads like their board.
         let text = AppDelegate.shared.info.weather.map {

@@ -191,6 +191,8 @@ final class AppSettings: ObservableObject {
     @Published var dotShape: DotShape { didSet { d.set(dotShape.rawValue, forKey: "dotShape") } }
     /// Dot diameter as a share of the dot pitch.
     @Published var dotSize: Double { didSet { d.set(dotSize, forKey: "dotSize") } }
+    /// Text weight on the board: 0 細い, 1 ふつう, 2 太い.
+    @Published var boardWeight: Int { didSet { d.set(boardWeight, forKey: "boardWeight") } }
     /// Brightness of unlit dots (0 = invisible).
     @Published var unlitDots: Double { didSet { d.set(unlitDots, forKey: "unlitDots") } }
     /// "#RRGGBB" of the custom theme color (AccentPreset.custom).
@@ -216,7 +218,7 @@ final class AppSettings: ObservableObject {
 
     /// Changes whenever anything that affects how the board is drawn changes.
     var boardStyleKey: String {
-        "\(accent.rawValue)|\(dotShape.rawValue)|\(dotSize)|\(unlitDots)|\(boardBase.rawValue)|\(boardCustomColor)|\(boardBaseCustom)|\(boardIdle.rawValue)|\(idleMessage)"
+        "\(accent.rawValue)|\(dotShape.rawValue)|\(dotSize)|\(unlitDots)|\(boardWeight)|\(boardBase.rawValue)|\(boardCustomColor)|\(boardBaseCustom)|\(boardIdle.rawValue)|\(idleMessage)"
     }
 
     /// Changes whenever any setting that affects the menu bar item's content, sampling, or animation changes.
@@ -259,21 +261,8 @@ final class AppSettings: ObservableObject {
     }
 
     /// Carries settings over from before the rename to Denko (once).
-    private static func migrateLegacyDefaults(_ d: UserDefaults) {
-        guard !d.bool(forKey: "migratedFromClaudeUsageOnBar") else { return }
-        d.set(true, forKey: "migratedFromClaudeUsageOnBar")
-        let old = "com.haru.ClaudeUsageOnBar" as CFString
-        guard let keys = CFPreferencesCopyKeyList(old, kCFPreferencesCurrentUser, kCFPreferencesAnyHost) as? [String],
-              let values = CFPreferencesCopyMultiple(keys as CFArray, old, kCFPreferencesCurrentUser,
-                                                     kCFPreferencesAnyHost) as? [String: Any] else { return }
-        for (k, v) in values where d.object(forKey: k) == nil && !k.hasPrefix("NS") && !k.hasPrefix("SU") {
-            d.set(v, forKey: k)
-        }
-    }
-
     init() {
         let d = UserDefaults.standard
-        Self.migrateLegacyDefaults(d)
         func bool(_ key: String, _ def: Bool) -> Bool { d.object(forKey: key) as? Bool ?? def }
         showCharacter = bool("showCharacter", true)
         let kind = CharacterKind(rawValue: d.string(forKey: "character") ?? "") ?? .frog
@@ -347,6 +336,7 @@ final class AppSettings: ObservableObject {
         storageMode = StorageMode(rawValue: d.string(forKey: "storageMode") ?? "") ?? .basic
         dotShape = DotShape(rawValue: d.string(forKey: "dotShape") ?? "") ?? .round
         dotSize = d.object(forKey: "dotSize") as? Double ?? 0.87
+        boardWeight = d.object(forKey: "boardWeight") as? Int ?? 1
         unlitDots = d.object(forKey: "unlitDots") as? Double ?? 0.07
         let customHex = d.string(forKey: "boardCustomColor") ?? "#FF9E29"
         boardCustomColor = customHex

@@ -9,7 +9,7 @@ enum SettingsWindow {
         let tabs = NSTabViewController()
         tabs.tabStyle = .toolbar
         // One height for every tab (no jumping when switching), small enough for a 13-inch screen.
-        let paneHeight = min(680, (NSScreen.main?.visibleFrame.height ?? 800) - 140)
+        let paneHeight = min(780, (NSScreen.main?.visibleFrame.height ?? 900) - 140)
         func add<V: View>(_ title: String, _ symbol: String, height _: CGFloat, _ view: V, image: NSImage? = nil) {
             let height = paneHeight
             let host = NSHostingController(rootView: Tinted(settings: settings,
@@ -25,6 +25,7 @@ enum SettingsWindow {
         add(String(localized: "セットアップ"), "checklist", height: 600, SetupPane(settings: settings))
         add(String(localized: "一般"), "gearshape", height: 600, GeneralPane(settings: settings))
         add(String(localized: "掲示板"), "", height: 760, BoardLookPane(settings: settings), image: BoardIcon.image())
+        add(String(localized: "お知らせ"), "bell.badge", height: 760, NoticesPane(settings: settings))
         add(String(localized: "メニューバー"), "menubar.rectangle", height: 760, MenuBarPane(settings: settings))
         add(String(localized: "情報連携"), "point.3.connected.trianglepath.dotted", height: 760, InfoHubPane(settings: settings))
         add(String(localized: "実験"), "flask", height: 760, ExperimentalPane(settings: settings))

@@ -44,19 +44,20 @@ enum Snapshot {
         for scheme in [ColorScheme.light, .dark] {
             let suffix = scheme == .dark ? "dark" : "light"
             let settingsPanes: [(String, AnyView, CGFloat)] = [
-                ("settings-setup", AnyView(SetupPane(settings: s)), 680),
-                ("settings-experimental", AnyView(ExperimentalPane(settings: s)), 680),
-                ("settings-general", AnyView(GeneralPane(settings: s)), 680),
-                ("settings-board", AnyView(BoardLookPane(settings: s)), 680),
-                ("settings-dashboard", AnyView(MenuBarPane(settings: s)), 680),
-                ("settings-info", AnyView(InfoHubPane(settings: s)), 680),
-                ("settings-info-news", AnyView(InfoHubPane(settings: s, detail: .news)), 680),
-                ("settings-info-trains", AnyView(InfoHubPane(settings: s, detail: .trains)), 680),
-                ("settings-info-weather", AnyView(InfoHubPane(settings: s, detail: .weather)), 680),
-                ("settings-info-ai", AnyView(InfoHubPane(settings: s, detail: .aiUsage)), 680),
+                ("settings-setup", AnyView(SetupPane(settings: s)), 780),
+                ("settings-experimental", AnyView(ExperimentalPane(settings: s)), 780),
+                ("settings-general", AnyView(GeneralPane(settings: s)), 780),
+                ("settings-board", AnyView(BoardLookPane(settings: s)), 780),
+                ("settings-notices", AnyView(NoticesPane(settings: s)), 780),
+                ("settings-dashboard", AnyView(MenuBarPane(settings: s)), 780),
+                ("settings-info", AnyView(InfoHubPane(settings: s)), 780),
+                ("settings-info-news", AnyView(InfoHubPane(settings: s, detail: .news)), 780),
+                ("settings-info-trains", AnyView(InfoHubPane(settings: s, detail: .trains)), 780),
+                ("settings-info-weather", AnyView(InfoHubPane(settings: s, detail: .weather)), 780),
+                ("settings-info-ai", AnyView(InfoHubPane(settings: s, detail: .aiUsage)), 780),
                 // DENKO_SNAPSHOT_SEARCH: what a user would type into the line search.
                 ("settings-info-trains-search", AnyView(InfoHubPane(settings: s, detail: .trains,
-                    search: ProcessInfo.processInfo.environment["DENKO_SNAPSHOT_SEARCH"] ?? "")), 680),
+                    search: ProcessInfo.processInfo.environment["DENKO_SNAPSHOT_SEARCH"] ?? "")), 780),
             ]
             for (name, view, height) in settingsPanes {
                 save(AnyView(Tinted(settings: s, content: view.frame(width: 520, height: height))), name, suffix, scheme)
@@ -136,7 +137,7 @@ enum Snapshot {
         if let only, !only.contains("menubar") { return }
         let s = app.settings
         LEDRenderer.configure(height: 22)
-        LEDRenderer.apply(dotSize: s.dotSize, square: s.dotShape == .square, unlit: s.unlitDots, base: s.boardBaseColor)
+        LEDRenderer.apply(dotSize: s.dotSize, square: s.dotShape == .square, unlit: s.unlitDots, base: s.boardBaseColor, weight: s.boardWeight)
         let saved = IconRenderer.character
         var strips: [(String, NSImage)] = []
         func content(_ kind: CharacterKind) -> IconContent {

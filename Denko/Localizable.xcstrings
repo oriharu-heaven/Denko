@@ -778,12 +778,32 @@
         }
       }
     },
+    "1.5倍" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1.5×"
+          }
+        }
+      }
+    },
     "1GB を超えるファイルです（%@）。不要なら削除、残したいなら外部ストレージへ。" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Over 1 GB (%@). Delete it if you don't need it, or move it to external storage."
+          }
+        }
+      }
+    },
+    "1回" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Once"
           }
         }
       }
@@ -834,6 +854,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hourly"
+          }
+        }
+      }
+    },
+    "2.5倍" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2.5×"
+          }
+        }
+      }
+    },
+    "2回" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Twice"
+          }
+        }
+      }
+    },
+    "3回" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3 times"
           }
         }
       }
@@ -1810,6 +1860,16 @@
         }
       }
     },
+    "うっすら" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Faint"
+          }
+        }
+      }
+    },
     "えんじ" : {
       "localizations" : {
         "en" : {
@@ -2036,6 +2096,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Click to show hidden items (⌥-click for “Always hidden” too)"
+          }
+        }
+      }
+    },
+    "くり返し" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Repeat"
           }
         }
       }
@@ -2630,6 +2700,16 @@
         }
       }
     },
+    "ドットの大きさ" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dot size"
+          }
+        }
+      }
+    },
     "ドットの形" : {
       "localizations" : {
         "en" : {
@@ -2726,6 +2806,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Get Started"
+          }
+        }
+      }
+    },
+    "はっきり" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visible"
           }
         }
       }
@@ -3262,6 +3352,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "down"
+          }
+        }
+      }
+    },
+    "中" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "M"
           }
         }
       }
@@ -3982,6 +4082,7 @@
       }
     },
     "変更…" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4008,6 +4109,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Outer"
+          }
+        }
+      }
+    },
+    "大" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L"
           }
         }
       }
@@ -4098,6 +4209,16 @@
         }
       }
     },
+    "太い" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bold"
+          }
+        }
+      }
+    },
     "好きなサイトの新着を流します。" : {
       "localizations" : {
         "en" : {
@@ -4164,6 +4285,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Use experimental features?"
+          }
+        }
+      }
+    },
+    "小" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "S"
           }
         }
       }
@@ -4364,6 +4495,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tidy"
+          }
+        }
+      }
+    },
+    "文字" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text"
           }
         }
       }
@@ -4689,6 +4830,16 @@
         }
       }
     },
+    "消えているドット" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unlit dots"
+          }
+        }
+      }
+    },
     "消去" : {
       "localizations" : {
         "en" : {
@@ -4715,6 +4866,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Could free up"
+          }
+        }
+      }
+    },
+    "点滅" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blink"
           }
         }
       }
@@ -4829,6 +4990,16 @@
         }
       }
     },
+    "盤面の色" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Board color"
+          }
+        }
+      }
+    },
     "省電力" : {
       "localizations" : {
         "en" : {
@@ -4910,6 +5081,7 @@
       }
     },
     "種類ごとの流し方" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4941,6 +5113,16 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "空き %1$@（%2$lld%%）"
+          }
+        }
+      }
+    },
+    "細い" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thin"
           }
         }
       }
@@ -5185,6 +5367,16 @@
         }
       }
     },
+    "見せない" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hidden"
+          }
+        }
+      }
+    },
     "見た目" : {
       "localizations" : {
         "en" : {
@@ -5241,6 +5433,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Choose lines…"
+          }
+        }
+      }
+    },
+    "見出し（◆ 天気 ◆）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Heading (◆ Weather ◆)"
           }
         }
       }
@@ -5757,6 +5959,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hide"
+          }
+        }
+      }
+    },
+    "集中モード" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Focus"
           }
         }
       }

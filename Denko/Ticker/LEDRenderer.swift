@@ -17,10 +17,18 @@ enum LEDRenderer {
     /// Bumped whenever the look changes, so cached dot images get redrawn.
     static private(set) var styleVersion = 0
 
-    static func apply(dotSize: Double, square: Bool, unlit: Double, base: NSColor) {
+    /// Text weight: 0 細い, 1 ふつう, 2 太い.
+    static private(set) var weight = 1
+
+    static func apply(dotSize: Double, square: Bool, unlit: Double, base: NSColor, weight: Int) {
         let d = pitch * CGFloat(dotSize)
         guard d != dot || square != self.square || CGFloat(unlit) != unlitAlpha || base != baseColor
+                || weight != self.weight
         else { return }
+        if weight != self.weight {
+            self.weight = weight
+            glyphCache = [:]
+        }
         dot = d
         self.square = square
         unlitAlpha = CGFloat(unlit)
@@ -53,10 +61,13 @@ enum LEDRenderer {
     }
 
     private static var font: NSFont {
-        NSFont(name: "HiraginoSans-W5", size: CGFloat(rows) - 1) ?? .systemFont(ofSize: CGFloat(rows) - 1, weight: .medium)
+        let name = ["HiraginoSans-W3", "HiraginoSans-W5", "HiraginoSans-W7"][min(max(weight, 0), 2)]
+        return NSFont(name: name, size: CGFloat(rows) - 1) ?? .systemFont(ofSize: CGFloat(rows) - 1, weight: .medium)
     }
     /// Latin text uses the system font (crisper than doubling the 5×8 font).
-    private static var latinFont: NSFont { .systemFont(ofSize: CGFloat(rows) - 2, weight: .semibold) }
+    private static var latinFont: NSFont {
+        .systemFont(ofSize: CGFloat(rows) - 2, weight: [NSFont.Weight.regular, .semibold, .heavy][min(max(weight, 0), 2)])
+    }
 
     /// Lit-dot mask for `text`: columns × rows, row 0 at the top.
     /// ASCII uses a classic 5×8 LED font (crisp at this size); everything else

@@ -274,7 +274,7 @@ final class MainStatusController: NSObject, NSPopoverDelegate, NSViewToolTipOwne
         let compat = settings.compatibleCatRendering
         let style = settings.boardStyleKey
         LEDRenderer.apply(dotSize: settings.dotSize, square: settings.dotShape == .square,
-                          unlit: settings.unlitDots, base: settings.boardBaseColor)
+                          unlit: settings.unlitDots, base: settings.boardBaseColor, weight: settings.boardWeight)
         guard force || compat != renderedCompat || c != content || style != renderedStyle,
               let button = item.button else { return }
         renderedStyle = style
