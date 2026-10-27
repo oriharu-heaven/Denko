@@ -55,8 +55,11 @@ enum SetupStep: String, CaseIterable, Identifiable {
         switch self {
         case .place, .launchAtLogin: return true
         case .trains: return s.infoTrains
-        case .agents: return AIProvider.claude.isDetected || CodexNotify.isAvailable
-        case .claudeUsage: return AIProvider.claude.isDetected
+        // Only what the user asked for in はじめに (coding agents; AI usage with Claude).
+        case .agents:
+            return (AIProvider.claude.isDetected || CodexNotify.isAvailable)
+                && (UserDefaults.standard.object(forKey: "setupAgents") as? Bool ?? true)
+        case .claudeUsage: return AIProvider.claude.isDetected && s.aiProviders.contains(.claude)
         }
     }
 
@@ -147,7 +150,8 @@ struct SetupPane: View {
                         }
                     }
                 } header: {
-                    Text("\(steps.filter { $0.isDone(settings) }.count) / \(steps.count)")
+                    ProgressView(value: Double(steps.filter { $0.isDone(settings) }.count), total: Double(max(steps.count, 1)))
+                        .accessibilityLabel(String(localized: "セットアップ"))
                 }
                 if let error {
                     Label(error, systemImage: "exclamationmark.triangle.fill")

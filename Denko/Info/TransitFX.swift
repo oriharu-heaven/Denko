@@ -34,6 +34,36 @@ enum TrainFeed {
 
     static let regions = ["関東", "東北", "信越", "北陸", "関西", "中国"]
 
+    /// English names of the lines people search for most, so "Yamanote" finds 山手線 and an
+    /// English Mac shows them in English.
+    static let englishNames: [String: String] = [
+        "山手線": "Yamanote Line", "京浜東北線": "Keihin-Tohoku Line", "中央線快速電車": "Chuo Line (Rapid)",
+        "中央・総武各駅停車": "Chuo-Sobu Line (Local)", "埼京線": "Saikyo Line", "湘南新宿ライン": "Shonan-Shinjuku Line",
+        "上野東京ライン": "Ueno-Tokyo Line", "東海道線": "Tokaido Line", "横須賀線": "Yokosuka Line",
+        "総武快速線": "Sobu Line (Rapid)", "京葉線": "Keiyo Line", "常磐線快速電車": "Joban Line (Rapid)",
+        "宇都宮線": "Utsunomiya Line", "高崎線": "Takasaki Line", "武蔵野線": "Musashino Line",
+        "南武線": "Nambu Line", "横浜線": "Yokohama Line", "りんかい線": "Rinkai Line",
+        "銀座線": "Ginza Line", "丸ノ内線": "Marunouchi Line", "日比谷線": "Hibiya Line", "東西線": "Tozai Line",
+        "千代田線": "Chiyoda Line", "有楽町線": "Yurakucho Line", "半蔵門線": "Hanzomon Line",
+        "南北線": "Namboku Line", "副都心線": "Fukutoshin Line",
+        "浅草線": "Asakusa Line", "三田線": "Mita Line", "新宿線": "Shinjuku Line", "大江戸線": "Oedo Line",
+        "東京さくらトラム": "Tokyo Sakura Tram", "日暮里・舎人ライナー": "Nippori-Toneri Liner",
+        "大阪環状線": "Osaka Loop Line", "JR京都線": "JR Kyoto Line", "JR神戸線": "JR Kobe Line",
+        "JR宝塚線": "JR Takarazuka Line", "大和路線": "Yamatoji Line", "阪和線": "Hanwa Line",
+        "京王線・井の頭線": "Keio / Inokashira Line", "京急線": "Keikyu Line", "近鉄線": "Kintetsu Line",
+    ]
+
+    /// The name to show: English on an English Mac when known.
+    static func displayName(_ name: String) -> String {
+        Locale.current.language.languageCode?.identifier == "en" ? (englishNames[name] ?? name) : name
+    }
+
+    /// Search by Japanese or English name, or by company.
+    static func matches(_ line: Line, _ query: String) -> Bool {
+        line.name.localizedCaseInsensitiveContains(query) || line.company.contains(query)
+            || (englishNames[line.name]?.localizedCaseInsensitiveContains(query) ?? false)
+    }
+
     static let keychainAccount = "odptConsumerKey"
     static var hasKey: Bool { Keychain.exists(account: keychainAccount) }
 

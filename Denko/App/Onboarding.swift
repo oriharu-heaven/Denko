@@ -30,10 +30,10 @@ struct OnboardingView: View {
                     .resizable()
                     .frame(width: 72, height: 72)
                 Text(String(localized: "Denko へようこそ")).font(.title.weight(.semibold))
-                Text(String(localized: "流したいものを選んでください"))
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
+                // What Denko is, shown rather than told: the board itself.
+                BoardPreview(settings: settings)
+                    .frame(maxWidth: 400)
+                    .padding(.top, 4)
             }
             .padding(.top, 28)
             .padding(.bottom, 8)
@@ -54,9 +54,14 @@ struct OnboardingView: View {
                     row("tram.fill", .green, String(localized: "電車の運行情報"), $c.trains)
                     row("cpu", .gray, String(localized: "Mac の状態"), $c.mac)
                 }
-                Section {
-                    row("terminal.fill", .brown, String(localized: "コーディングエージェント"), $c.dev)
-                    row("gauge.with.dots.needle.67percent", .pink, String(localized: "AI の使用量"), $c.ai)
+                // Only for tools that are on this Mac.
+                let agents = AIProvider.claude.isDetected || CodexNotify.isAvailable
+                let anyAI = AIProvider.offered(settings).contains(where: \.isDetected)
+                if agents || anyAI {
+                    Section {
+                        if agents { row("terminal.fill", .brown, String(localized: "コーディングエージェント"), $c.dev) }
+                        if anyAI { row("gauge.with.dots.needle.67percent", .pink, String(localized: "AI の使用量"), $c.ai) }
+                    }
                 }
                 Section {
                     Toggle(String(localized: "ログイン時に Denko を起動"), isOn: $c.launchAtLogin)
@@ -73,7 +78,7 @@ struct OnboardingView: View {
             .keyboardShortcut(.defaultAction)
             .padding(.bottom, 24)
         }
-        .frame(width: 480, height: 580)
+        .frame(width: 480, height: 650)
         .tint(settings.accent.color)
     }
 
@@ -119,8 +124,16 @@ extension AppDelegate {
         s.aiProviders = c.ai ? (detected.isEmpty ? [.claude] : detected) : []
         s.menuBarAI = s.aiProviders
         if c.dev { s.notifyServerEnabled = true }
+        UserDefaults.standard.set(c.dev, forKey: "setupAgents")
         let place = c.place.trimmingCharacters(in: .whitespaces)
-        if !place.isEmpty { Task { _ = await info.setPlace(place) } }
+        if !place.isEmpty {
+            Task {
+                if await !info.setPlace(place) {
+                    hub.post(.system, title: String(localized: "「\(place)」が見つかりませんでした"), force: .normal)
+                    openSettings(tab: String(localized: "情報連携"), feed: .weather)
+                }
+            }
+        }
         Task { await info.refreshAll() }
 
         // Coding agents: these change the tools' own settings files, so ask first.

@@ -52,6 +52,11 @@ enum Snapshot {
                 ("settings-info", AnyView(InfoHubPane(settings: s)), 680),
                 ("settings-info-news", AnyView(InfoHubPane(settings: s, detail: .news)), 680),
                 ("settings-info-trains", AnyView(InfoHubPane(settings: s, detail: .trains)), 680),
+                ("settings-info-weather", AnyView(InfoHubPane(settings: s, detail: .weather)), 680),
+                ("settings-info-ai", AnyView(InfoHubPane(settings: s, detail: .aiUsage)), 680),
+                // DENKO_SNAPSHOT_SEARCH: what a user would type into the line search.
+                ("settings-info-trains-search", AnyView(InfoHubPane(settings: s, detail: .trains,
+                    search: ProcessInfo.processInfo.environment["DENKO_SNAPSHOT_SEARCH"] ?? "")), 680),
             ]
             for (name, view, height) in settingsPanes {
                 save(AnyView(Tinted(settings: s, content: view.frame(width: 520, height: height))), name, suffix, scheme)

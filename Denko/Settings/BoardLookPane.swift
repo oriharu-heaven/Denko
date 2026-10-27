@@ -123,7 +123,7 @@ private struct NoticeLevelsSection: View {
 }
 
 /// Still preview of the board with the current look.
-private struct BoardPreview: View {
+struct BoardPreview: View {
     @ObservedObject var settings: AppSettings
 
     var body: some View {

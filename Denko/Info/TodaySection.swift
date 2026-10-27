@@ -62,7 +62,19 @@ struct TodaySection: View {
                           alert: recent != nil,
                           text: recent?.title ?? String(localized: "\(settings.weatherPrefecture)：警報・強い揺れなし"))
             }
-            if settings.infoTrains {
+            if settings.infoTrains && settings.trainLines.isEmpty {
+                Button {
+                    AppDelegate.shared.openSettings(tab: String(localized: "情報連携"), feed: .trains)
+                } label: {
+                    HStack {
+                        statusRow(icon: "tram", alert: false, text: String(localized: "見る路線を選ぶ…"))
+                        Spacer()
+                        Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            } else if settings.infoTrains {
                 statusRow(icon: trouble.isEmpty ? "tram" : "tram.fill", alert: !trouble.isEmpty,
                           text: settings.trainLines.isEmpty ? String(localized: "路線が未設定")
                             : info.trains == nil ? (info.failed.contains("trains") ? String(localized: "運行情報を取得できません") : String(localized: "読み込み中…"))

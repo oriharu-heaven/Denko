@@ -65,8 +65,7 @@ struct ExperimentalPane: View {
     private func gated(_ value: Binding<Bool>, onEnable: @escaping () -> Void) -> Binding<Bool> {
         Binding(get: { value.wrappedValue }, set: { on in
             guard on else { value.wrappedValue = false; return }
-            guard settings.experimentalAccepted || Self.confirm() else { return }
-            settings.experimentalAccepted = true
+            guard Experimental.agree(settings) else { return }
             value.wrappedValue = true
             onEnable()
         })
@@ -76,6 +75,20 @@ struct ExperimentalPane: View {
     private func add(_ p: AIProvider) {
         if !settings.aiProviders.contains(p) { settings.aiProviders.append(p) }
         if !settings.menuBarAI.contains(p) { settings.menuBarAI.append(p) }
+    }
+
+}
+
+/// The one-time 実験 agreement, shared by the 実験 tab and the places that offer a Lab
+/// feature where it's needed (the line picker).
+@MainActor
+enum Experimental {
+    /// True once the user has agreed (asks the first time).
+    static func agree(_ settings: AppSettings) -> Bool {
+        if settings.experimentalAccepted { return true }
+        guard confirm() else { return false }
+        settings.experimentalAccepted = true
+        return true
     }
 
     private static func confirm() -> Bool {

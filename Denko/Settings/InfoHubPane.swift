@@ -24,9 +24,11 @@ struct InfoHubPane: View {
 
     private var server: LocalNotifyServer { AppDelegate.shared.notifyServer }
 
-    init(settings: AppSettings, detail: Feed? = nil) {
+    /// `search`: a line search already typed in (for snapshots of the 運行情報 page).
+    init(settings: AppSettings, detail: Feed? = nil, search: String = "") {
         self.settings = settings
         _detail = State(initialValue: detail)
+        _lineSearch = State(initialValue: search)
         _place = StateObject(wrappedValue: PlaceService(settings: settings) {
             Task {
                 await AppDelegate.shared.info.refreshWeather()
@@ -389,14 +391,16 @@ struct InfoHubPane: View {
                 Text(p.name)
             }
             .disabled(!p.isDetected && !settings.aiProviders.contains(p))
-            if settings.aiProviders.contains(p), let e = ai.errors[p] {
-                Text(e).font(.caption).foregroundStyle(.secondary)
+            if p == .claude && settings.aiProviders.contains(.claude) {
+                LabeledContent(String(localized: "Claude Code のステータスライン")) {
+                    if statusLineInstalled { Text(String(localized: "連携済み")).foregroundStyle(.secondary) }
+                    else { Button(String(localized: "連携する")) { setStatusLine(true) } }
+                }
             }
-        }
-        if settings.aiProviders.contains(.claude) {
-            LabeledContent(String(localized: "Claude Code のステータスライン")) {
-                if statusLineInstalled { Text(String(localized: "連携済み")).foregroundStyle(.secondary) }
-                else { Button(String(localized: "連携する")) { setStatusLine(true) } }
+            // Claude's "not yet" only matters once something can send it.
+            if settings.aiProviders.contains(p), let e = ai.errors[p],
+               p != .claude || statusLineInstalled || settings.experimentalRealtimeClaude {
+                Text(e).font(.caption).foregroundStyle(.secondary)
             }
         }
         if let statusLineError { Text(statusLineError).font(.caption).foregroundStyle(.secondary) }
@@ -512,7 +516,7 @@ struct InfoHubPane: View {
                     Image(systemName: WeatherCode.symbol(w.code)).symbolRenderingMode(.hierarchical)
                         .font(.system(size: 26)).foregroundStyle(accent)
                     VStack(alignment: .leading) {
-                        Text("\(settings.weatherPlace)　\(Int(w.temperature.rounded()))° \(WeatherCode.text(w.code))")
+                        Text("\(Int(w.temperature.rounded()))° \(WeatherCode.text(w.code))")
                         Text(String(localized: "最高 \(Int(w.high.rounded()))°　最低 \(Int(w.low.rounded()))°　降水 \(w.rainChance)%"))
                             .font(.caption).foregroundStyle(.secondary)
                     }
@@ -573,7 +577,7 @@ note(String(localized: "緊急地震速報には対応していません"))
             let line = info.allTrainLines.first { $0.name == name }
             HStack {
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(name)
+                    Text(TrainFeed.displayName(name))
                     if let line {
                         Text(String(localized: "\(line.company)・\(line.status)")).font(.caption).foregroundStyle(.secondary)
                     } else if !info.allTrainLines.isEmpty {
@@ -594,6 +598,23 @@ note(String(localized: "緊急地震速報には対応していません"))
         }
     }
 
+    /// JR, Tokyo Metro and private railways come from 実験 (their own status pages). Offered
+    /// right where a user looks for those lines, until it's on.
+    @ViewBuilder
+    private var labTrainsRow: some View {
+        if !settings.experimentalTrainPages {
+            LabeledContent {
+                Button(String(localized: "使う…")) {
+                    guard Experimental.agree(settings) else { return }
+                    settings.experimentalTrainPages = true
+                    Task { await info.refreshTrains(everything: true) }
+                }
+            } label: {
+                Label(String(localized: "JR・東京メトロ・私鉄"), systemImage: "flask")
+            }
+        }
+    }
+
     /// A search field, then region → company → line.
     @ViewBuilder
     private var linePicker: some View {
@@ -605,10 +626,14 @@ note(String(localized: "緊急地震速報には対応していません"))
             }
         } else if !lineSearch.trimmingCharacters(in: .whitespaces).isEmpty {
             let q = lineSearch.trimmingCharacters(in: .whitespaces)
-            let hits = info.allTrainLines.filter { $0.name.localizedCaseInsensitiveContains(q) || $0.company.contains(q) }
-            if hits.isEmpty { note(String(localized: "「\(q)」に合う路線はありません。")) }
+            let hits = info.allTrainLines.filter { TrainFeed.matches($0, q) }
+            if hits.isEmpty {
+                note(String(localized: "「\(q)」に合う路線はありません。"))
+                labTrainsRow
+            }
             ForEach(hits.prefix(30)) { line in lineToggle(line, showPlace: true) }
         } else {
+            labTrainsRow
             ForEach(TrainFeed.regions, id: \.self) { region in
                 let inRegion = info.allTrainLines.filter { $0.region == region }
                 if !inRegion.isEmpty {
@@ -618,7 +643,7 @@ note(String(localized: "緊急地震速報には対応していません"))
                         ForEach(companies.keys.sorted(), id: \.self) { company in
                             let lines = companies[company] ?? []
                             if lines.count == 1, let only = lines.first {
-                                lineToggle(only, showPlace: false, label: "\(company)：\(only.name)")
+                                lineToggle(only, showPlace: false, label: "\(company)：\(TrainFeed.displayName(only.name))")
                             } else {
                                 DisclosureGroup {
                                     ForEach(lines) { lineToggle($0, showPlace: false) }
@@ -647,7 +672,7 @@ note(String(localized: "緊急地震速報には対応していません"))
                 if on { if !settings.trainLines.contains(line.name) { settings.trainLines.append(line.name) } }
                 else { settings.trainLines.removeAll { $0 == line.name } }
             })) {
-            Text(label ?? line.name)
+            Text(label ?? TrainFeed.displayName(line.name))
             if showPlace { Text(String(localized: "\(line.region)・\(line.company)")) }
         }
     }

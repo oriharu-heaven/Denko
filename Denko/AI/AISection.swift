@@ -61,6 +61,7 @@ private struct ProviderRow: View {
     let error: String?
     let now: Date
     let accent: Color
+    @State private var connected = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -78,10 +79,10 @@ private struct ProviderRow: View {
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 8) {
                     Legend(window: usage?.primary, placeholder: provider.defaultLabels.outer,
-                           note: String(localized: "外側"), now: now, accent: accent)
+                           now: now, accent: accent)
                     if usage?.secondary != nil || usage == nil {
                         Legend(window: usage?.secondary, placeholder: provider.defaultLabels.inner,
-                               note: String(localized: "内側"), now: now, accent: accent)
+                               now: now, accent: accent)
                     }
                 }
             }
@@ -97,7 +98,19 @@ private struct ProviderRow: View {
                 }
             }
 
-            if let error {
+            if provider == .claude, usage == nil, !connected,
+               !ClaudeStatusLine.isInstalled(endpoint: AppDelegate.shared.notifyServer.endpoint),
+               !AppDelegate.shared.settings.experimentalRealtimeClaude {
+                // Nothing can arrive until Claude Code reports to Denko: offer that right here.
+                HStack {
+                    Text(String(localized: "Claude Code のステータスライン")).font(.caption)
+                    Spacer()
+                    Button(String(localized: "連携する")) {
+                        connected = (try? ClaudeStatusLine.install(endpoint: AppDelegate.shared.notifyServer.endpoint)) != nil
+                    }
+                    .controlSize(.small)
+                }
+            } else if let error {
                 Label(error, systemImage: "exclamationmark.triangle.fill")
                     .font(.caption)
                     .foregroundStyle(.orange)
@@ -114,7 +127,6 @@ private struct ProviderRow: View {
 private struct Legend: View {
     let window: AIWindow?
     let placeholder: String
-    let note: String
     let now: Date
     let accent: Color
 
@@ -125,17 +137,17 @@ private struct Legend: View {
                     .font(.title3.weight(.semibold).monospacedDigit())
                     .foregroundStyle((window?.percent ?? 0) >= Theme.highUsage ? accent : .primary)
                 Text(window?.label ?? placeholder).font(.callout)
-                Text(note).font(.caption).foregroundStyle(.tertiary)
             }
             if let w = window, w.resetsAt != nil {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text(String(localized: "リセット \(TimeText.untilReset(w.resetsAt, now: now))"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    if let pace = w.paceStatus(now: now) {
+                    // Only worth a word when it's running out faster than the clock.
+                    if let pace = w.paceStatus(now: now), pace.isHigh {
                         Text("（\(pace.text)）")
                             .font(.caption2.monospacedDigit())
-                            .foregroundStyle(pace.isHigh ? accent : .secondary)
+                            .foregroundStyle(accent)
                     }
                 }
                 .help(TimeText.absolute(w.resetsAt))

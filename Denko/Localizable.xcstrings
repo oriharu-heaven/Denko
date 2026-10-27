@@ -226,6 +226,7 @@
       }
     },
     "%@　%lld° %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -579,6 +580,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld°"
+          }
+        }
+      }
+    },
+    "%lld° %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld° %2$@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld° %2$@"
           }
         }
       }
@@ -3415,6 +3432,16 @@
         }
       }
     },
+    "使う…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use…"
+          }
+        }
+      }
+    },
     "使わない" : {
       "localizations" : {
         "en" : {
@@ -3586,6 +3613,7 @@
       }
     },
     "内側" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3974,6 +4002,7 @@
       }
     },
     "外側" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4610,6 +4639,7 @@
       }
     },
     "流したいものを選んでください" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
