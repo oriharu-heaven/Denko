@@ -7,12 +7,12 @@ enum BoardBase: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var label: String {
         switch self {
-        case .black: return "黒"
-        case .navy: return "紺"
-        case .green: return "深緑"
-        case .wine: return "えんじ"
-        case .brown: return "焦げ茶"
-        case .custom: return "好きな色"
+        case .black: return String(localized: "黒")
+        case .navy: return String(localized: "紺")
+        case .green: return String(localized: "深緑")
+        case .wine: return String(localized: "えんじ")
+        case .brown: return String(localized: "焦げ茶")
+        case .custom: return String(localized: "好きな色")
         }
     }
     static let presets: [BoardBase] = [.black, .navy, .green, .wine, .brown]
@@ -60,9 +60,9 @@ enum StorageMode: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var label: String {
         switch self {
-        case .off: return "使わない"
-        case .basic: return "かんたん（確認なし）"
-        case .full: return "詳しく"
+        case .off: return String(localized: "使わない")
+        case .basic: return String(localized: "かんたん（確認なし）")
+        case .full: return String(localized: "詳しく")
         }
     }
 }
@@ -73,16 +73,16 @@ enum CharacterKind: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var label: String {
         switch self {
-        case .frog: return "カエル"
-        case .train: return "電車"
-        case .chick: return "ひよこ"
+        case .frog: return String(localized: "カエル")
+        case .train: return String(localized: "電車")
+        case .chick: return String(localized: "ひよこ")
         }
     }
     var motion: String {
         switch self {
-        case .frog: return "Mac が忙しいほど速く跳ねます。"
-        case .train: return "Mac が忙しいほど速く走ります。"
-        case .chick: return "Mac が忙しいほど速くはばたきます。"
+        case .frog: return String(localized: "Mac が忙しいほど速く跳ねます。")
+        case .train: return String(localized: "Mac が忙しいほど速く走ります。")
+        case .chick: return String(localized: "Mac が忙しいほど速くはばたきます。")
         }
     }
 }
@@ -90,7 +90,7 @@ enum CharacterKind: String, CaseIterable, Identifiable {
 enum DotShape: String, CaseIterable, Identifiable {
     case round, square
     var id: String { rawValue }
-    var label: String { self == .round ? "丸" : "四角" }
+    var label: String { self == .round ? String(localized: "丸") : String(localized: "四角") }
 }
 
 enum BoardIdle: String, CaseIterable, Identifiable {
@@ -98,9 +98,9 @@ enum BoardIdle: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var label: String {
         switch self {
-        case .dashboard: return "Mac の使用状況"
-        case .clock: return "時計"
-        case .message: return "ひとこと"
+        case .dashboard: return String(localized: "Mac の使用状況")
+        case .clock: return String(localized: "時計")
+        case .message: return String(localized: "ひとこと")
         }
     }
 }
@@ -111,16 +111,16 @@ enum PerformanceMode: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var label: String {
         switch self {
-        case .saver: return "省電力"
-        case .standard: return "標準"
-        case .performance: return "パフォーマンス"
+        case .saver: return String(localized: "省電力")
+        case .standard: return String(localized: "標準")
+        case .performance: return String(localized: "パフォーマンス")
         }
     }
     var detail: String {
         switch self {
-        case .saver: return "メニューバーは5秒ごと、ニュースは30分・運行情報は15分ごとに更新します。バッテリーに優しい設定です。"
-        case .standard: return "メニューバーは3秒ごと、ニュースは15分・運行情報は10分ごとに更新します。"
-        case .performance: return "メニューバーは1秒ごと、ニュースと運行情報は10分ごとに更新し、キャラクターもなめらかに動きます。"
+        case .saver: return String(localized: "メニューバーは5秒ごと、ニュースは30分・運行情報は15分ごとに更新します。バッテリーに優しい設定です。")
+        case .standard: return String(localized: "メニューバーは3秒ごと、ニュースは15分・運行情報は10分ごとに更新します。")
+        case .performance: return String(localized: "メニューバーは1秒ごと、ニュースと運行情報は10分ごとに更新し、キャラクターもなめらかに動きます。")
         }
     }
     var menuBarInterval: Double { [5, 3, 1][index] }

@@ -15,7 +15,7 @@ enum ClaudeUsageAPI {
     /// With a session key, claude.ai's own usage; otherwise Claude Code's login.
     static func fetch(useSessionKey: Bool) async throws -> UsageSnapshot {
         if useSessionKey {
-            guard let key = Keychain.load(account: sessionKeyAccount) else { throw AIUsageError(message: "セッションキーが未設定") }
+            guard let key = Keychain.load(account: sessionKeyAccount) else { throw AIUsageError(message: String(localized: "セッションキーが未設定")) }
             return try await fetchWeb(sessionKey: key)
         }
         return try await fetchWithClaudeCode()
@@ -25,14 +25,14 @@ enum ClaudeUsageAPI {
         if tokenCache == nil || tokenCache!.expiresAt.map({ $0 < Date() }) == true {
             // Reading the secret may show a keychain password prompt, so only do it when
             // Claude Code has actually written a new token since our last read.
-            guard let itemDate = Keychain.claudeCodeItemModified() else { throw AIUsageError(message: "Claude Code にログインしていません") }
+            guard let itemDate = Keychain.claudeCodeItemModified() else { throw AIUsageError(message: String(localized: "Claude Code にログインしていません")) }
             if itemDate != tokenReadForItemDate {
                 tokenReadForItemDate = itemDate
                 tokenCache = Keychain.loadClaudeCodeToken()
             }
         }
-        guard let token = tokenCache else { throw AIUsageError(message: "Claude Code にログインしていません") }
-        if let exp = token.expiresAt, exp < Date() { throw AIUsageError(message: "ログインの期限切れ（claude を一度起動すると直ります）") }
+        guard let token = tokenCache else { throw AIUsageError(message: String(localized: "Claude Code にログインしていません")) }
+        if let exp = token.expiresAt, exp < Date() { throw AIUsageError(message: String(localized: "ログインの期限切れ（claude を一度起動すると直ります）")) }
 
         var req = URLRequest(url: URL(string: "https://api.anthropic.com/api/oauth/usage")!)
         req.setValue("Bearer \(token.accessToken)", forHTTPHeaderField: "Authorization")
@@ -42,10 +42,10 @@ enum ClaudeUsageAPI {
         let (data, resp) = try await URLSession.shared.data(for: req)
         let code = (resp as? HTTPURLResponse)?.statusCode ?? 0
         guard (200..<300).contains(code) else {
-            throw AIUsageError(message: code == 401 ? "ログインの期限切れ（claude を一度起動すると直ります）" : "取得できませんでした（\(code)）")
+            throw AIUsageError(message: code == 401 ? String(localized: "ログインの期限切れ（claude を一度起動すると直ります）") : String(localized: "取得できませんでした（\(code)）"))
         }
         guard let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
-              let snap = UsageSnapshot(api: json) else { throw AIUsageError(message: "形式が変わったため読み取れません") }
+              let snap = UsageSnapshot(api: json) else { throw AIUsageError(message: String(localized: "形式が変わったため読み取れません")) }
         return snap
     }
 
@@ -65,7 +65,7 @@ enum ClaudeUsageAPI {
         let org = try await organizationID(sessionKey: sessionKey)
         let data = try await get(webRequest(URL(string: "https://claude.ai/api/organizations/\(org)/usage")!, sessionKey: sessionKey))
         guard let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
-              let snap = UsageSnapshot(api: json) else { throw AIUsageError(message: "形式が変わったため読み取れません") }
+              let snap = UsageSnapshot(api: json) else { throw AIUsageError(message: String(localized: "形式が変わったため読み取れません")) }
         return snap
     }
 
@@ -75,7 +75,7 @@ enum ClaudeUsageAPI {
         let data = try await get(webRequest(URL(string: "https://claude.ai/api/organizations")!, sessionKey: sessionKey))
         let orgs = (try? JSONSerialization.jsonObject(with: data)) as? [[String: Any]] ?? []
         let pick = orgs.first { ($0["capabilities"] as? [String])?.contains("chat") == true } ?? orgs.first
-        guard let id = pick?["uuid"] as? String else { throw AIUsageError(message: "アカウントを確認できません") }
+        guard let id = pick?["uuid"] as? String else { throw AIUsageError(message: String(localized: "アカウントを確認できません")) }
         orgCache = (sessionKey, id)
         return id
     }
@@ -84,7 +84,7 @@ enum ClaudeUsageAPI {
         let (data, resp) = try await URLSession.shared.data(for: req)
         let code = (resp as? HTTPURLResponse)?.statusCode ?? 0
         guard (200..<300).contains(code) else {
-            throw AIUsageError(message: code == 401 || code == 403 ? "セッションキーの期限切れ" : "取得できませんでした（\(code)）")
+            throw AIUsageError(message: code == 401 || code == 403 ? String(localized: "セッションキーの期限切れ") : String(localized: "取得できませんでした（\(code)）"))
         }
         return data
     }

@@ -444,39 +444,39 @@ final class MainStatusController: NSObject, NSPopoverDelegate, NSViewToolTipOwne
 
     private func tooltip(for region: IconRegion) -> String {
         func top(_ list: [AppUsageMonitor.AppUsage], _ value: (AppUsageMonitor.AppUsage) -> String) -> String {
-            list.prefix(3).map { "・\($0.name)  \(value($0))" }.joined(separator: "\n")
+            list.prefix(3).map { String(localized: "・\($0.name)  \(value($0))") }.joined(separator: "\n")
         }
-        let hint = "クリックで詳細"
+        let hint = String(localized: "クリックで詳細")
         switch region {
         case .character, .cpu:
             var s = String(format: "CPU %.0f%%", monitor.cpu)
             let t = top(apps.topCPU) { String(format: "%.1f%%", $0.cpu) }
             if !t.isEmpty { s += "\n" + t }
             if region == .character && Features.sleepPrevention {
-                s += "\nスリープ防止: \(awake.remainingText())\n⌥クリックでスリープ防止を切り替え"
+                s += String(localized: "\nスリープ防止: \(awake.remainingText())\n⌥クリックでスリープ防止を切り替え")
             }
             return s + "\n" + hint
         case .memory:
-            var s = "メモリ \(ByteText.size(Int64(monitor.memoryUsed))) / \(ByteText.size(Int64(monitor.memoryTotal)))"
+            var s = String(localized: "メモリ \(ByteText.size(Int64(monitor.memoryUsed))) / \(ByteText.size(Int64(monitor.memoryTotal)))")
                 + String(format: "（%.0f%%）", monitor.memoryPercent)
             let t = top(apps.topMemory) { ByteText.size(Int64($0.memory)) }
             if !t.isEmpty { s += "\n" + t }
             return s + "\n" + hint
         case .network:
             apps.sampleNetworkIfNeeded()
-            var s = "受信 \(ByteText.rate(monitor.netDown))　送信 \(ByteText.rate(monitor.netUp))"
+            var s = String(localized: "受信 \(ByteText.rate(monitor.netDown))　送信 \(ByteText.rate(monitor.netUp))")
             let t = top(apps.topNetwork) { ByteText.rate($0.net) }
             if !t.isEmpty { s += "\n" + t }
             return s + "\n" + hint
         case .ai(let p):
-            guard let u = ai.usage[p] else { return "\(p.name): \(ai.errors[p] ?? "取得中…")" }
+            guard let u = ai.usage[p] else { return String(localized: "\(p.name): \(ai.errors[p] ?? "取得中…")") }
             var lines = [p.name]
             for w in [u.primary, u.secondary].compactMap({ $0 }) {
                 var line = "\(w.label) \(Int(w.percent.rounded()))%"
-                if let r = w.resetsAt { line += "（リセット\(TimeText.untilReset(r).replacingOccurrences(of: "あと ", with: "まで"))）" }
+                if let r = w.resetsAt { line += String(localized: "（リセット\(TimeText.untilReset(r).replacingOccurrences(of: "あと ", with: "まで"))）") }
                 lines.append(line)
             }
-            lines.append("\(TimeText.absolute(u.updatedAt)) 更新・\(hint)")
+            lines.append(String(localized: "\(TimeText.absolute(u.updatedAt)) 更新・\(hint)"))
             return lines.joined(separator: "\n")
         }
     }
@@ -518,14 +518,14 @@ final class MainStatusController: NSObject, NSPopoverDelegate, NSViewToolTipOwne
         func appName(_ m: AppUsageMonitor.Metric) -> String {
             guard let id = apps.leader[m] else { return "" }
             let list = m == .cpu ? apps.topCPU : m == .memory ? apps.topMemory : apps.topNetwork
-            return list.first { $0.id == id }.map { "（最多: \($0.name)）" } ?? ""
+            return list.first { $0.id == id }.map { String(localized: "（最多: \($0.name)）") } ?? ""
         }
         lines.append(String(format: "CPU %.0f%%", monitor.cpu) + appName(.cpu))
-        lines.append(String(format: "メモリ %.0f%%", monitor.memoryPercent) + appName(.memory))
-        lines.append("通信 ↓\(ByteText.rate(monitor.netDown)) ↑\(ByteText.rate(monitor.netUp))" + appName(.network))
+        lines.append(String(format: String(localized: "メモリ %.0f%%"), monitor.memoryPercent) + appName(.memory))
+        lines.append(String(localized: "通信 ↓\(ByteText.rate(monitor.netDown)) ↑\(ByteText.rate(monitor.netUp))") + appName(.network))
         if Features.sleepPrevention {
-            lines.append("スリープ防止: \(awake.remainingText())")
-            lines.append("⌥クリックでスリープ防止を切り替え")
+            lines.append(String(localized: "スリープ防止: \(awake.remainingText())"))
+            lines.append(String(localized: "⌥クリックでスリープ防止を切り替え"))
         }
         return lines.joined(separator: "\n")
     }
@@ -603,14 +603,14 @@ final class MainStatusController: NSObject, NSPopoverDelegate, NSViewToolTipOwne
     private func announcementMenuItems() -> [NSMenuItem] {
         guard let msg = announcing else { return [] }
         var items: [NSMenuItem] = []
-        let header = NSMenuItem(title: "流れているお知らせ：\(msg.title.prefix(24))", action: nil, keyEquivalent: "")
+        let header = NSMenuItem(title: String(localized: "流れているお知らせ：\(msg.title.prefix(24))"), action: nil, keyEquivalent: "")
         items.append(header)
         if msg.canOpen {
             let open = NSMenuItem(title: msg.openLabel, action: #selector(openAnnouncement), keyEquivalent: "")
             open.target = self
             items.append(open)
         }
-        let close = NSMenuItem(title: "このお知らせを閉じる", action: #selector(closeAnnouncement), keyEquivalent: "")
+        let close = NSMenuItem(title: String(localized: "このお知らせを閉じる"), action: #selector(closeAnnouncement), keyEquivalent: "")
         close.target = self
         items.append(close)
         return items
@@ -859,13 +859,13 @@ final class MainStatusController: NSObject, NSPopoverDelegate, NSViewToolTipOwne
     }
 
     private func awakeMenuItems() -> [NSMenuItem] {
-        var items = [NSMenuItem.sectionHeader(title: "スリープ防止")]
+        var items = [NSMenuItem.sectionHeader(title: String(localized: "スリープ防止"))]
         if awake.isActive {
             let status = NSMenuItem(title: awake.remainingText(), action: nil, keyEquivalent: "")
             status.isEnabled = false
             items.append(status)
         }
-        let off = NSMenuItem(title: "オフ", action: #selector(awakeOff), keyEquivalent: "")
+        let off = NSMenuItem(title: String(localized: "オフ"), action: #selector(awakeOff), keyEquivalent: "")
         off.target = self
         off.state = awake.isActive ? .off : .on
         items.append(off)

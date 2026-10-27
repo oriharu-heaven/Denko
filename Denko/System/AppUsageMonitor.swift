@@ -25,8 +25,8 @@ final class AppUsageMonitor: ObservableObject {
         var label: String {
             switch self {
             case .cpu: return "CPU"
-            case .memory: return "メモリ"
-            case .network: return "通信"
+            case .memory: return String(localized: "メモリ")
+            case .network: return String(localized: "通信")
             }
         }
     }

@@ -144,11 +144,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                 self?.onboardingWindow = nil
                 self?.applyOnboarding(choices)
                 // What はじめに couldn't do itself (lines, permissions …) is next in セットアップ.
-                self?.openSettings(tab: "セットアップ")
+                self?.openSettings(tab: String(localized: "セットアップ"))
             })
             let w = NSWindow(contentViewController: host)
             w.styleMask = [.titled, .closable]
-            w.title = "はじめに"
+            w.title = String(localized: "はじめに")
             w.isReleasedWhenClosed = false
             w.delegate = self
             w.center()
@@ -171,7 +171,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             window.center()
             settingsWindow = window
         }
-        let wanted = tab ?? (isNew && SetupStep.remaining(settings).isEmpty ? "一般" : nil)
+        let wanted = tab ?? (isNew && SetupStep.remaining(settings).isEmpty ? String(localized: "一般") : nil)
         if let wanted, let tabs = settingsWindow?.contentViewController as? NSTabViewController,
            let index = tabs.tabViewItems.firstIndex(where: { $0.label == wanted }) {
             tabs.selectedTabViewItemIndex = index

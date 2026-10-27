@@ -183,18 +183,18 @@ final class LocalNotifyServer {
         let where_ = project.map { "（\($0)）" } ?? ""
         switch j["hook_event_name"] as? String {
         case "Notification":
-            let raw = j["message"] as? String ?? "通知があります"
+            let raw = j["message"] as? String ?? String(localized: "通知があります")
             // Waiting for input / permission needs the user: make it stand out.
             hub.post(.claudeCode, kind: .claudeWaiting, title: "\(Self.translate(raw))\(where_)", projectPath: cwd)
         case "Stop":
             // The answer is ready and Claude is waiting on the user: worth the whole bar.
-            hub.post(.claudeCode, kind: .claudeDone, title: "応答が完了しました\(where_)", projectPath: cwd)
+            hub.post(.claudeCode, kind: .claudeDone, title: String(localized: "応答が完了しました\(where_)"), projectPath: cwd)
         case "SubagentStop":
-            hub.post(.claudeCode, kind: .claudeDone, title: "サブエージェントが完了しました\(where_)", projectPath: cwd)
+            hub.post(.claudeCode, kind: .claudeDone, title: String(localized: "サブエージェントが完了しました\(where_)"), projectPath: cwd)
         case let other?:
             hub.post(.claudeCode, title: "\(other)\(where_)", projectPath: cwd)
         case nil:
-            hub.post(.claudeCode, title: "通知があります\(where_)", projectPath: cwd)
+            hub.post(.claudeCode, title: String(localized: "通知があります\(where_)"), projectPath: cwd)
         }
     }
 
@@ -205,9 +205,9 @@ final class LocalNotifyServer {
         let where_ = project.map { "（\($0)）" } ?? ""
         let type = j["type"] as? String ?? ""
         if type.contains("approval") || type.contains("input") {
-            hub.post(.codex, kind: .claudeWaiting, title: "許可を求めています\(where_)", projectPath: cwd)
+            hub.post(.codex, kind: .claudeWaiting, title: String(localized: "許可を求めています\(where_)"), projectPath: cwd)
         } else {
-            hub.post(.codex, kind: .claudeDone, title: "作業が完了しました\(where_)",
+            hub.post(.codex, kind: .claudeDone, title: String(localized: "作業が完了しました\(where_)"),
                      body: (j["last-assistant-message"] as? String).map { String($0.prefix(120)) },
                      projectPath: cwd)
         }
@@ -220,15 +220,15 @@ final class LocalNotifyServer {
         let where_ = project.map { "（\(URL(fileURLWithPath: $0).lastPathComponent)）" } ?? ""
         let waiting = ["waiting", "permission", "input", "approval"].contains { event.lowercased().contains($0) }
         hub.post(source, kind: waiting ? .claudeWaiting : .claudeDone,
-                 title: who + (title ?? (waiting ? "許可を求めています" : "作業が完了しました")) + where_,
+                 title: who + (title ?? (waiting ? String(localized: "許可を求めています") : String(localized: "作業が完了しました"))) + where_,
                  projectPath: project)
     }
 
     private static func translate(_ s: String) -> String {
-        if s.localizedCaseInsensitiveContains("waiting for your input") { return "入力待ちです" }
+        if s.localizedCaseInsensitiveContains("waiting for your input") { return String(localized: "入力待ちです") }
         if s.localizedCaseInsensitiveContains("needs your permission") {
-            if let r = s.range(of: "to use ") { return "\(s[r.upperBound...]) の許可を求めています" }
-            return "許可を求めています"
+            if let r = s.range(of: "to use ") { return String(localized: "\(s[r.upperBound...]) の許可を求めています") }
+            return String(localized: "許可を求めています")
         }
         return s
     }

@@ -117,21 +117,21 @@ final class StorageAnalyzer: ObservableObject {
         // かんたん mode skips places macOS guards with a permission prompt: Desktop,
         // Documents, Downloads, media folders and other apps' containers.
         let basicFolders: [(String, String, URL)] = [
-            ("apps", "アプリケーション", URL(fileURLWithPath: "/Applications")),
-            ("library", "ライブラリ（キャッシュ・アプリのデータ）", home.appendingPathComponent("Library")),
+            ("apps", String(localized: "アプリケーション"), URL(fileURLWithPath: "/Applications")),
+            ("library", String(localized: "ライブラリ（キャッシュ・アプリのデータ）"), home.appendingPathComponent("Library")),
         ]
         let folders: [(String, String, URL)] = full ? [
-            ("apps", "アプリケーション", URL(fileURLWithPath: "/Applications")),
-            ("library", "ライブラリ（キャッシュ・アプリのデータ）", home.appendingPathComponent("Library")),
-            ("documents", "書類", home.appendingPathComponent("Documents")),
-            ("desktop", "デスクトップ", home.appendingPathComponent("Desktop")),
-            ("downloads", "ダウンロード", home.appendingPathComponent("Downloads")),
-            ("pictures", "ピクチャ", home.appendingPathComponent("Pictures")),
-            ("movies", "ムービー", home.appendingPathComponent("Movies")),
-            ("music", "ミュージック", home.appendingPathComponent("Music")),
+            ("apps", String(localized: "アプリケーション"), URL(fileURLWithPath: "/Applications")),
+            ("library", String(localized: "ライブラリ（キャッシュ・アプリのデータ）"), home.appendingPathComponent("Library")),
+            ("documents", String(localized: "書類"), home.appendingPathComponent("Documents")),
+            ("desktop", String(localized: "デスクトップ"), home.appendingPathComponent("Desktop")),
+            ("downloads", String(localized: "ダウンロード"), home.appendingPathComponent("Downloads")),
+            ("pictures", String(localized: "ピクチャ"), home.appendingPathComponent("Pictures")),
+            ("movies", String(localized: "ムービー"), home.appendingPathComponent("Movies")),
+            ("music", String(localized: "ミュージック"), home.appendingPathComponent("Music")),
         ] : basicFolders
         // All folders at once: the slowest one (usually ~/Library) sets the pace.
-        progress = "フォルダごとの容量を集計中…"
+        progress = String(localized: "フォルダごとの容量を集計中…")
         var cats: [Category] = []
         await withTaskGroup(of: Category?.self) { group in
             for (id, name, url) in folders {
@@ -148,8 +148,8 @@ final class StorageAnalyzer: ObservableObject {
         let used = total - available
         let other = used - cats.reduce(0) { $0 + $1.size }
         if other > Self.gb {
-            cats.append(Category(id: "other", name: full ? "システム・その他（隠しフォルダ・スナップショット等）"
-                                                    : "その他（書類・写真・システムなど）", size: other))
+            cats.append(Category(id: "other", name: full ? String(localized: "システム・その他（隠しフォルダ・スナップショット等）")
+                                                    : String(localized: "その他（書類・写真・システムなど）"), size: other))
             categories = cats.sorted { $0.size > $1.size }
         }
 
@@ -161,56 +161,56 @@ final class StorageAnalyzer: ObservableObject {
             findings = found.sorted { $0.size > $1.size }
         }
 
-        progress = "開発ツールのファイルを確認中…"
+        progress = String(localized: "開発ツールのファイルを確認中…")
         let dev = home.appendingPathComponent("Library/Developer")
-        add(await folderFinding("derived", "Xcode のビルド中間ファイル（DerivedData）",
-                                "ビルドのたびに作られる一時ファイルです。消しても次のビルドで自動的に作り直されます。",
+        add(await folderFinding("derived", String(localized: "Xcode のビルド中間ファイル（DerivedData）"),
+                                String(localized: "ビルドのたびに作られる一時ファイルです。消しても次のビルドで自動的に作り直されます。"),
                                 dev.appendingPathComponent("Xcode/DerivedData"), trashContents: true))
         for platform in ["iOS", "watchOS", "tvOS", "visionOS"] {
             add(await folderFinding("support-\(platform)", "\(platform) DeviceSupport",
-                                    "実機をつないだときに作られるデバッグ用ファイルです。古い OS 版のフォルダは消して大丈夫です。",
+                                    String(localized: "実機をつないだときに作られるデバッグ用ファイルです。古い OS 版のフォルダは消して大丈夫です。"),
                                     dev.appendingPathComponent("Xcode/\(platform) DeviceSupport"), trashContents: false))
         }
-        add(await folderFinding("archives", "Xcode のアーカイブ",
-                                "過去にアーカイブしたビルドです。配布済みで不要なものだけ手動で削除してください。",
+        add(await folderFinding("archives", String(localized: "Xcode のアーカイブ"),
+                                String(localized: "過去にアーカイブしたビルドです。配布済みで不要なものだけ手動で削除してください。"),
                                 dev.appendingPathComponent("Xcode/Archives"), trashContents: false))
-        if let sims = await sizeFinding("simulators", "iOS シミュレータ",
-                                        "使わなくなった OS 版のシミュレータは、右のコマンドでまとめて削除できます。",
+        if let sims = await sizeFinding("simulators", String(localized: "iOS シミュレータ"),
+                                        String(localized: "使わなくなった OS 版のシミュレータは、右のコマンドでまとめて削除できます。"),
                                         dev.appendingPathComponent("CoreSimulator/Devices"),
                                         action: .command("xcrun simctl delete unavailable")) {
             add(sims)
         }
 
-        progress = "キャッシュを確認中…"
+        progress = String(localized: "キャッシュを確認中…")
         for f in await cacheFindings() { add(f) }
 
-        progress = "開発用キャッシュを確認中…"
+        progress = String(localized: "開発用キャッシュを確認中…")
         let devCaches: [(String, String, String, String)] = [
-            ("npm", "npm のキャッシュ", ".npm/_cacache", "npm cache clean --force"),
-            ("pnpm", "pnpm のストア", "Library/pnpm/store", "pnpm store prune"),
-            ("gradle", "Gradle のキャッシュ", ".gradle/caches", "rm -rf ~/.gradle/caches"),
-            ("cargo", "Cargo のレジストリ", ".cargo/registry", "cargo cache --autoclean"),
-            ("docker", "Docker のディスクイメージ", "Library/Containers/com.docker.docker/Data/vms", "docker system prune -a"),
+            ("npm", String(localized: "npm のキャッシュ"), ".npm/_cacache", "npm cache clean --force"),
+            ("pnpm", String(localized: "pnpm のストア"), "Library/pnpm/store", "pnpm store prune"),
+            ("gradle", String(localized: "Gradle のキャッシュ"), ".gradle/caches", "rm -rf ~/.gradle/caches"),
+            ("cargo", String(localized: "Cargo のレジストリ"), ".cargo/registry", "cargo cache --autoclean"),
+            ("docker", String(localized: "Docker のディスクイメージ"), "Library/Containers/com.docker.docker/Data/vms", "docker system prune -a"),
         ]
         for (id, title, rel, cmd) in devCaches where full || !rel.contains("Containers") {
-            add(await sizeFinding(id, title, "開発ツールが溜めたファイルです。右のコマンドで、ツール自身に安全に整理させられます。",
+            add(await sizeFinding(id, title, String(localized: "開発ツールが溜めたファイルです。右のコマンドで、ツール自身に安全に整理させられます。"),
                                   home.appendingPathComponent(rel), action: .command(cmd)))
         }
 
         if full {
-            progress = "ダウンロードを確認中…"
+            progress = String(localized: "ダウンロードを確認中…")
             add(await oldDownloadsFinding())
         }
 
-        progress = "しばらく使っていないアプリを確認中…"
+        progress = String(localized: "しばらく使っていないアプリを確認中…")
         for f in await unusedApps() { add(f) }
 
         if full {
-            progress = "大きなファイルを探しています…"
+            progress = String(localized: "大きなファイルを探しています…")
             for f in await largeFiles() { add(f) }
 
-            progress = "ゴミ箱を確認中…"
-            add(await sizeFinding("trash", "ゴミ箱", "ゴミ箱に入っているファイルも容量を使っています。Finder でゴミ箱を空にすると解放されます。",
+            progress = String(localized: "ゴミ箱を確認中…")
+            add(await sizeFinding("trash", String(localized: "ゴミ箱"), String(localized: "ゴミ箱に入っているファイルも容量を使っています。Finder でゴミ箱を空にすると解放されます。"),
                                   home.appendingPathComponent(".Trash"), action: .reveal(home.appendingPathComponent(".Trash"))))
         }
 
@@ -255,9 +255,9 @@ final class StorageAnalyzer: ObservableObject {
             let isBrew = child.lastPathComponent == "Homebrew"
             out.append(StorageFinding(
                 id: "cache-\(child.lastPathComponent)",
-                title: name.hasSuffix("の更新ファイル") ? name : "\(name) のキャッシュ",
-                detail: isBrew ? "古いパッケージのダウンロードです。右のコマンドで Homebrew 自身に整理させるのが安全です。"
-                               : "一時保存されたデータで、アプリが必要に応じて作り直します。アプリを終了してから削除してください。",
+                title: name.hasSuffix("の更新ファイル") ? name : String(localized: "\(name) のキャッシュ"),
+                detail: isBrew ? String(localized: "古いパッケージのダウンロードです。右のコマンドで Homebrew 自身に整理させるのが安全です。")
+                               : String(localized: "一時保存されたデータで、アプリが必要に応じて作り直します。アプリを終了してから削除してください。"),
                 size: size, action: isBrew ? .command("brew cleanup --prune=all") : .trash([child]), revealURL: child))
         }
         return out
@@ -281,8 +281,8 @@ final class StorageAnalyzer: ObservableObject {
             return (size, count)
         }.value
         guard result.1 > 0 else { return nil }
-        return StorageFinding(id: "downloads-old", title: "30日以上開いていないダウンロード（\(result.1)件）",
-                              detail: "インストーラ（.dmg / .zip）など、一度使ったら不要なものが多い場所です。Finder で確認して削除してください。",
+        return StorageFinding(id: "downloads-old", title: String(localized: "30日以上開いていないダウンロード（\(result.1)件）"),
+                              detail: String(localized: "インストーラ（.dmg / .zip）など、一度使ったら不要なものが多い場所です。Finder で確認して削除してください。"),
                               size: result.0, action: .reveal(downloads), revealURL: downloads)
     }
 
@@ -300,10 +300,10 @@ final class StorageAnalyzer: ObservableObject {
             if let bundle = Bundle(url: app)?.bundleIdentifier, bundle.hasPrefix("com.apple.") { continue }
             let size = await Self.du(app)
             guard size >= 500_000_000 else { continue }
-            let when = last.map { "最後に開いたのは \(Self.relative($0))" } ?? "開いた記録がありません"
+            let when = last.map { String(localized: "最後に開いたのは \(Self.relative($0))") } ?? String(localized: "開いた記録がありません")
             out.append(StorageFinding(id: "app-\(app.lastPathComponent)",
                                       title: app.deletingPathExtension().lastPathComponent,
-                                      detail: "\(when)。使っていなければゴミ箱へ（App Store アプリはあとで再ダウンロードできます）。",
+                                      detail: String(localized: "\(when)。使っていなければゴミ箱へ（App Store アプリはあとで再ダウンロードできます）。"),
                                       size: size, action: .trash([app]), revealURL: app))
         }
         return out
@@ -330,7 +330,7 @@ final class StorageAnalyzer: ObservableObject {
             let size = Int64((try? url.resourceValues(forKeys: [.totalFileAllocatedSizeKey]))?.totalFileAllocatedSize ?? 0)
             guard size > 0 else { continue }
             out.append(StorageFinding(id: "big-\(path)", title: url.lastPathComponent,
-                                      detail: "1GB を超えるファイルです（\(url.deletingLastPathComponent().path.replacingOccurrences(of: home.path, with: "~"))）。不要なら削除、残したいなら外部ストレージへ。",
+                                      detail: String(localized: "1GB を超えるファイルです（\(url.deletingLastPathComponent().path.replacingOccurrences(of: home.path, with: "~"))）。不要なら削除、残したいなら外部ストレージへ。"),
                                       size: size, action: .reveal(url), revealURL: url))
         }
         return Array(out.sorted { $0.size > $1.size }.prefix(8))
@@ -349,8 +349,8 @@ final class StorageAnalyzer: ObservableObject {
         refreshVolume()
         save()
         trashMessage = failed > 0
-            ? "\(failed) 個の項目を移動できませんでした。使っているアプリを終了してから、もう一度お試しください。"
-            : "「\(f.title)」をゴミ箱に入れました。ゴミ箱を空にすると容量が空きます。"
+            ? String(localized: "\(failed) 個の項目を移動できませんでした。使っているアプリを終了してから、もう一度お試しください。")
+            : String(localized: "「\(f.title)」をゴミ箱に入れました。ゴミ箱を空にすると容量が空きます。")
 
     }
 
@@ -381,10 +381,10 @@ final class StorageAnalyzer: ObservableObject {
     private static func friendlyCacheName(_ folder: String) -> String {
         // "<bundle id>.ShipIt" folders hold downloaded app updates.
         if folder.hasSuffix(".ShipIt") {
-            return friendlyCacheName(String(folder.dropLast(".ShipIt".count))) + " の更新ファイル"
+            return friendlyCacheName(String(folder.dropLast(".ShipIt".count))) + String(localized: " の更新ファイル")
         }
         if folder.hasSuffix("-updater") {
-            return friendlyCacheName(String(folder.dropLast("-updater".count))) + " の更新ファイル"
+            return friendlyCacheName(String(folder.dropLast("-updater".count))) + String(localized: " の更新ファイル")
         }
         let known = ["org.swift.swiftpm": "Swift Package Manager", "Unity": "Unity", "UnityHub": "Unity Hub",
                      "unityhub": "Unity Hub", "antigravity": "Antigravity", "com.google.antigravity": "Antigravity",

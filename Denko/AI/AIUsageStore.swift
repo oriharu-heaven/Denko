@@ -43,8 +43,8 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
     /// Window names shown before the first data arrives.
     var defaultLabels: (outer: String, inner: String) {
         switch self {
-        case .claude, .codex: return ("5時間枠", "週間")
-        case .gemini: return ("1日", "1日（ほかのモデル）")
+        case .claude, .codex: return (String(localized: "5時間枠"), String(localized: "週間"))
+        case .gemini: return (String(localized: "1日"), String(localized: "1日（ほかのモデル）"))
         }
     }
 
@@ -57,9 +57,9 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
 
     var sourceNote: String {
         switch self {
-        case .claude: return "Claude Code がステータスラインに知らせる使用量から取得。Claude Code を使うと更新されます"
-        case .codex: return "Codex CLI のローカル記録（~/.codex/sessions）から取得。Codex を使うと更新されます"
-        case .gemini: return "Gemini CLI のログインで Google の利用枠を取得（実験的）"
+        case .claude: return String(localized: "Claude Code がステータスラインに知らせる使用量から取得。Claude Code を使うと更新されます")
+        case .codex: return String(localized: "Codex CLI のローカル記録（~/.codex/sessions）から取得。Codex を使うと更新されます")
+        case .gemini: return String(localized: "Gemini CLI のログインで Google の利用枠を取得（実験的）")
         }
     }
 }
@@ -93,11 +93,11 @@ struct AIWindow: Equatable {
         let elapsedPercent = ((total - remaining) / total) * 100
         let diff = percent - elapsedPercent
         if diff >= 15 {
-            return ("ペース速め・経過\(Int(elapsedPercent.rounded()))%", true)
+            return (String(localized: "ペース速め・経過\(Int(elapsedPercent.rounded()))%"), true)
         } else if elapsedPercent >= 10 && diff <= -15 {
-            return ("余裕あり・経過\(Int(elapsedPercent.rounded()))%", false)
+            return (String(localized: "余裕あり・経過\(Int(elapsedPercent.rounded()))%"), false)
         }
-        return ("経過\(Int(elapsedPercent.rounded()))%", false)
+        return (String(localized: "経過\(Int(elapsedPercent.rounded()))%"), false)
     }
 }
 
@@ -187,8 +187,8 @@ final class AIUsageStore: ObservableObject {
                 if let r = w.resetsAt, r < Date() { return AIWindow(label: label, percent: 0, resetsAt: nil, windowMinutes: minutes) }
                 return AIWindow(label: label, percent: w.utilization, resetsAt: w.resetsAt, windowMinutes: minutes)
             }
-            let u = AIUsage(primary: s.fiveHour.map { window($0, "5時間枠", 300) },
-                            secondary: s.sevenDay.map { window($0, "週間", 10_080) },
+            let u = AIUsage(primary: s.fiveHour.map { window($0, String(localized: "5時間枠"), 300) },
+                            secondary: s.sevenDay.map { window($0, String(localized: "週間"), 10_080) },
                             updatedAt: claude.lastUpdated ?? Date(),
                             source: "Claude Code")
             if usage[.claude] != u { usage[.claude] = u }
@@ -233,7 +233,7 @@ enum CodexUsage {
         let fm = FileManager.default
         let root = fm.homeDirectoryForCurrentUser.appendingPathComponent(".codex/sessions")
         guard let walker = fm.enumerator(at: root, includingPropertiesForKeys: [.contentModificationDateKey])
-        else { throw AIUsageError(message: "Codex CLI の記録が見つかりません（~/.codex/sessions）。Codex を一度使うと表示されます。") }
+        else { throw AIUsageError(message: String(localized: "Codex CLI の記録が見つかりません（~/.codex/sessions）。Codex を一度使うと表示されます。")) }
 
         var files: [(URL, Date)] = []
         for case let url as URL in walker where url.pathExtension == "jsonl" {
@@ -251,16 +251,16 @@ enum CodexUsage {
                 let stamp = (obj["timestamp"] as? String).flatMap(UsageWindow.parseDate) ?? modified
                 return AIUsage(primary: window(limits["primary"], stamp: stamp),
                                secondary: window(limits["secondary"], stamp: stamp),
-                               updatedAt: stamp, source: "Codex CLI の記録")
+                               updatedAt: stamp, source: String(localized: "Codex CLI の記録"))
             }
         }
-        throw AIUsageError(message: "Codex の使用量の記録がまだありません。Codex を一度使うと表示されます。")
+        throw AIUsageError(message: String(localized: "Codex の使用量の記録がまだありません。Codex を一度使うと表示されます。"))
     }
 
     private static func window(_ any: Any?, stamp: Date) -> AIWindow? {
         guard let w = any as? [String: Any], let used = w["used_percent"] as? Double else { return nil }
         let minutes = w["window_minutes"] as? Double ?? 0
-        let label = minutes >= 1440 ? (minutes >= 10_080 ? "週間" : "\(Int(minutes / 1440))日") : "\(Int(max(minutes, 60) / 60))時間枠"
+        let label = minutes >= 1440 ? (minutes >= 10_080 ? String(localized: "週間") : String(localized: "\(Int(minutes / 1440))日")) : String(localized: "\(Int(max(minutes, 60) / 60))時間枠")
         var reset: Date?
         if let at = w["resets_at"] as? Double { reset = Date(timeIntervalSince1970: at) }
         else if let inS = w["resets_in_seconds"] as? Double { reset = stamp.addingTimeInterval(inS) }

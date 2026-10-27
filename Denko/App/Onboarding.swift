@@ -29,8 +29,8 @@ struct OnboardingView: View {
                 Image(nsImage: NSApp.applicationIconImage)
                     .resizable()
                     .frame(width: 72, height: 72)
-                Text("Denko へようこそ").font(.title.weight(.semibold))
-                Text("流したいものを選んでください")
+                Text(String(localized: "Denko へようこそ")).font(.title.weight(.semibold))
+                Text(String(localized: "流したいものを選んでください"))
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -43,30 +43,30 @@ struct OnboardingView: View {
                     // Asked up front: weather and disaster info both depend on it, and a grey
                     // placeholder alone read as if it were already filled in.
                     LabeledContent {
-                        TextField("住んでいる地域", text: $c.place, prompt: Text(settings.weatherPlace))
+                        TextField(String(localized: "住んでいる地域"), text: $c.place, prompt: Text(settings.weatherPlace))
                             .textFieldStyle(.roundedBorder)
                             .labelsHidden()
                             .frame(width: 200)
                     } label: {
-                        Text("住んでいる地域")
+                        Text(String(localized: "住んでいる地域"))
                     }
-                    row("cloud.sun.fill", .blue, "天気とニュース", $c.today)
-                    row("tram.fill", .green, "電車の運行情報", $c.trains)
-                    row("cpu", .gray, "Mac の状態", $c.mac)
+                    row("cloud.sun.fill", .blue, String(localized: "天気とニュース"), $c.today)
+                    row("tram.fill", .green, String(localized: "電車の運行情報"), $c.trains)
+                    row("cpu", .gray, String(localized: "Mac の状態"), $c.mac)
                 }
                 Section {
-                    row("terminal.fill", .brown, "コーディングエージェント", $c.dev)
-                    row("gauge.with.dots.needle.67percent", .pink, "AI の使用量", $c.ai)
+                    row("terminal.fill", .brown, String(localized: "コーディングエージェント"), $c.dev)
+                    row("gauge.with.dots.needle.67percent", .pink, String(localized: "AI の使用量"), $c.ai)
                 }
                 Section {
-                    Toggle("ログイン時に Denko を起動", isOn: $c.launchAtLogin)
+                    Toggle(String(localized: "ログイン時に Denko を起動"), isOn: $c.launchAtLogin)
                 }
             }
             .formStyle(.grouped)
             .scrollDisabled(true)
 
             Button { finish(c) } label: {
-                Text("はじめる").frame(minWidth: 120)
+                Text(String(localized: "はじめる")).frame(minWidth: 120)
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
@@ -134,25 +134,25 @@ extension AppDelegate {
         }
         // Claude's usage arrives through Claude Code's status line.
         if s.aiProviders.contains(.claude) && !ClaudeStatusLine.isInstalled(endpoint: endpoint) {
-            tools.append(("Claude の使用量", "~/.claude/settings.json のステータスライン",
+            tools.append((String(localized: "Claude の使用量"), String(localized: "~/.claude/settings.json のステータスライン"),
                           { try ClaudeStatusLine.install(endpoint: endpoint) }))
         }
         FullBarAnnouncer.debugLog("onboarding dev=\(c.dev) tools=\(tools.map(\.0)) claudeDetected=\(AIProvider.claude.isDetected)")
         if !tools.isEmpty {
             let alert = NSAlert()
-            alert.messageText = "\(tools.map(\.0).joined(separator: "・")) と連携しますか？"
-            alert.informativeText = "\(tools.map(\.1).joined(separator: "、")) に、Denko に知らせる設定（許可待ち・作業完了・使用量）を追加します。元のファイルは同じフォルダにバックアップされます。あとから 設定 → 情報連携 で解除できます。"
-            alert.addButton(withTitle: "連携する")
-            alert.addButton(withTitle: "あとで")
+            alert.messageText = String(localized: "\(tools.map(\.0).joined(separator: "・")) と連携しますか？")
+            alert.informativeText = String(localized: "\(tools.map(\.1).joined(separator: "、")) に、Denko に知らせる設定（許可待ち・作業完了・使用量）を追加します。元のファイルは同じフォルダにバックアップされます。あとから 設定 → 情報連携 で解除できます。")
+            alert.addButton(withTitle: String(localized: "連携する"))
+            alert.addButton(withTitle: String(localized: "あとで"))
             if alert.runModal() == .alertFirstButtonReturn {
                 for t in tools {
                     do { try t.2() } catch {
-                        hub.post(.system, title: "\(t.0) と連携できませんでした",
-                                 body: "設定 → 情報連携 → \(t.0) からもう一度お試しください", force: .normal)
+                        hub.post(.system, title: String(localized: "\(t.0) と連携できませんでした"),
+                                 body: String(localized: "設定 → 情報連携 → \(t.0) からもう一度お試しください"), force: .normal)
                     }
                 }
             }
         }
-        hub.post(.system, title: "Denko の準備ができました", body: "設定 → 掲示板 で見た目を変えられます", force: .normal)
+        hub.post(.system, title: String(localized: "Denko の準備ができました"), body: String(localized: "設定 → 掲示板 で見た目を変えられます"), force: .normal)
     }
 }

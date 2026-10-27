@@ -8,9 +8,9 @@ final class SleepPreventer: ObservableObject {
 
     static func label(minutes: Int) -> String {
         switch minutes {
-        case 0: return "無期限"
-        case let m where m < 60: return "\(m)分"
-        default: return "\(minutes / 60)時間"
+        case 0: return String(localized: "無期限")
+        case let m where m < 60: return String(localized: "\(m)分")
+        default: return String(localized: "\(minutes / 60)時間")
         }
     }
 
@@ -41,7 +41,7 @@ final class SleepPreventer: ObservableObject {
             : kIOPMAssertionTypePreventUserIdleDisplaySleep
         let ok = IOPMAssertionCreateWithName(type as CFString,
                                              IOPMAssertionLevel(kIOPMAssertionLevelOn),
-                                             "Denko スリープ防止" as CFString,
+                                             String(localized: "Denko スリープ防止") as CFString,
                                              &assertionID) == kIOReturnSuccess
         guard ok else { stop(); return }
         isActive = true
@@ -100,9 +100,9 @@ final class SleepPreventer: ObservableObject {
     }
 
     func remainingText(now: Date = Date()) -> String {
-        guard isActive else { return "オフ" }
-        guard let endsAt else { return "無期限" }
-        return "\(TimeText.untilReset(endsAt, now: now))（\(TimeText.absolute(endsAt))まで）"
+        guard isActive else { return String(localized: "オフ") }
+        guard let endsAt else { return String(localized: "無期限") }
+        return String(localized: "\(TimeText.untilReset(endsAt, now: now))（\(TimeText.absolute(endsAt))まで）")
     }
 }
 

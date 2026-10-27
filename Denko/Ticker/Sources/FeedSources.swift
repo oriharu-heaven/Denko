@@ -67,7 +67,7 @@ final class GitHubSource {
               let http = resp as? HTTPURLResponse else { return }
         if let p = http.value(forHTTPHeaderField: "X-Poll-Interval").flatMap(Double.init) { interval = max(60, p) }
         if http.statusCode == 401 {
-            hub.post(.github, title: "トークンが無効です", body: "設定 → 掲示板 で GitHub トークンを確認してください")
+            hub.post(.github, title: String(localized: "トークンが無効です"), body: String(localized: "設定 → 掲示板 で GitHub トークンを確認してください"))
             timer?.invalidate()
             return
         }
@@ -84,13 +84,13 @@ final class GitHubSource {
         // First run: don't replay the existing backlog, just summarize it.
         if !primed {
             primed = true
-            if !items.isEmpty { hub.post(.github, kind: .githubOther, title: "未読の通知が \(items.count) 件あります") }
+            if !items.isEmpty { hub.post(.github, kind: .githubOther, title: String(localized: "未読の通知が \(items.count) 件あります")) }
             return
         }
         for item in fresh.reversed() {
             let subject = item["subject"] as? [String: Any]
             let repo = (item["repository"] as? [String: Any])?["full_name"] as? String ?? ""
-            let title = subject?["title"] as? String ?? "通知"
+            let title = subject?["title"] as? String ?? String(localized: "通知")
             let kind = Self.kindLabel(subject?["type"] as? String, reason: item["reason"] as? String)
             // Things that need the user (review requests, mentions, assignments) are urgent.
             let reason = item["reason"] as? String ?? ""
@@ -101,16 +101,16 @@ final class GitHubSource {
 
     private static func kindLabel(_ type: String?, reason: String?) -> String {
         switch reason {
-        case "review_requested": return "レビュー依頼"
-        case "mention", "team_mention": return "メンション"
+        case "review_requested": return String(localized: "レビュー依頼")
+        case "mention", "team_mention": return String(localized: "メンション")
         case "ci_activity": return "CI"
-        case "assign": return "アサイン"
+        case "assign": return String(localized: "アサイン")
         default: break
         }
         switch type {
         case "PullRequest": return "PR"
         case "Issue": return "Issue"
-        case "Release": return "リリース"
+        case "Release": return String(localized: "リリース")
         case "CheckSuite": return "CI"
         default: return type ?? ""
         }
@@ -245,17 +245,17 @@ final class BuiltInAlerts {
         guard settings.alertClaudeUsage, let prev = lastFive else { return }
         for threshold in [80.0, 100.0] where prev < threshold && five >= threshold {
             let reset = TimeText.untilReset(snapshot?.fiveHour?.resetsAt)
-            hub.post(.system, kind: .aiUsage, title: "Claude 5時間枠が \(Int(threshold))% に達しました", body: "リセット \(reset)")
+            hub.post(.system, kind: .aiUsage, title: String(localized: "Claude 5時間枠が \(Int(threshold))% に達しました"), body: String(localized: "リセット \(reset)"))
         }
         if prev >= 50 && five < 5 {
-            hub.post(.system, kind: .aiUsage, title: "Claude 5時間枠がリセットされました")
+            hub.post(.system, kind: .aiUsage, title: String(localized: "Claude 5時間枠がリセットされました"))
         }
     }
 
     func awakeChanged(isActive: Bool) {
         defer { wasAwake = isActive }
         if settings.alertAwake, wasAwake, !isActive {
-            hub.post(.system, kind: .awakeEnded, title: "スリープ防止が終了しました")
+            hub.post(.system, kind: .awakeEnded, title: String(localized: "スリープ防止が終了しました"))
         }
     }
 }

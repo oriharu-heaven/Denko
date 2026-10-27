@@ -15,16 +15,16 @@ struct AISection: View {
                 AIPromo(settings: settings, accent: accent)
             } else if shown.isEmpty {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("表示する AI が選ばれていません").font(.callout)
+                    Text(String(localized: "表示する AI が選ばれていません")).font(.callout)
                     ForEach(store.enabled) { p in
                         HStack {
                             ProviderMarkView(provider: p, color: accent).frame(width: 14, height: 14)
                             Text(p.name)
                             Spacer()
-                            Button("表示する") { settings.menuBarAI.append(p) }.controlSize(.small)
+                            Button(String(localized: "表示する")) { settings.menuBarAI.append(p) }.controlSize(.small)
                         }
                     }
-                    Text("あとから 設定 → メニューバー でも変えられます。").font(.caption).foregroundStyle(.secondary)
+                    Text(String(localized: "あとから 設定 → メニューバー でも変えられます。")).font(.caption).foregroundStyle(.secondary)
                 }
             } else {
                 TimelineView(.periodic(from: .now, by: 30)) { ctx in
@@ -43,7 +43,7 @@ struct AISection: View {
                         Button {
                             Task { await store.refresh() }
                         } label: {
-                            Label("更新", systemImage: "arrow.clockwise")
+                            Label(String(localized: "更新"), systemImage: "arrow.clockwise")
                         }
                         .buttonStyle(.borderless)
                         .foregroundStyle(.secondary)
@@ -78,10 +78,10 @@ private struct ProviderRow: View {
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 8) {
                     Legend(window: usage?.primary, placeholder: provider.defaultLabels.outer,
-                           note: "外側", now: now, accent: accent)
+                           note: String(localized: "外側"), now: now, accent: accent)
                     if usage?.secondary != nil || usage == nil {
                         Legend(window: usage?.secondary, placeholder: provider.defaultLabels.inner,
-                               note: "内側", now: now, accent: accent)
+                               note: String(localized: "内側"), now: now, accent: accent)
                     }
                 }
             }
@@ -103,7 +103,7 @@ private struct ProviderRow: View {
                     .foregroundStyle(.orange)
                     .fixedSize(horizontal: false, vertical: true)
             } else if let u = usage {
-                Text("\(u.source)・\(TimeText.absolute(u.updatedAt)) 更新")
+                Text(String(localized: "\(u.source)・\(TimeText.absolute(u.updatedAt)) 更新"))
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
             }
@@ -129,7 +129,7 @@ private struct Legend: View {
             }
             if let w = window, w.resetsAt != nil {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Text("リセット \(TimeText.untilReset(w.resetsAt, now: now))")
+                    Text(String(localized: "リセット \(TimeText.untilReset(w.resetsAt, now: now))"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     if let pace = w.paceStatus(now: now) {
@@ -183,8 +183,8 @@ private struct AIPromo: View {
                     .font(.system(size: 26))
                     .foregroundStyle(accent)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("AI の使用量を掲示板に").font(.headline)
-                    Text("Claude・Codex の利用枠（5時間・1週間）を二重のリングで表示し、残りが少なくなったら掲示板でお知らせします。")
+                    Text(String(localized: "AI の使用量を掲示板に")).font(.headline)
+                    Text(String(localized: "Claude・Codex の利用枠（5時間・1週間）を二重のリングで表示し、残りが少なくなったら掲示板でお知らせします。"))
                         .font(.caption).foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -194,17 +194,17 @@ private struct AIPromo: View {
                     ProviderMarkView(provider: p, color: accent).frame(width: 14, height: 14)
                     Text(p.name).font(.callout)
                     if p.isDetected {
-                        Text("この Mac で使われています").font(.caption2).foregroundStyle(accent)
+                        Text(String(localized: "この Mac で使われています")).font(.caption2).foregroundStyle(accent)
                     }
                     Spacer()
-                    Button("表示する") {
+                    Button(String(localized: "表示する")) {
                         if !settings.aiProviders.contains(p) { settings.aiProviders.append(p) }
                         if !settings.menuBarAI.contains(p) { settings.menuBarAI.append(p) }
                     }
                         .controlSize(.small)
                 }
             }
-            Text("ログイン情報は読み取るだけで、外部に送ることはありません。")
+            Text(String(localized: "ログイン情報は読み取るだけで、外部に送ることはありません。"))
                 .font(.caption2).foregroundStyle(.tertiary)
         }
     }

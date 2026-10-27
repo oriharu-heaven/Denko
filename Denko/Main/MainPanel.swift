@@ -6,11 +6,11 @@ enum PanelTab: String, CaseIterable, Identifiable {
     var label: String {
         switch self {
         case .cpu: return "CPU"
-        case .memory: return "メモリ"
-        case .network: return "通信"
-        case .disk: return "ディスク"
+        case .memory: return String(localized: "メモリ")
+        case .network: return String(localized: "通信")
+        case .disk: return String(localized: "ディスク")
         case .ai: return "AI"
-        case .today: return "今日"
+        case .today: return String(localized: "今日")
         }
     }
     var symbol: String {
@@ -96,34 +96,34 @@ struct MainPanel: View {
                 Divider()
             }
             HStack {
-                Button("設定…") { AppDelegate.shared.openSettings() }
+                Button(String(localized: "設定…")) { AppDelegate.shared.openSettings() }
                     .keyboardShortcut(",", modifiers: .command)
                 let left = SetupStep.remainingCount(settings)
                 if left > 0 {
                     Button {
-                        AppDelegate.shared.openSettings(tab: "セットアップ")
+                        AppDelegate.shared.openSettings(tab: String(localized: "セットアップ"))
                     } label: {
                         Label("\(left)", systemImage: "checklist")
                     }
                     .foregroundStyle(settings.accent.color)
-                    .help("セットアップ")
-                    .accessibilityLabel("セットアップ、残り\(left)")
+                    .help(String(localized: "セットアップ"))
+                    .accessibilityLabel(String(localized: "セットアップ、残り\(left)"))
                 }
                 Spacer()
                 // Quick pause for meetings: only urgent notices play until then.
                 if settings.isPaused, let until = settings.pausedUntil {
-                    Text("\(until, format: .dateTime.hour().minute()) まで緊急だけ")
+                    Text(String(localized: "\(until, format: .dateTime.hour().minute()) まで緊急だけ"))
                         .font(.caption)
-                    Button("再開") { settings.pausedUntil = nil }
+                    Button(String(localized: "再開")) { settings.pausedUntil = nil }
                 } else {
-                    Menu("お知らせを止める") {
-                        Button("30分") { settings.pause(minutes: 30) }
-                        Button("1時間") { settings.pause(minutes: 60) }
-                        Button("明日の朝まで") { settings.pause(minutes: nil) }
+                    Menu(String(localized: "お知らせを止める")) {
+                        Button(String(localized: "30分")) { settings.pause(minutes: 30) }
+                        Button(String(localized: "1時間")) { settings.pause(minutes: 60) }
+                        Button(String(localized: "明日の朝まで")) { settings.pause(minutes: nil) }
                     }
                     .menuStyle(.borderlessButton)
                     .fixedSize()
-                    .help("止めている間も、「緊急」にしたお知らせ（初期設定では強い地震・津波）は流れます")
+                    .help(String(localized: "止めている間も、「緊急」にしたお知らせ（初期設定では強い地震・津波）は流れます"))
                 }
             }
             .buttonStyle(.borderless)
@@ -210,8 +210,8 @@ private struct AwakeSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            PanelHeader(title: "スリープ防止", systemImage: awake.isActive ? "cup.and.saucer.fill" : "cup.and.saucer") {
-                Toggle("スリープ防止", isOn: Binding(
+            PanelHeader(title: String(localized: "スリープ防止"), systemImage: awake.isActive ? "cup.and.saucer.fill" : "cup.and.saucer") {
+                Toggle(String(localized: "スリープ防止"), isOn: Binding(
                     get: { awake.isActive },
                     set: { $0 ? awake.start(minutes: settings.keepAwakeDefaultMinutes) : awake.stop() }))
                     .toggleStyle(.switch)
@@ -225,7 +225,7 @@ private struct AwakeSection: View {
                             .font(.callout.monospacedDigit())
                     }
                 } else {
-                    Text("Mac はいつも通りスリープします")
+                    Text(String(localized: "Mac はいつも通りスリープします"))
                         .font(.callout)
                         .foregroundStyle(.secondary)
                 }
@@ -235,7 +235,7 @@ private struct AwakeSection: View {
                         Button(SleepPreventer.label(minutes: m)) { awake.start(minutes: m) }
                     }
                 } label: {
-                    Text(awake.isActive ? "延長" : "時間を選ぶ")
+                    Text(awake.isActive ? String(localized: "延長") : String(localized: "時間を選ぶ"))
                 }
                 .menuStyle(.borderlessButton)
                 .fixedSize()

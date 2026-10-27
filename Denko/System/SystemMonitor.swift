@@ -273,7 +273,7 @@ enum ByteText {
     }
 
     static func rate(_ bytesPerSec: Double) -> String {
-        if bytesPerSec > 0 && bytesPerSec < 1000 { return "1 KB/s 未満" }
+        if bytesPerSec > 0 && bytesPerSec < 1000 { return String(localized: "1 KB/s 未満") }
         return rateFormatter.string(fromByteCount: Int64(bytesPerSec)) + "/s"
     }
 }

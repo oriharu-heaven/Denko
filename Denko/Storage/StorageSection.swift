@@ -31,9 +31,9 @@ struct StorageSection: View {
             if !analyzer.findings.isEmpty {
                 Divider()
                 HStack(alignment: .firstTextBaseline) {
-                    Text("減らせそうなもの").font(.subheadline.weight(.semibold))
+                    Text(String(localized: "減らせそうなもの")).font(.subheadline.weight(.semibold))
                     Spacer()
-                    Text("合計 \(ByteText.size(analyzer.reclaimable))")
+                    Text(String(localized: "合計 \(ByteText.size(analyzer.reclaimable))"))
                         .font(.caption.monospacedDigit())
                         .foregroundStyle(accent)
                 }
@@ -47,7 +47,7 @@ struct StorageSection: View {
                 }
                 .frame(maxHeight: 300)
             } else if analyzer.lastScan != nil && !analyzer.isScanning {
-                Label("大きく減らせそうなものは見つかりませんでした", systemImage: "checkmark.circle")
+                Label(String(localized: "大きく減らせそうなものは見つかりませんでした"), systemImage: "checkmark.circle")
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
@@ -67,7 +67,7 @@ struct StorageSection: View {
         HStack(spacing: 8) {
             Spacer()
             if settings.storageMode != .full {
-                Button("詳しく調べる…") { AppDelegate.shared.openSettings() }
+                Button(String(localized: "詳しく調べる…")) { AppDelegate.shared.openSettings() }
                     .buttonStyle(.borderless)
                     .font(.caption)
             }
@@ -78,18 +78,18 @@ struct StorageSection: View {
     private var summary: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text("使用中 \(ByteText.size(analyzer.used))")
+                Text(String(localized: "使用中 \(ByteText.size(analyzer.used))"))
                     .font(.title3.weight(.semibold).monospacedDigit())
                     .foregroundStyle(lowSpace ? accent : .primary)
-                Text("/ 全体 \(ByteText.size(analyzer.total))").font(.caption).foregroundStyle(.secondary)
+                Text(String(localized: "/ 全体 \(ByteText.size(analyzer.total))")).font(.caption).foregroundStyle(.secondary)
                 Spacer()
-                Button(analyzer.isScanning ? "分析中…" : "再分析") { Task { await analyzer.scan(mode: settings.storageMode) } }
+                Button(analyzer.isScanning ? String(localized: "分析中…") : String(localized: "再分析")) { Task { await analyzer.scan(mode: settings.storageMode) } }
                     .controlSize(.small)
                     .disabled(analyzer.isScanning)
             }
             stackedBar.frame(height: 12)
             HStack {
-                Text("空き \(ByteText.size(analyzer.available))（\(Int((1 - usedFraction) * 100))%）")
+                Text(String(localized: "空き \(ByteText.size(analyzer.available))（\(Int((1 - usedFraction) * 100))%）"))
                     .foregroundStyle(lowSpace ? accent : .secondary)
                 Spacer()
                 if let last = analyzer.lastScan, !analyzer.isScanning {
@@ -152,7 +152,7 @@ struct StorageSection: View {
             }
             HStack(spacing: 6) {
                 Rectangle().strokeBorder(.tertiary).frame(width: 9, height: 9)
-                Text("空き").font(.caption)
+                Text(String(localized: "空き")).font(.caption)
                 Spacer(minLength: 6)
                 Text(ByteText.size(analyzer.available)).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
                 Text("\(Int(((1 - usedFraction) * 100).rounded()))%")
@@ -197,16 +197,16 @@ private struct FindingRow: View {
                 case .trash:
                     // Asked in place (a dialog would close the panel). Reversible from the Trash.
                     if confirmTrash {
-                        Button("やめる") { confirmTrash = false }
-                        Button("ゴミ箱に入れる", role: .destructive) { analyzer.moveToTrash(finding) }
+                        Button(String(localized: "やめる")) { confirmTrash = false }
+                        Button(String(localized: "ゴミ箱に入れる"), role: .destructive) { analyzer.moveToTrash(finding) }
                             .foregroundStyle(.red)
                     } else {
-                        Button("ゴミ箱に入れる…") { confirmTrash = true }
+                        Button(String(localized: "ゴミ箱に入れる…")) { confirmTrash = true }
                     }
                 case .reveal:
                     EmptyView()
                 case .command(let cmd):
-                    Button(copied ? "コピーしました" : "コマンドをコピー") {
+                    Button(copied ? String(localized: "コピーしました") : String(localized: "コマンドをコピー")) {
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString(cmd, forType: .string)
                         copied = true
@@ -215,7 +215,7 @@ private struct FindingRow: View {
                 }
                 Spacer()
                 if let url = finding.revealURL {
-                    Button("Finder で表示") { NSWorkspace.shared.activateFileViewerSelecting([url]) }
+                    Button(String(localized: "Finder で表示")) { NSWorkspace.shared.activateFileViewerSelecting([url]) }
                 }
             }
             .buttonStyle(.borderless)

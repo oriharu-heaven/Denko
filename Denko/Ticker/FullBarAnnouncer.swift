@@ -215,7 +215,7 @@ final class FullBarAnnouncer: NSObject, CAAnimationDelegate {
         for seg in segments {
             let width = seg.clip.bounds.width
             seg.text.removeAllAnimations()
-            let heading = msg.urgent ? "◆  \(msg.source.tag)  ◆  緊急のお知らせ  ◆" : "◆  \(msg.source.tag)  ◆"
+            let heading = msg.urgent ? String(localized: "◆  \(msg.source.tag)  ◆  緊急のお知らせ  ◆") : "◆  \(msg.source.tag)  ◆"
             seg.text.contents = textStyle
                 ? TextStrip.heading(tag: msg.source.label, urgent: msg.urgent, width: width, style: style(height: board.bounds.height))
                 : LEDRenderer.staticStrip(for: heading, accent: accent, boardWidth: width / scale)

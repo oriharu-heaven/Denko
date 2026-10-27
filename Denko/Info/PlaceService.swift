@@ -45,7 +45,7 @@ final class PlaceService: NSObject, ObservableObject, MKLocalSearchCompleterDele
         let req = MKLocalSearch.Request()
         req.naturalLanguageQuery = text
         guard let item = try? await MKLocalSearch(request: req).start().mapItems.first else {
-            error = "「\(text)」が見つかりませんでした"
+            error = String(localized: "「\(text)」が見つかりませんでした")
             return
         }
         await apply(item.placemark.location ?? CLLocation(latitude: item.placemark.coordinate.latitude,
@@ -61,7 +61,7 @@ final class PlaceService: NSObject, ObservableObject, MKLocalSearchCompleterDele
         case .notDetermined: manager.requestWhenInUseAuthorization()
         case .denied, .restricted:
             isLocating = false
-            error = "位置情報が許可されていません。"
+            error = String(localized: "位置情報が許可されていません。")
         default: manager.requestLocation()
         }
     }
@@ -73,7 +73,7 @@ final class PlaceService: NSObject, ObservableObject, MKLocalSearchCompleterDele
             case .authorizedAlways, .authorized: manager.requestLocation()
             case .denied, .restricted:
                 self.isLocating = false
-                self.error = "位置情報が許可されませんでした"
+                self.error = String(localized: "位置情報が許可されませんでした")
             default: break
             }
         }
@@ -90,7 +90,7 @@ final class PlaceService: NSObject, ObservableObject, MKLocalSearchCompleterDele
     nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         Task { @MainActor in
             self.isLocating = false
-            self.error = "現在地を取得できませんでした"
+            self.error = String(localized: "現在地を取得できませんでした")
         }
     }
 
@@ -99,7 +99,7 @@ final class PlaceService: NSObject, ObservableObject, MKLocalSearchCompleterDele
         let mark = try? await CLGeocoder().reverseGeocodeLocation(loc, preferredLocale: Locale(identifier: "ja_JP")).first
         settings.weatherLatitude = loc.coordinate.latitude
         settings.weatherLongitude = loc.coordinate.longitude
-        settings.weatherPlace = mark?.locality ?? mark?.subAdministrativeArea ?? mark?.administrativeArea ?? "指定した地点"
+        settings.weatherPlace = mark?.locality ?? mark?.subAdministrativeArea ?? mark?.administrativeArea ?? String(localized: "指定した地点")
         if let pref = mark?.administrativeArea { settings.weatherPrefecture = pref }
         onChange()
     }

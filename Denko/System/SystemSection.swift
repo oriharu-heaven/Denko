@@ -53,12 +53,12 @@ struct SystemSection: View {
             }
             let rest = monitor.cpu - list.reduce(0) { $0 + $1.cpu }
             if rest >= 0.5 {
-                out.append(Slice(id: AppUsageMonitor.othersID, name: "その他", value: rest,
+                out.append(Slice(id: AppUsageMonitor.othersID, name: String(localized: "その他"), value: rest,
                                  label: String(format: "%.1f%%", rest), color: .gray.opacity(0.35)))
             }
             let idle = max(0, 100 - monitor.cpu)
             if idle > 0 {
-                out.append(Slice(id: Slice.freeID, name: "空き", value: idle,
+                out.append(Slice(id: Slice.freeID, name: String(localized: "空き"), value: idle,
                                  label: String(format: "%.0f%%", idle), color: .gray.opacity(0.12)))
             }
         case .memory:
@@ -69,12 +69,12 @@ struct SystemSection: View {
             }
             let rest = Double(monitor.memoryUsed) - list.reduce(0) { $0 + Double($1.memory) }
             if rest > 100_000_000 {
-                out.append(Slice(id: AppUsageMonitor.othersID, name: "その他", value: rest,
+                out.append(Slice(id: AppUsageMonitor.othersID, name: String(localized: "その他"), value: rest,
                                  label: ByteText.size(Int64(rest)), color: .gray.opacity(0.35)))
             }
             let free = Double(monitor.memoryTotal) - Double(monitor.memoryUsed)
             if free > 0 {
-                out.append(Slice(id: Slice.freeID, name: "空き", value: free,
+                out.append(Slice(id: Slice.freeID, name: String(localized: "空き"), value: free,
                                  label: ByteText.size(Int64(free)), color: .gray.opacity(0.12)))
             }
         case .network:
@@ -85,7 +85,7 @@ struct SystemSection: View {
             let total = monitor.netDown + monitor.netUp
             let rest = total - list.reduce(0) { $0 + $1.net }
             if rest > 1024 {
-                out.append(Slice(id: AppUsageMonitor.othersID, name: "その他", value: rest,
+                out.append(Slice(id: AppUsageMonitor.othersID, name: String(localized: "その他"), value: rest,
                                  label: ByteText.rate(rest), color: .gray.opacity(0.35)))
             }
         }
@@ -99,7 +99,7 @@ struct SystemSection: View {
         switch metric {
         case .cpu:
             VStack(alignment: .leading, spacing: 4) {
-                BigValue(value: String(format: "%.0f%%", monitor.cpu), caption: "CPU 全体",
+                BigValue(value: String(format: "%.0f%%", monitor.cpu), caption: String(localized: "CPU 全体"),
                          high: monitor.cpu >= Theme.highUsage, accent: accent)
                 Sparkline(values: monitor.cpuHistory, maxCount: SystemMonitor.historyLength, accent: accent)
                     .frame(height: 22)
@@ -107,7 +107,7 @@ struct SystemSection: View {
         case .memory:
             VStack(alignment: .leading, spacing: 4) {
                 BigValue(value: ByteText.size(Int64(monitor.memoryUsed)),
-                         caption: "/ \(ByteText.size(Int64(monitor.memoryTotal))) 使用中",
+                         caption: String(localized: "/ \(ByteText.size(Int64(monitor.memoryTotal))) 使用中"),
                          high: monitor.memoryPercent >= Theme.highUsage, accent: accent)
                 // Memory moves slowly: zoom to the recent range (±5 points) so changes are visible.
                 let lo = max(0, (monitor.memoryHistory.min() ?? 0) - 5)
@@ -119,8 +119,8 @@ struct SystemSection: View {
         case .network:
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 18) {
-                    BigValue(value: "↓ " + ByteText.rate(monitor.netDown), caption: "受信", high: false, accent: accent)
-                    BigValue(value: "↑ " + ByteText.rate(monitor.netUp), caption: "送信", high: false, accent: accent)
+                    BigValue(value: "↓ " + ByteText.rate(monitor.netDown), caption: String(localized: "受信"), high: false, accent: accent)
+                    BigValue(value: "↑ " + ByteText.rate(monitor.netUp), caption: String(localized: "送信"), high: false, accent: accent)
                 }
                 // Scaled to the busiest moment in view (network has no fixed maximum).
                 let peak = max(monitor.networkHistory.max() ?? 0, 1)
@@ -162,9 +162,9 @@ struct SystemSection: View {
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .help("\(a.name) の詳細")
+                    .help(String(localized: "\(a.name) の詳細"))
                 } else if i == 0 {
-                    Text("いま通信しているアプリはありません").font(.caption).foregroundStyle(.secondary)
+                    Text(String(localized: "いま通信しているアプリはありません")).font(.caption).foregroundStyle(.secondary)
                         .frame(height: 22)
                 } else {
                     // Keep the height steady while apps come and go.
@@ -180,7 +180,7 @@ struct SystemSection: View {
         return HStack(alignment: .center, spacing: 14) {
             ZStack {
                 Chart(data) { s in
-                    SectorMark(angle: .value("使用量", max(s.value, 0.0001)),
+                    SectorMark(angle: .value(String(localized: "使用量"), max(s.value, 0.0001)),
                                innerRadius: .ratio(0.62), angularInset: 1.2)
                         .cornerRadius(2)
                         .foregroundStyle(s.color)
@@ -236,9 +236,9 @@ struct SystemSection: View {
 
     private var centerCaption: String {
         switch metric {
-        case .cpu: return "全体"
-        case .memory: return "使用中"
-        case .network: return "合計"
+        case .cpu: return String(localized: "全体")
+        case .memory: return String(localized: "使用中")
+        case .network: return String(localized: "合計")
         }
     }
 
@@ -275,7 +275,7 @@ struct SystemSection: View {
                         AppIconView(icon: icon, isOthers: slice?.isOthers ?? false, colorIcons: colorIcons)
                             .frame(width: 14, height: 14)
                     }
-                    Text(slice?.name ?? "集計中…")
+                    Text(slice?.name ?? String(localized: "集計中…"))
                         .font(.caption)
                         .lineLimit(1)
                         .truncationMode(.middle)
@@ -289,7 +289,7 @@ struct SystemSection: View {
             }
             .buttonStyle(.plain)
             .disabled(slice == nil || slice!.isOthers)
-            .help(slice.map { $0.isOthers ? $0.name : "\($0.name) の詳細" } ?? "")
+            .help(slice.map { $0.isOthers ? $0.name : String(localized: "\($0.name) の詳細") } ?? "")
         }
     }
 }
@@ -330,11 +330,11 @@ private struct AppDetail: View {
                     Image(systemName: "chevron.left")
                 }
                 .buttonStyle(.borderless)
-                .help("戻る")
+                .help(String(localized: "戻る"))
                 AppIconView(icon: apps.icon(for: id), colorIcons: true).frame(width: 28, height: 28)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(u?.name ?? id).font(.headline).lineLimit(1)
-                    Text("\(procs.count) プロセス").font(.caption).foregroundStyle(.secondary)
+                    Text(String(localized: "\(procs.count) プロセス")).font(.caption).foregroundStyle(.secondary)
                 }
                 Spacer()
             }
@@ -342,8 +342,8 @@ private struct AppDetail: View {
             Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 4) {
                 GridRow {
                     Text("CPU").foregroundStyle(.secondary)
-                    Text("メモリ").foregroundStyle(.secondary)
-                    Text("通信").foregroundStyle(.secondary)
+                    Text(String(localized: "メモリ")).foregroundStyle(.secondary)
+                    Text(String(localized: "通信")).foregroundStyle(.secondary)
                 }
                 .font(.caption)
                 GridRow {
@@ -355,7 +355,7 @@ private struct AppDetail: View {
             }
 
             VStack(alignment: .leading, spacing: 4) {
-                Text("プロセス").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                Text(String(localized: "プロセス")).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
                 ForEach(0..<6, id: \.self) { i in
                     if i < procs.count {
                         let p = procs[i]
@@ -374,11 +374,11 @@ private struct AppDetail: View {
             }
 
             HStack(spacing: 12) {
-                Button("アクティビティモニタ") {
+                Button(String(localized: "アクティビティモニタ")) {
                     NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/Utilities/Activity Monitor.app"))
                 }
                 if id.hasSuffix(".app") {
-                    Button("Finder で表示") {
+                    Button(String(localized: "Finder で表示")) {
                         NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: id)])
                     }
                 }
@@ -386,11 +386,11 @@ private struct AppDetail: View {
                 if let app = runningApp {
                     // Confirmed right here: a dialog would close this panel.
                     if confirmQuit {
-                        Button("やめる") { confirmQuit = false }
-                        Button("終了する", role: .destructive) { app.terminate(); back() }
+                        Button(String(localized: "やめる")) { confirmQuit = false }
+                        Button(String(localized: "終了する"), role: .destructive) { app.terminate(); back() }
                             .foregroundStyle(.red)
                     } else {
-                        Button("終了…", role: .destructive) { confirmQuit = true }
+                        Button(String(localized: "終了…"), role: .destructive) { confirmQuit = true }
                             .foregroundStyle(.red)
                     }
                 }

@@ -147,7 +147,7 @@ final class InfoStore: ObservableObject {
         var cards: [(TickerSource, String)] = []
         if settings.infoWeather, let w = weather {
             cards.append((.weather, "\(settings.weatherPlace) \(Int(w.temperature.rounded()))° \(WeatherCode.text(w.code))"
-                + "（最高\(Int(w.high.rounded()))° 最低\(Int(w.low.rounded()))° 降水\(w.rainChance)%）"
+                + String(localized: "（最高\(Int(w.high.rounded()))° 最低\(Int(w.low.rounded()))° 降水\(w.rainChance)%）")
                 + (w.rainSoon.map { " \($0)" } ?? "")))
         }
         // Headlines: only ones not played yet (two slots per rotation).
@@ -155,7 +155,7 @@ final class InfoStore: ObservableObject {
         if let first = fresh.first { cards.append((.news, first.title)) }
         if settings.infoTrains, let trains {
             let trouble = Self.uniqueLines(trains.filter(\.isTrouble))
-            cards.append((.train, trouble.isEmpty ? "登録した路線は平常運転です" : trouble.joined(separator: "・")))
+            cards.append((.train, trouble.isEmpty ? String(localized: "登録した路線は平常運転です") : trouble.joined(separator: String(localized: "・"))))
         }
         if settings.infoFX, !fx.isEmpty {
             cards.append((.fx, fx.map { "\($0.label) \(Self.price($0))（\(Self.percent($0.changePercent))）" }
@@ -168,21 +168,21 @@ final class InfoStore: ObservableObject {
     func rollText() -> String {
         var cards: [String] = []
         if settings.infoWeather, let w = weather {
-            cards.append("天気 \(settings.weatherPlace) \(Int(w.temperature.rounded()))° \(WeatherCode.text(w.code))"
-                + "（最高\(Int(w.high.rounded()))° 最低\(Int(w.low.rounded()))° 降水\(w.rainChance)%）"
+            cards.append(String(localized: "天気 \(settings.weatherPlace) \(Int(w.temperature.rounded()))° \(WeatherCode.text(w.code))")
+                + String(localized: "（最高\(Int(w.high.rounded()))° 最低\(Int(w.low.rounded()))° 降水\(w.rainChance)%）")
                 + (w.rainSoon.map { " \($0)" } ?? ""))
         }
         if settings.infoNews, !unshownNews.isEmpty {
-            cards.append("ニュース " + unshownNews.prefix(3).map(\.title).joined(separator: " ／ "))
+            cards.append(String(localized: "ニュース ") + unshownNews.prefix(3).map(\.title).joined(separator: " ／ "))
         }
         if settings.infoTrains, let trains {
             let trouble = trains.filter(\.isTrouble)
             cards.append(trouble.isEmpty
-                ? "運行情報 \(settings.trainLines.isEmpty ? "首都圏の" : "登録した")路線は平常運転"
-                : "運行情報 " + Self.uniqueLines(trouble).joined(separator: "・"))
+                ? String(localized: "運行情報 \(settings.trainLines.isEmpty ? "首都圏の" : "登録した")路線は平常運転")
+                : String(localized: "運行情報 ") + Self.uniqueLines(trouble).joined(separator: String(localized: "・")))
         }
         if settings.infoFX, !fx.isEmpty {
-            cards.append("為替 " + fx.map { "\($0.label) \(Self.price($0))（\(Self.percent($0.changePercent))）" }
+            cards.append(String(localized: "為替 ") + fx.map { "\($0.label) \(Self.price($0))（\(Self.percent($0.changePercent))）" }
                 .joined(separator: "  "))
         }
         return cards.joined(separator: "　◆　")
@@ -213,7 +213,7 @@ final class InfoStore: ObservableObject {
         defer { flashPrimed = true }
         guard flashPrimed else { return }
         for r in fresh {
-            hub.post(.news, kind: .newsBreaking, title: "NHK速報　" + r.text, url: r.link)
+            hub.post(.news, kind: .newsBreaking, title: String(localized: "NHK速報　") + r.text, url: r.link)
         }
     }
 
@@ -269,14 +269,14 @@ final class InfoStore: ObservableObject {
         if names.count == 1 {
             hub.post(.train, kind: .trainDelay, title: names[0], body: fresh.first?.note)
         } else if !names.isEmpty {
-            hub.post(.train, kind: .trainDelay, title: names.joined(separator: "・"))
+            hub.post(.train, kind: .trainDelay, title: names.joined(separator: String(localized: "・")))
         }
         guard trainsPrimed else { return }
         let nowTrouble = Set(lines.filter(\.isTrouble).map(\.name))
         let recovered = Set(troubleKeys.compactMap { $0.split(separator: "|").dropFirst().first.map(String.init) })
             .subtracting(nowTrouble)
         for name in recovered.sorted() {
-            hub.post(.train, kind: .trainRecovered, title: "\(name)は平常運転に戻りました")
+            hub.post(.train, kind: .trainRecovered, title: String(localized: "\(name)は平常運転に戻りました"))
         }
     }
 
@@ -298,9 +298,9 @@ final class InfoStore: ObservableObject {
             let key = "fxAlert-\(q.pair)-\(q.date)"
             guard !UserDefaults.standard.bool(forKey: key) else { continue }
             UserDefaults.standard.set(true, forKey: key)
-            let word = q.pair.hasSuffix("JPY") ? (q.change > 0 ? "円安" : "円高") : (q.change > 0 ? "上昇" : "下落")
-            hub.post(.fx, kind: .fxMove, title: "\(q.label) \(Self.price(q))　前日比 \(Self.percent(q.changePercent))の\(word)",
-                     body: "前営業日 \(String(format: "%.\(q.decimals)f", q.previousClose))（ECB 参考レート）")
+            let word = q.pair.hasSuffix("JPY") ? (q.change > 0 ? String(localized: "円安") : String(localized: "円高")) : (q.change > 0 ? String(localized: "上昇") : String(localized: "下落"))
+            hub.post(.fx, kind: .fxMove, title: String(localized: "\(q.label) \(Self.price(q))　前日比 \(Self.percent(q.changePercent))の\(word)"),
+                     body: String(localized: "前営業日 \(String(format: "%.\(q.decimals)f", q.previousClose))（ECB 参考レート）"))
         }
     }
 
@@ -323,7 +323,7 @@ final class InfoStore: ObservableObject {
               let (data, _) = try? await URLSession.shared.data(from: url),
               let j = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let cur = j["current"] as? [String: Any], let daily = j["daily"] as? [String: Any]
-        else { error = "天気を取得できませんでした"; return }
+        else { error = String(localized: "天気を取得できませんでした"); return }
 
         func first(_ key: String) -> Double? { (daily[key] as? [Double])?.first ?? (daily[key] as? [Int])?.first.map(Double.init) }
         var rainSoon: String?
@@ -346,7 +346,7 @@ final class InfoStore: ObservableObject {
                 guard let d = f.date(from: t), d > now, d < now.addingTimeInterval(6 * 3600) else { continue }
                 if p >= 50 {
                     let h = Calendar.current.component(.hour, from: d)
-                    rainSoon = "\(h)時ごろから雨（\(p)%）"
+                    rainSoon = String(localized: "\(h)時ごろから雨（\(p)%）")
                     break
                 }
             }
@@ -367,7 +367,7 @@ final class InfoStore: ObservableObject {
         if settings.announceRain, let soon = w.rainSoon,
            lastRainAlert.map({ Date().timeIntervalSince($0) > 3 * 3600 }) ?? true {
             lastRainAlert = Date()
-            hub.post(.weather, kind: .weatherRain, title: "\(settings.weatherPlace)：\(soon)", body: "傘を忘れずに")
+            hub.post(.weather, kind: .weatherRain, title: "\(settings.weatherPlace)：\(soon)", body: String(localized: "傘を忘れずに"))
         }
         // Morning forecast: first update after 6:00 each day.
         let cal = Calendar.current
@@ -375,8 +375,8 @@ final class InfoStore: ObservableObject {
         if settings.announceMorning, cal.component(.hour, from: Date()) >= 6,
            !UserDefaults.standard.bool(forKey: key) {
             UserDefaults.standard.set(true, forKey: key)
-            hub.post(.weather, kind: .weatherMorning, title: "今日の\(settings.weatherPlace)は\(WeatherCode.text(w.code))",
-                     body: "最高\(Int(w.high.rounded()))° 最低\(Int(w.low.rounded()))° 降水\(w.rainChance)%")
+            hub.post(.weather, kind: .weatherMorning, title: String(localized: "今日の\(settings.weatherPlace)は\(WeatherCode.text(w.code))"),
+                     body: String(localized: "最高\(Int(w.high.rounded()))° 最低\(Int(w.low.rounded()))° 降水\(w.rainChance)%"))
         }
     }
 
@@ -443,43 +443,43 @@ enum NewsCatalog {
         return [
             // 国内
             Source(id: "nhk", name: "NHK", overseas: false, categories: [
-                c("top", "主要", nhk + "cat0.xml"), c("society", "社会", nhk + "cat1.xml"),
-                c("politics", "政治", nhk + "cat4.xml"), c("economy", "経済", nhk + "cat5.xml"),
-                c("world", "国際", nhk + "cat6.xml"), c("science", "科学・文化", nhk + "cat3.xml"),
-                c("sports", "スポーツ", nhk + "cat7.xml"),
+                c("top", String(localized: "主要"), nhk + "cat0.xml"), c("society", String(localized: "社会"), nhk + "cat1.xml"),
+                c("politics", String(localized: "政治"), nhk + "cat4.xml"), c("economy", String(localized: "経済"), nhk + "cat5.xml"),
+                c("world", String(localized: "国際"), nhk + "cat6.xml"), c("science", String(localized: "科学・文化"), nhk + "cat3.xml"),
+                c("sports", String(localized: "スポーツ"), nhk + "cat7.xml"),
             ]),
-            Source(id: "yahoo", name: "Yahoo!ニュース", overseas: false, categories: [
-                c("top", "主要", yahoo + "top-picks.xml"), c("domestic", "国内", yahoo + "domestic.xml"),
-                c("world", "国際", yahoo + "world.xml"), c("economy", "経済", yahoo + "business.xml"),
-                c("it", "IT", yahoo + "it.xml"), c("science", "科学", yahoo + "science.xml"),
-                c("entertainment", "エンタメ", yahoo + "entertainment.xml"), c("sports", "スポーツ", yahoo + "sports.xml"),
+            Source(id: "yahoo", name: String(localized: "Yahoo!ニュース"), overseas: false, categories: [
+                c("top", String(localized: "主要"), yahoo + "top-picks.xml"), c("domestic", String(localized: "国内"), yahoo + "domestic.xml"),
+                c("world", String(localized: "国際"), yahoo + "world.xml"), c("economy", String(localized: "経済"), yahoo + "business.xml"),
+                c("it", "IT", yahoo + "it.xml"), c("science", String(localized: "科学"), yahoo + "science.xml"),
+                c("entertainment", String(localized: "エンタメ"), yahoo + "entertainment.xml"), c("sports", String(localized: "スポーツ"), yahoo + "sports.xml"),
             ]),
-            Source(id: "google", name: "Google ニュース", overseas: false, categories: [
-                c("top", "主要", "https://news.google.com/rss" + ja), c("economy", "経済", google + "BUSINESS" + ja),
-                c("tech", "テクノロジー", google + "TECHNOLOGY" + ja), c("science", "科学", google + "SCIENCE" + ja),
-                c("entertainment", "エンタメ", google + "ENTERTAINMENT" + ja), c("sports", "スポーツ", google + "SPORTS" + ja),
+            Source(id: "google", name: String(localized: "Google ニュース"), overseas: false, categories: [
+                c("top", String(localized: "主要"), "https://news.google.com/rss" + ja), c("economy", String(localized: "経済"), google + "BUSINESS" + ja),
+                c("tech", String(localized: "テクノロジー"), google + "TECHNOLOGY" + ja), c("science", String(localized: "科学"), google + "SCIENCE" + ja),
+                c("entertainment", String(localized: "エンタメ"), google + "ENTERTAINMENT" + ja), c("sports", String(localized: "スポーツ"), google + "SPORTS" + ja),
             ]),
-            Source(id: "asahi", name: "朝日新聞", overseas: false, categories: [
-                c("top", "主要", "https://www.asahi.com/rss/asahi/newsheadlines.rdf"),
+            Source(id: "asahi", name: String(localized: "朝日新聞"), overseas: false, categories: [
+                c("top", String(localized: "主要"), "https://www.asahi.com/rss/asahi/newsheadlines.rdf"),
             ]),
-            Source(id: "mainichi", name: "毎日新聞", overseas: false, categories: [
-                c("top", "速報", "https://mainichi.jp/rss/etc/mainichi-flash.rss"),
+            Source(id: "mainichi", name: String(localized: "毎日新聞"), overseas: false, categories: [
+                c("top", String(localized: "速報"), "https://mainichi.jp/rss/etc/mainichi-flash.rss"),
             ]),
-            Source(id: "jiji", name: "時事通信", overseas: false, categories: [
-                c("top", "注目", "https://www.jiji.com/rss/ranking.rdf"),
+            Source(id: "jiji", name: String(localized: "時事通信"), overseas: false, categories: [
+                c("top", String(localized: "注目"), "https://www.jiji.com/rss/ranking.rdf"),
             ]),
-            Source(id: "toyokeizai", name: "東洋経済", overseas: false, categories: [
-                c("top", "最新", "https://toyokeizai.net/list/feed/rss"),
+            Source(id: "toyokeizai", name: String(localized: "東洋経済"), overseas: false, categories: [
+                c("top", String(localized: "最新"), "https://toyokeizai.net/list/feed/rss"),
             ]),
             Source(id: "itmedia", name: "ITmedia", overseas: false, categories: [
-                c("top", "総合", "https://rss.itmedia.co.jp/rss/2.0/itmedia_all.xml"),
+                c("top", String(localized: "総合"), "https://rss.itmedia.co.jp/rss/2.0/itmedia_all.xml"),
             ]),
             Source(id: "gigazine", name: "GIGAZINE", overseas: false, categories: [
-                c("top", "最新", "https://gigazine.net/news/rss_2.0/"),
+                c("top", String(localized: "最新"), "https://gigazine.net/news/rss_2.0/"),
             ]),
-            Source(id: "hatena", name: "はてなブックマーク", overseas: false, categories: [
-                c("top", "人気", "https://b.hatena.ne.jp/hotentry/all.rss"),
-                c("it", "テクノロジー", "https://b.hatena.ne.jp/hotentry/it.rss"),
+            Source(id: "hatena", name: String(localized: "はてなブックマーク"), overseas: false, categories: [
+                c("top", String(localized: "人気"), "https://b.hatena.ne.jp/hotentry/all.rss"),
+                c("it", String(localized: "テクノロジー"), "https://b.hatena.ne.jp/hotentry/it.rss"),
             ]),
             // 海外
             Source(id: "bbc", name: "BBC News", overseas: true, categories: [
@@ -537,7 +537,7 @@ struct NewsChoice: Equatable {
     var source: NewsCatalog.Source { NewsCatalog.source(sourceID) }
     var category: NewsCatalog.Category { source.categories.first { $0.id == categoryID } ?? source.categories[0] }
     var url: String { category.url }
-    var label: String { source.categories.count > 1 ? "\(source.name)・\(category.label)" : source.name }
+    var label: String { source.categories.count > 1 ? String(localized: "\(source.name)・\(category.label)") : source.name }
 }
 
 /// NHK's breaking-news flag (a ~100-byte XML): polled every minute for 速報.
@@ -567,17 +567,17 @@ enum NHKFlash {
 enum WeatherCode {
     static func text(_ code: Int) -> String {
         switch code {
-        case 0: return "快晴"
-        case 1: return "晴れ"
-        case 2: return "晴れ時々くもり"
-        case 3: return "くもり"
-        case 45, 48: return "霧"
-        case 51, 53, 55, 56, 57: return "霧雨"
-        case 61, 63, 80, 81: return "雨"
-        case 65, 82: return "強い雨"
-        case 66, 67: return "凍雨"
-        case 71, 73, 75, 77, 85, 86: return "雪"
-        case 95, 96, 99: return "雷雨"
+        case 0: return String(localized: "快晴")
+        case 1: return String(localized: "晴れ")
+        case 2: return String(localized: "晴れ時々くもり")
+        case 3: return String(localized: "くもり")
+        case 45, 48: return String(localized: "霧")
+        case 51, 53, 55, 56, 57: return String(localized: "霧雨")
+        case 61, 63, 80, 81: return String(localized: "雨")
+        case 65, 82: return String(localized: "強い雨")
+        case 66, 67: return String(localized: "凍雨")
+        case 71, 73, 75, 77, 85, 86: return String(localized: "雪")
+        case 95, 96, 99: return String(localized: "雷雨")
         default: return "—"
         }
     }

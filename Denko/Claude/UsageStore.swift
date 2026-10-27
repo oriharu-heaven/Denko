@@ -31,7 +31,7 @@ final class UsageStore: ObservableObject {
 
     var lastError: String? {
         if realtime, let apiError { return apiError }
-        return snapshot == nil ? "まだ届いていません" : nil
+        return snapshot == nil ? String(localized: "まだ届いていません") : nil
     }
 
     private static let storeKey = "claudeStatusLineUsage"
@@ -105,11 +105,11 @@ enum TimeText {
     static func untilReset(_ date: Date?, now: Date = Date()) -> String {
         guard let date else { return "—" }
         let s = Int(date.timeIntervalSince(now))
-        if s <= 0 { return "まもなくリセット" }
+        if s <= 0 { return String(localized: "まもなくリセット") }
         let d = s / 86400, h = (s % 86400) / 3600, m = (s % 3600) / 60
-        if d > 0 { return "あと \(d)日\(h)時間" }
-        if h > 0 { return "あと \(h)時間\(m)分" }
-        return "あと \(m)分"
+        if d > 0 { return String(localized: "あと \(d)日\(h)時間") }
+        if h > 0 { return String(localized: "あと \(h)時間\(m)分") }
+        return String(localized: "あと \(m)分")
     }
 
     static func absolute(_ date: Date?) -> String {

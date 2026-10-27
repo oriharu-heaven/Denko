@@ -13,12 +13,12 @@ enum AccentPreset: String, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .sage: return "セージ"
-        case .slate: return "スレート"
-        case .clay: return "クレイ"
-        case .moss: return "モス"
-        case .station: return "駅の案内"
-        case .custom: return "好きな色"
+        case .sage: return String(localized: "セージ")
+        case .slate: return String(localized: "スレート")
+        case .clay: return String(localized: "クレイ")
+        case .moss: return String(localized: "モス")
+        case .station: return String(localized: "駅の案内")
+        case .custom: return String(localized: "好きな色")
         }
     }
 

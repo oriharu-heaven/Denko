@@ -7,9 +7,9 @@ enum NoticeLevel: String, CaseIterable, Identifiable, Codable {
     var id: String { rawValue }
     var label: String {
         switch self {
-        case .urgent: return "緊急"
-        case .normal: return "ふつう"
-        case .off: return "流さない"
+        case .urgent: return String(localized: "緊急")
+        case .normal: return String(localized: "ふつう")
+        case .off: return String(localized: "流さない")
         }
     }
 }
@@ -25,38 +25,38 @@ enum NoticeKind: String, CaseIterable, Identifiable, Codable {
 
     var group: String {
         switch self {
-        case .claudeWaiting, .claudeDone, .githubReview, .githubOther, .aiUsage, .webhook: return "開発・AI"
-        case .trainDelay, .trainRecovered: return "電車"
-        case .newsBreaking, .newsNew, .rss: return "ニュース"
-        case .weatherRain, .weatherMorning, .fxMove, .todayRoll: return "今日の情報"
-        case .quakeStrong, .quakeOther, .tsunami, .weatherWarning: return "防災"
-        case .awakeEnded, .other: return "このアプリ"
+        case .claudeWaiting, .claudeDone, .githubReview, .githubOther, .aiUsage, .webhook: return String(localized: "開発・AI")
+        case .trainDelay, .trainRecovered: return String(localized: "電車")
+        case .newsBreaking, .newsNew, .rss: return String(localized: "ニュース")
+        case .weatherRain, .weatherMorning, .fxMove, .todayRoll: return String(localized: "今日の情報")
+        case .quakeStrong, .quakeOther, .tsunami, .weatherWarning: return String(localized: "防災")
+        case .awakeEnded, .other: return String(localized: "このアプリ")
         }
     }
 
     var label: String {
         switch self {
-        case .claudeWaiting: return "コーディングエージェントの許可待ち・入力待ち"
-        case .claudeDone: return "コーディングエージェントの作業完了"
-        case .githubReview: return "GitHub のレビュー依頼・メンション"
-        case .githubOther: return "GitHub のその他の通知"
-        case .aiUsage: return "AI の使用量（80%・100%・リセット）"
-        case .webhook: return "Webhook・スクリプトから"
-        case .trainDelay: return "見ている路線の遅延・運転見合わせ"
-        case .trainRecovered: return "平常運転に戻ったとき"
-        case .newsBreaking: return "ニュース速報"
-        case .newsNew: return "新しいニュース"
-        case .rss: return "RSS の新着"
-        case .weatherRain: return "まもなく雨"
-        case .weatherMorning: return "朝の天気予報"
-        case .fxMove: return "為替の大きな動き"
-        case .todayRoll: return "今日の情報（定期的に流すもの）"
-        case .awakeEnded: return "スリープ防止の終了"
-        case .other: return "その他"
-        case .quakeStrong: return "強い地震（震度5弱以上・地元で震度4以上）"
-        case .quakeOther: return "震度4の地震・地元で震度3の地震"
-        case .tsunami: return "津波警報・注意報、噴火速報"
-        case .weatherWarning: return "地元の気象警報・土砂災害警戒情報など"
+        case .claudeWaiting: return String(localized: "コーディングエージェントの許可待ち・入力待ち")
+        case .claudeDone: return String(localized: "コーディングエージェントの作業完了")
+        case .githubReview: return String(localized: "GitHub のレビュー依頼・メンション")
+        case .githubOther: return String(localized: "GitHub のその他の通知")
+        case .aiUsage: return String(localized: "AI の使用量（80%・100%・リセット）")
+        case .webhook: return String(localized: "Webhook・スクリプトから")
+        case .trainDelay: return String(localized: "見ている路線の遅延・運転見合わせ")
+        case .trainRecovered: return String(localized: "平常運転に戻ったとき")
+        case .newsBreaking: return String(localized: "ニュース速報")
+        case .newsNew: return String(localized: "新しいニュース")
+        case .rss: return String(localized: "RSS の新着")
+        case .weatherRain: return String(localized: "まもなく雨")
+        case .weatherMorning: return String(localized: "朝の天気予報")
+        case .fxMove: return String(localized: "為替の大きな動き")
+        case .todayRoll: return String(localized: "今日の情報（定期的に流すもの）")
+        case .awakeEnded: return String(localized: "スリープ防止の終了")
+        case .other: return String(localized: "その他")
+        case .quakeStrong: return String(localized: "強い地震（震度5弱以上・地元で震度4以上）")
+        case .quakeOther: return String(localized: "震度4の地震・地元で震度3の地震")
+        case .tsunami: return String(localized: "津波警報・注意報、噴火速報")
+        case .weatherWarning: return String(localized: "地元の気象警報・土砂災害警戒情報など")
         }
     }
 
@@ -73,7 +73,7 @@ enum NoticeKind: String, CaseIterable, Identifiable, Codable {
         }
     }
 
-    static var groups: [String] { ["防災", "開発・AI", "電車", "ニュース", "今日の情報"] }
+    static var groups: [String] { ["防災", String(localized: "開発・AI"), String(localized: "電車"), String(localized: "ニュース"), String(localized: "今日の情報")] }
 }
 
 /// While a Focus is on (or a full-screen app is in front), what still plays.
@@ -82,9 +82,9 @@ enum FocusBehavior: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var label: String {
         switch self {
-        case .same: return "いつもどおり"
-        case .urgentOnly: return "緊急だけ"
-        case .silent: return "流さない"
+        case .same: return String(localized: "いつもどおり")
+        case .urgentOnly: return String(localized: "緊急だけ")
+        case .silent: return String(localized: "流さない")
         }
     }
 }

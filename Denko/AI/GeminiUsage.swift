@@ -17,7 +17,7 @@ enum GeminiUsage {
         let project = try await projectID(token: token)
         let json = try await post("\(endpoint):retrieveUserQuota", token: token, body: ["project": project])
         guard let buckets = json["buckets"] as? [[String: Any]], !buckets.isEmpty else {
-            throw AIUsageError(message: "Gemini の利用枠情報を取得できませんでした。")
+            throw AIUsageError(message: String(localized: "Gemini の利用枠情報を取得できませんでした。"))
         }
         var windows: [AIWindow] = []
         for b in buckets {
@@ -29,13 +29,13 @@ enum GeminiUsage {
             windows.append(AIWindow(label: model, percent: (1 - remaining) * 100, resetsAt: reset))
         }
         windows.sort { $0.percent > $1.percent }
-        guard let top = windows.first else { throw AIUsageError(message: "Gemini の利用枠情報が空です。") }
+        guard let top = windows.first else { throw AIUsageError(message: String(localized: "Gemini の利用枠情報が空です。")) }
         // Outer ring: the most-used model's daily quota; inner: the next one.
-        return AIUsage(primary: AIWindow(label: "1日（\(top.label)）", percent: top.percent, resetsAt: top.resetsAt),
+        return AIUsage(primary: AIWindow(label: String(localized: "1日（\(top.label)）"), percent: top.percent, resetsAt: top.resetsAt),
                        secondary: windows.dropFirst().first.map {
-                           AIWindow(label: "1日（\($0.label)）", percent: $0.percent, resetsAt: $0.resetsAt) },
+                           AIWindow(label: String(localized: "1日（\($0.label)）"), percent: $0.percent, resetsAt: $0.resetsAt) },
                        extras: Array(windows.dropFirst(2).prefix(4)),
-                       updatedAt: Date(), source: "Gemini CLI のログイン")
+                       updatedAt: Date(), source: String(localized: "Gemini CLI のログイン"))
     }
 
     @MainActor
@@ -44,7 +44,7 @@ enum GeminiUsage {
         let url = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".gemini/oauth_creds.json")
         guard let data = try? Data(contentsOf: url),
               let creds = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
-        else { throw AIUsageError(message: "Gemini CLI にログインしていません（~/.gemini/oauth_creds.json がありません）。") }
+        else { throw AIUsageError(message: String(localized: "Gemini CLI にログインしていません（~/.gemini/oauth_creds.json がありません）。")) }
 
         if let token = creds["access_token"] as? String, let ms = creds["expiry_date"] as? Double,
            Date(timeIntervalSince1970: ms / 1000) > Date().addingTimeInterval(60) {
@@ -52,10 +52,10 @@ enum GeminiUsage {
             return token
         }
         guard let refresh = creds["refresh_token"] as? String else {
-            throw AIUsageError(message: "Gemini のログインが期限切れです。Gemini CLI を一度起動してください。")
+            throw AIUsageError(message: String(localized: "Gemini のログインが期限切れです。Gemini CLI を一度起動してください。"))
         }
         guard let client = await GeminiCLIClient.find() else {
-            throw AIUsageError(message: "Gemini のログインを更新するには、Gemini CLI がインストールされている必要があります。Gemini CLI を一度起動すると、しばらくは表示されます。")
+            throw AIUsageError(message: String(localized: "Gemini のログインを更新するには、Gemini CLI がインストールされている必要があります。Gemini CLI を一度起動すると、しばらくは表示されます。"))
         }
         var req = URLRequest(url: URL(string: "https://oauth2.googleapis.com/token")!)
         req.httpMethod = "POST"
@@ -68,7 +68,7 @@ enum GeminiUsage {
         guard (resp as? HTTPURLResponse)?.statusCode == 200,
               let j = try JSONSerialization.jsonObject(with: respData) as? [String: Any],
               let token = j["access_token"] as? String
-        else { throw AIUsageError(message: "Gemini のログインを更新できませんでした。Gemini CLI を一度起動してください。") }
+        else { throw AIUsageError(message: String(localized: "Gemini のログインを更新できませんでした。Gemini CLI を一度起動してください。")) }
         let expires = Date().addingTimeInterval(j["expires_in"] as? Double ?? 3000)
         cachedToken = (token, expires)
         return token
@@ -82,7 +82,7 @@ enum GeminiUsage {
         ])
         let project = json["cloudaicompanionProject"] as? String
             ?? (json["cloudaicompanionProject"] as? [String: Any])?["id"] as? String
-        guard let project else { throw AIUsageError(message: "Gemini の利用枠を確かめられませんでした。Gemini CLI で一度 Code Assist を使うと表示されるようになります。") }
+        guard let project else { throw AIUsageError(message: String(localized: "Gemini の利用枠を確かめられませんでした。Gemini CLI で一度 Code Assist を使うと表示されるようになります。")) }
         cachedProject = project
         return project
     }
@@ -97,7 +97,7 @@ enum GeminiUsage {
         let (data, resp) = try await URLSession.shared.data(for: req)
         let code = (resp as? HTTPURLResponse)?.statusCode ?? 0
         guard code == 200, let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            throw AIUsageError(message: code == 401 || code == 403 ? "ログインの期限切れ（gemini を一度起動すると直ります）" : "取得できませんでした（\(code)）")
+            throw AIUsageError(message: code == 401 || code == 403 ? String(localized: "ログインの期限切れ（gemini を一度起動すると直ります）") : String(localized: "取得できませんでした（\(code)）"))
         }
         return json
     }

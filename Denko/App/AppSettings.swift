@@ -6,9 +6,9 @@ enum AnimationMode: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var label: String {
         switch self {
-        case .eco: return "省電力（おすすめ）"
-        case .smooth: return "なめらか"
-        case .still: return "止める"
+        case .eco: return String(localized: "省電力（おすすめ）")
+        case .smooth: return String(localized: "なめらか")
+        case .still: return String(localized: "止める")
         }
     }
 }
@@ -18,8 +18,8 @@ enum DisplayStyle: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var label: String {
         switch self {
-        case .standard: return "アイコン"
-        case .led: return "電光掲示板"
+        case .standard: return String(localized: "アイコン")
+        case .led: return String(localized: "電光掲示板")
         }
     }
 }
@@ -29,9 +29,9 @@ enum GaugeStyle: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var label: String {
         switch self {
-        case .pie: return "円グラフ"
-        case .bar: return "縦バー"
-        case .ring: return "リング"
+        case .pie: return String(localized: "円グラフ")
+        case .bar: return String(localized: "縦バー")
+        case .ring: return String(localized: "リング")
         }
     }
 }
@@ -41,9 +41,9 @@ enum ClaudeNumbers: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var label: String {
         switch self {
-        case .none: return "表示しない"
-        case .fiveHour: return "5時間枠のみ"
-        case .both: return "5時間枠と週間"
+        case .none: return String(localized: "表示しない")
+        case .fiveHour: return String(localized: "5時間枠のみ")
+        case .both: return String(localized: "5時間枠と週間")
         }
     }
 }
@@ -53,9 +53,9 @@ enum ItemSection: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var label: String {
         switch self {
-        case .visible: return "表示"
-        case .hidden: return "隠す"
-        case .alwaysHidden: return "常に隠す"
+        case .visible: return String(localized: "表示")
+        case .hidden: return String(localized: "隠す")
+        case .alwaysHidden: return String(localized: "常に隠す")
         }
     }
 }
@@ -313,7 +313,7 @@ final class AppSettings: ObservableObject {
 
         infoWeather = bool("infoWeather", true)
         infoNews = bool("infoNews", true)
-        weatherPlace = d.string(forKey: "weatherPlace") ?? "東京"
+        weatherPlace = d.string(forKey: "weatherPlace") ?? String(localized: "東京")
         weatherLatitude = d.object(forKey: "weatherLatitude") as? Double ?? 35.6812
         weatherLongitude = d.object(forKey: "weatherLongitude") as? Double ?? 139.7671
         newsFeed = NewsChoice(d.string(forKey: "newsChoice"))
@@ -339,7 +339,7 @@ final class AppSettings: ObservableObject {
         fullBarAll = bool("fullBarAll", false)
 
         infoDisaster = bool("infoDisaster", true)
-        weatherPrefecture = d.string(forKey: "weatherPrefecture") ?? "東京都"
+        weatherPrefecture = d.string(forKey: "weatherPrefecture") ?? String(localized: "東京都")
         pausedUntil = d.object(forKey: "pausedUntil") as? Date
         noticeLevels = d.dictionary(forKey: "noticeLevels") as? [String: String] ?? [:]
         focusBehavior = FocusBehavior(rawValue: d.string(forKey: "focusBehavior") ?? "") ?? .urgentOnly

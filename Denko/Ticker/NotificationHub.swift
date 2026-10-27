@@ -9,16 +9,16 @@ enum TickerSource: String, CaseIterable, Identifiable, Codable {
         case .claudeCode: return "Claude Code"
         case .codex: return "Codex"
         case .gemini: return "Gemini CLI"
-        case .agent: return "コーディングエージェント"
+        case .agent: return String(localized: "コーディングエージェント")
         case .github: return "GitHub"
         case .rss: return "RSS"
         case .webhook: return "Webhook"
-        case .system: return "このアプリ"
-        case .news: return "ニュース"
-        case .weather: return "天気"
-        case .today: return "今日の情報"
-        case .train: return "運行情報"
-        case .fx: return "為替"
+        case .system: return String(localized: "このアプリ")
+        case .news: return String(localized: "ニュース")
+        case .weather: return String(localized: "天気")
+        case .today: return String(localized: "今日の情報")
+        case .train: return String(localized: "運行情報")
+        case .fx: return String(localized: "為替")
         }
     }
     var symbol: String {
@@ -47,10 +47,10 @@ enum TickerSource: String, CaseIterable, Identifiable, Codable {
         case .webhook: return "INFO"
         case .system: return "INFO"
         case .news: return "NEWS"
-        case .weather: return "天気"
+        case .weather: return String(localized: "天気")
         case .today: return "TODAY"
-        case .train: return "運行情報"
-        case .fx: return "為替"
+        case .train: return String(localized: "運行情報")
+        case .fx: return String(localized: "為替")
         }
     }
     var isCodingAgent: Bool {
@@ -84,7 +84,7 @@ struct TickerMessage: Identifiable, Equatable {
     }
 
     var openLabel: String {
-        url != nil ? "記事を開く" : "ターミナル・エディタを開く"
+        url != nil ? String(localized: "記事を開く") : String(localized: "ターミナル・エディタを開く")
     }
 
     @MainActor

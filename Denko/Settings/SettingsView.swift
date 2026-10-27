@@ -22,17 +22,17 @@ enum SettingsWindow {
             tabs.addTabViewItem(item)
         }
         // セットアップ → 一般 → the board's look → what it shows while idle → what flows into it.
-        add("セットアップ", "checklist", height: 600, SetupPane(settings: settings))
-        add("一般", "gearshape", height: 600, GeneralPane(settings: settings))
-        add("掲示板", "", height: 760, BoardLookPane(settings: settings), image: BoardIcon.image())
-        add("メニューバー", "menubar.rectangle", height: 760, MenuBarPane(settings: settings))
-        add("情報連携", "point.3.connected.trianglepath.dotted", height: 760, InfoHubPane(settings: settings))
-        add("実験", "flask", height: 760, ExperimentalPane(settings: settings))
+        add(String(localized: "セットアップ"), "checklist", height: 600, SetupPane(settings: settings))
+        add(String(localized: "一般"), "gearshape", height: 600, GeneralPane(settings: settings))
+        add(String(localized: "掲示板"), "", height: 760, BoardLookPane(settings: settings), image: BoardIcon.image())
+        add(String(localized: "メニューバー"), "menubar.rectangle", height: 760, MenuBarPane(settings: settings))
+        add(String(localized: "情報連携"), "point.3.connected.trianglepath.dotted", height: 760, InfoHubPane(settings: settings))
+        add(String(localized: "実験"), "flask", height: 760, ExperimentalPane(settings: settings))
         if Features.sleepPrevention {
-            add("スリープ防止", "cup.and.saucer", height: 330, AwakePane(settings: settings, awake: awake))
+            add(String(localized: "スリープ防止"), "cup.and.saucer", height: 330, AwakePane(settings: settings, awake: awake))
         }
         if let hider {
-            add("整理", "rectangle.split.3x1", height: 600, HiderPane(settings: settings, hider: hider))
+            add(String(localized: "整理"), "rectangle.split.3x1", height: 600, HiderPane(settings: settings, hider: hider))
         }
 
         let window = NSWindow(contentViewController: tabs)
@@ -61,15 +61,15 @@ struct GeneralPane: View {
     var body: some View {
         Form {
             Section {
-                Picker("動作の軽さ", selection: $settings.performance) {
+                Picker(String(localized: "動作の軽さ"), selection: $settings.performance) {
                     ForEach(PerformanceMode.allCases) { Text($0.label).tag($0) }
                 }
                 .pickerStyle(.segmented)
             } header: {
-                Text("パフォーマンス")
+                Text(String(localized: "パフォーマンス"))
             }
             Section {
-                Toggle("ログイン時に起動", isOn: $launchAtLogin)
+                Toggle(String(localized: "ログイン時に起動"), isOn: $launchAtLogin)
                     .onChange(of: launchAtLogin) { _, on in
                         do {
                             if on { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
@@ -84,37 +84,37 @@ struct GeneralPane: View {
                 }
             }
             Section {
-                Picker("分析", selection: $settings.storageMode) {
+                Picker(String(localized: "分析"), selection: $settings.storageMode) {
                     ForEach(StorageMode.allCases) { Text($0.label).tag($0) }
                 }
                 if settings.storageMode == .full {
-                    LabeledContent("フルディスクアクセス") {
-                        Button("開く…") {
+                    LabeledContent(String(localized: "フルディスクアクセス")) {
+                        Button(String(localized: "開く…")) {
                             NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles")!)
                         }
                     }
                 }
             } header: {
-                Text("ストレージ")
+                Text(String(localized: "ストレージ"))
             }
             Section {
                 // Checking automatically also downloads, so there's one switch.
-                Toggle("自動で更新", isOn: Binding(
+                Toggle(String(localized: "自動で更新"), isOn: Binding(
                     get: { updater.automaticallyChecks },
                     set: { updater.automaticallyChecks = $0; updater.automaticallyDownloads = $0 }))
-                LabeledContent("バージョン \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?")") {
-                    Button("今すぐ確認") { updater.checkForUpdates() }.disabled(!updater.canCheck)
+                LabeledContent(String(localized: "バージョン \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?")")) {
+                    Button(String(localized: "今すぐ確認")) { updater.checkForUpdates() }.disabled(!updater.canCheck)
                 }
             } header: {
-                Text("アップデート")
+                Text(String(localized: "アップデート"))
             }
             Section {
-                Toggle("キャラクターを互換描画にする", isOn: $settings.compatibleCatRendering)
-                LabeledContent("はじめに") {
-                    Button("表示…") { AppDelegate.shared.showOnboarding() }
+                Toggle(String(localized: "キャラクターを互換描画にする"), isOn: $settings.compatibleCatRendering)
+                LabeledContent(String(localized: "はじめに")) {
+                    Button(String(localized: "表示…")) { AppDelegate.shared.showOnboarding() }
                 }
             } header: {
-                Text("困ったとき")
+                Text(String(localized: "困ったとき"))
             }
         }
         .formStyle(.grouped)
@@ -138,25 +138,25 @@ struct MenuBarPane: View {
             }
 
             Section {
-                Picker("表示スタイル", selection: $settings.displayStyle) {
+                Picker(String(localized: "表示スタイル"), selection: $settings.displayStyle) {
                     ForEach(DisplayStyle.allCases) { Text($0.label).tag($0) }
                 }
                 .pickerStyle(.segmented)
                 if settings.displayStyle == .led {
-                    Picker("お知らせがないとき", selection: $settings.boardIdle) {
+                    Picker(String(localized: "お知らせがないとき"), selection: $settings.boardIdle) {
                         ForEach(BoardIdle.allCases) { Text($0.label).tag($0) }
                     }
                     .pickerStyle(.segmented)
                     if settings.boardIdle == .message {
-                        TextField("ひとこと", text: $settings.idleMessage, prompt: Text("DENKO"))
+                        TextField(String(localized: "ひとこと"), text: $settings.idleMessage, prompt: Text("DENKO"))
                     }
                 }
             }
 
             Section {
-                Toggle("キャラクター", isOn: $settings.showCharacter)
+                Toggle(String(localized: "キャラクター"), isOn: $settings.showCharacter)
                 if settings.showCharacter {
-                    Picker("種類", selection: $settings.character) {
+                    Picker(String(localized: "種類"), selection: $settings.character) {
                         ForEach(CharacterKind.allCases) { Text($0.label).tag($0) }
                     }
                     .pickerStyle(.segmented)
@@ -165,8 +165,8 @@ struct MenuBarPane: View {
 
             Section {
                 Toggle("CPU", isOn: $settings.showCPUGauge)
-                Toggle("メモリ", isOn: $settings.showMemoryGauge)
-                Toggle("通信", isOn: $settings.showNetworkGauge)
+                Toggle(String(localized: "メモリ"), isOn: $settings.showMemoryGauge)
+                Toggle(String(localized: "通信"), isOn: $settings.showNetworkGauge)
             } header: {
                 Text("Mac")
             }
@@ -189,10 +189,10 @@ struct MenuBarPane: View {
                 // Claude normally arrives with every Claude Code reply; this paces Codex's logs
                 // and, under 実験的, Claude's real-time requests.
                 if settings.aiProviders.contains(.codex) || settings.experimentalRealtimeClaude {
-                    Picker("更新間隔", selection: Binding(
+                    Picker(String(localized: "更新間隔"), selection: Binding(
                         get: { AppDelegate.shared.ai.claude.refreshMinutes },
                         set: { AppDelegate.shared.ai.claude.refreshMinutes = $0 })) {
-                        ForEach([1, 5, 15], id: \.self) { Text("\($0)分").tag($0) }
+                        ForEach([1, 5, 15], id: \.self) { Text(String(localized: "\($0)分")).tag($0) }
                     }
                 }
             } header: {
@@ -240,7 +240,7 @@ private struct IconPreview: View {
             .frame(height: 24)
             .background(.bar)
             .overlay(alignment: .bottom) { Divider() }
-            .accessibilityLabel("メニューバーの表示プレビュー")
+            .accessibilityLabel(String(localized: "メニューバーの表示プレビュー"))
     }
 }
 
@@ -253,19 +253,19 @@ private struct AwakePane: View {
     var body: some View {
         Form {
             Section {
-                LabeledContent("現在の状態", value: awake.remainingText())
-                Picker("⌥クリックで防止する時間", selection: $settings.keepAwakeDefaultMinutes) {
+                LabeledContent(String(localized: "現在の状態"), value: awake.remainingText())
+                Picker(String(localized: "⌥クリックで防止する時間"), selection: $settings.keepAwakeDefaultMinutes) {
                     ForEach(SleepPreventer.durations, id: \.self) { Text(SleepPreventer.label(minutes: $0)).tag($0) }
                 }
             }
             Section {
-                Toggle("ディスプレイのスリープは許可する", isOn: $settings.allowDisplaySleep)
+                Toggle(String(localized: "ディスプレイのスリープは許可する"), isOn: $settings.allowDisplaySleep)
                 .onChange(of: settings.allowDisplaySleep) { _, _ in awake.reapplyIfActive() }
-                Picker("バッテリー残量で自動解除", selection: $settings.keepAwakeBatteryLimit) {
-                    Text("しない").tag(0)
-                    ForEach([10, 20, 30, 50], id: \.self) { Text("\($0)% 以下").tag($0) }
+                Picker(String(localized: "バッテリー残量で自動解除"), selection: $settings.keepAwakeBatteryLimit) {
+                    Text(String(localized: "しない")).tag(0)
+                    ForEach([10, 20, 30, 50], id: \.self) { Text(String(localized: "\($0)% 以下")).tag($0) }
                 }
-                Toggle("アプリ起動時にオンにする", isOn: $settings.keepAwakeOnLaunch)
+                Toggle(String(localized: "アプリ起動時にオンにする"), isOn: $settings.keepAwakeOnLaunch)
             }
         }
         .formStyle(.grouped)
@@ -281,33 +281,33 @@ private struct HiderPane: View {
     var body: some View {
         Form {
             Section {
-                Toggle("メニューバー整理を有効にする", isOn: $settings.hiderEnabled)
+                Toggle(String(localized: "メニューバー整理を有効にする"), isOn: $settings.hiderEnabled)
                 if !MenuBarHider.isModernMenuBar {
-                    Toggle("「常に隠す」セクションを使う", isOn: $settings.alwaysHiddenEnabled)
+                    Toggle(String(localized: "「常に隠す」セクションを使う"), isOn: $settings.alwaysHiddenEnabled)
                 }
             }
 
             Group {
                 itemsSection
 
-                Section("表示のしかた") {
-                    Toggle("‹ にポインタを乗せたら表示", isOn: $settings.showOnHover)
-                    Toggle("一定時間後に自動で隠す", isOn: $settings.autoRehide)
+                Section(String(localized: "表示のしかた")) {
+                    Toggle(String(localized: "‹ にポインタを乗せたら表示"), isOn: $settings.showOnHover)
+                    Toggle(String(localized: "一定時間後に自動で隠す"), isOn: $settings.autoRehide)
                     if settings.autoRehide {
-                        Stepper("\(Int(settings.autoRehideSeconds)) 秒後", value: $settings.autoRehideSeconds,
+                        Stepper(String(localized: "\(Int(settings.autoRehideSeconds)) 秒後"), value: $settings.autoRehideSeconds,
                                 in: 3...60, step: 1)
                     }
-                    Toggle("別のアプリに切り替えたら隠す", isOn: $settings.rehideOnAppSwitch)
+                    Toggle(String(localized: "別のアプリに切り替えたら隠す"), isOn: $settings.rehideOnAppSwitch)
                 }
 
                 Section {
-                    Toggle("アプリ起動時に配置を自動で適用", isOn: $settings.autoArrange)
-                    Picker("初めて見る項目", selection: $settings.newItemSection) {
+                    Toggle(String(localized: "アプリ起動時に配置を自動で適用"), isOn: $settings.autoArrange)
+                    Picker(String(localized: "初めて見る項目"), selection: $settings.newItemSection) {
                         ForEach(availableSections) { Text($0.label).tag($0) }
                     }
                     .disabled(!settings.autoArrange)
                 } header: {
-                    Text("自動配置")
+                    Text(String(localized: "自動配置"))
                 }
             }
             .disabled(!settings.hiderEnabled)
@@ -325,12 +325,12 @@ private struct HiderPane: View {
         Section {
             if !hider.isTrusted {
                 LabeledContent {
-                    Button("許可…") { hider.requestAccessibility() }
+                    Button(String(localized: "許可…")) { hider.requestAccessibility() }
                 } label: {
-                    Label("アクセシビリティ", systemImage: "hand.raised")
+                    Label(String(localized: "アクセシビリティ"), systemImage: "hand.raised")
                 }
             } else if hider.items.isEmpty {
-                Text("項目が見つかりません").foregroundStyle(.secondary)
+                Text(String(localized: "項目が見つかりません")).foregroundStyle(.secondary)
             }
             ForEach(hider.items) { item in
                 HStack(spacing: 8) {
@@ -354,16 +354,16 @@ private struct HiderPane: View {
             }
         } header: {
             HStack {
-                Text("項目ごとの配置")
+                Text(String(localized: "項目ごとの配置"))
                 Spacer()
                 if hider.isArranging { ProgressView().controlSize(.small) }
-                Button("再読み込み") { hider.refreshItems() }
-                Button("すべて適用") { Task { await hider.applyAllRules() } }
+                Button(String(localized: "再読み込み")) { hider.refreshItems() }
+                Button(String(localized: "すべて適用")) { Task { await hider.applyAllRules() } }
                     .disabled(hider.isArranging)
             }
             .controlSize(.small)
         } footer: {
-            Text("移動中はマウスに触れないでください")
+            Text(String(localized: "移動中はマウスに触れないでください"))
                 .font(.caption).foregroundStyle(.secondary)
         }
         .disabled(hider.isArranging)

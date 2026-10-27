@@ -7,9 +7,9 @@ struct NoticesSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            PanelHeader(title: "お知らせ", systemImage: "text.bubble") {
+            PanelHeader(title: String(localized: "お知らせ"), systemImage: "text.bubble") {
                 if !hub.history.isEmpty {
-                    Button("消去") { hub.clear() }
+                    Button(String(localized: "消去")) { hub.clear() }
                         .buttonStyle(.borderless)
                         .foregroundStyle(.secondary)
                         .font(.callout)
@@ -21,10 +21,10 @@ struct NoticesSection: View {
                     Image(systemName: "tray")
                         .font(.title2)
                         .foregroundStyle(.tertiary)
-                    Text("お知らせはありません")
+                    Text(String(localized: "お知らせはありません"))
                         .font(.callout)
                         .foregroundStyle(.secondary)
-                    Text("連携は 設定 → 掲示板 で追加できます")
+                    Text(String(localized: "連携は 設定 → 掲示板 で追加できます"))
                         .font(.caption)
                         .foregroundStyle(.tertiary)
                 }

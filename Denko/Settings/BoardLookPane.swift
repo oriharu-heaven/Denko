@@ -12,43 +12,43 @@ struct BoardLookPane: View {
                 BoardPreview(settings: settings)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 4)
-                LabeledContent("テスト") {
+                LabeledContent(String(localized: "テスト")) {
                     HStack {
-                        Button("ふつう") {
-                            AppDelegate.shared.hub.post(.system, title: "テスト表示です", force: .normal)
+                        Button(String(localized: "ふつう")) {
+                            AppDelegate.shared.hub.post(.system, title: String(localized: "テスト表示です"), force: .normal)
                         }
-                        Button("緊急") {
-                            AppDelegate.shared.hub.post(.system, title: "緊急表示のテストです", force: .urgent)
+                        Button(String(localized: "緊急")) {
+                            AppDelegate.shared.hub.post(.system, title: String(localized: "緊急表示のテストです"), force: .urgent)
                         }
                     }
                 }
             }
 
-            Section("流し方") {
-                Picker("速さ", selection: $settings.tickerSpeed) {
-                    Text("ゆっくり").tag(30.0)
-                    Text("ふつう").tag(45.0)
-                    Text("はやい").tag(60.0)
+            Section(String(localized: "流し方")) {
+                Picker(String(localized: "速さ"), selection: $settings.tickerSpeed) {
+                    Text(String(localized: "ゆっくり")).tag(30.0)
+                    Text(String(localized: "ふつう")).tag(45.0)
+                    Text(String(localized: "はやい")).tag(60.0)
                 }
                 .pickerStyle(.segmented)
-                Picker("メニューバー全体", selection: Binding(
+                Picker(String(localized: "メニューバー全体"), selection: Binding(
                     get: { !settings.fullBarUrgent ? 0 : (settings.fullBarAll ? 2 : 1) },
                     set: { settings.fullBarUrgent = $0 > 0; settings.fullBarAll = $0 == 2 })) {
-                    Text("すべて").tag(2)
-                    Text("緊急だけ").tag(1)
-                    Text("使わない").tag(0)
+                    Text(String(localized: "すべて")).tag(2)
+                    Text(String(localized: "緊急だけ")).tag(1)
+                    Text(String(localized: "使わない")).tag(0)
                 }
                 .pickerStyle(.segmented)
-                Picker("今日の情報", selection: $settings.infoRollMinutes) {
-                    Text("流さない").tag(0)
-                    Text("15分ごと").tag(15)
-                    Text("1時間ごと").tag(60)
+                Picker(String(localized: "今日の情報"), selection: $settings.infoRollMinutes) {
+                    Text(String(localized: "流さない")).tag(0)
+                    Text(String(localized: "15分ごと")).tag(15)
+                    Text(String(localized: "1時間ごと")).tag(60)
                 }
                 .pickerStyle(.segmented)
             }
 
-            Section("見た目") {
-                LabeledContent("光の色") {
+            Section(String(localized: "見た目")) {
+                LabeledContent(String(localized: "光の色")) {
                     SwatchRow(
                         items: AccentPreset.allCases.filter { $0 != .custom }.map { ($0.rawValue, Color(nsColor: $0.ledColor), $0.label) },
                         selected: settings.accent == .custom ? "custom" : settings.accent.rawValue,
@@ -59,26 +59,26 @@ struct BoardLookPane: View {
                             settings.accent = .custom
                         })
                 }
-                Picker("ドットの形", selection: $settings.dotShape) {
+                Picker(String(localized: "ドットの形"), selection: $settings.dotShape) {
                     ForEach(DotShape.allCases) { Text($0.label).tag($0) }
                 }
                 .pickerStyle(.segmented)
             }
 
-            Section("お知らせ") {
-                LabeledContent("種類ごとの流し方") {
-                    Button("変更…") { showLevels = true }
+            Section(String(localized: "お知らせ")) {
+                LabeledContent(String(localized: "種類ごとの流し方")) {
+                    Button(String(localized: "変更…")) { showLevels = true }
                 }
-                Picker("集中モード中", selection: $settings.focusBehavior) {
+                Picker(String(localized: "集中モード中"), selection: $settings.focusBehavior) {
                     ForEach(FocusBehavior.allCases) { Text($0.label).tag($0) }
                 }
                 .pickerStyle(.segmented)
                 if !FocusWatcher.isAuthorized && settings.focusBehavior != .same {
-                    LabeledContent("集中モードとの連動") {
-                        Button("許可…") { FocusWatcher.requestAuthorization { _ in } }
+                    LabeledContent(String(localized: "集中モードとの連動")) {
+                        Button(String(localized: "許可…")) { FocusWatcher.requestAuthorization { _ in } }
                     }
                 }
-                Toggle("全画面のアプリの間は緊急だけ", isOn: $settings.quietInFullScreen)
+                Toggle(String(localized: "全画面のアプリの間は緊急だけ"), isOn: $settings.quietInFullScreen)
             }
         }
         .formStyle(.grouped)
@@ -87,7 +87,7 @@ struct BoardLookPane: View {
                 Form { NoticeLevelsSection(settings: settings) }.formStyle(.grouped)
                 HStack {
                     Spacer()
-                    Button("完了") { showLevels = false }.keyboardShortcut(.defaultAction)
+                    Button(String(localized: "完了")) { showLevels = false }.keyboardShortcut(.defaultAction)
                 }
                 .padding(12)
             }
@@ -114,10 +114,10 @@ private struct NoticeLevelsSection: View {
                 }
             }
             if !settings.noticeLevels.isEmpty {
-                Button("おすすめの設定に戻す") { settings.noticeLevels = [:] }
+                Button(String(localized: "おすすめの設定に戻す")) { settings.noticeLevels = [:] }
             }
         } header: {
-            Text("お知らせの種類ごとの流し方")
+            Text(String(localized: "お知らせの種類ごとの流し方"))
         }
     }
 }
@@ -133,7 +133,7 @@ private struct BoardPreview: View {
             .resizable()
             .aspectRatio(contentMode: .fit)
             .frame(width: 440)
-            .accessibilityLabel("掲示板のプレビュー")
+            .accessibilityLabel(String(localized: "掲示板のプレビュー"))
     }
 
     private func render() -> NSImage {
@@ -142,8 +142,8 @@ private struct BoardPreview: View {
         let color = settings.boardNSColor
         // The user's own weather when it's loaded, so the preview reads like their board.
         let text = AppDelegate.shared.info.weather.map {
-            "◆ 天気 ◆ \(settings.weatherPlace) \(Int($0.temperature.rounded()))° \(WeatherCode.text($0.code))"
-        } ?? "◆ 天気 ◆ \(settings.weatherPlace) 晴れ"
+            String(localized: "◆ 天気 ◆ \(settings.weatherPlace) \(Int($0.temperature.rounded()))° \(WeatherCode.text($0.code))")
+        } ?? String(localized: "◆ 天気 ◆ \(settings.weatherPlace) 晴れ")
         let width = CGFloat(LEDRenderer.mask(for: text).columns + 12) * LEDRenderer.pitch
         let board = LEDRenderer.board(width: width, accent: color)
         let strip = LEDRenderer.staticStrip(for: text, accent: color, boardWidth: width)
@@ -229,8 +229,8 @@ struct SwatchRow: View {
                     }
             }
             .buttonStyle(.plain)
-            .help("好きな色を選ぶ")
-            .accessibilityLabel("好きな色を選ぶ")
+            .help(String(localized: "好きな色を選ぶ"))
+            .accessibilityLabel(String(localized: "好きな色を選ぶ"))
         }
     }
 }

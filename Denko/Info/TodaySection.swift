@@ -38,14 +38,14 @@ struct TodaySection: View {
                 }
                 Spacer(minLength: 8)
                 if let soon = w.rainSoon {
-                    Label(soon.replacingOccurrences(of: "（[0-9]+%）", with: "", options: .regularExpression),
+                    Label(soon.replacingOccurrences(of: " ?[（(][0-9]+%[）)]", with: "", options: .regularExpression),
                           systemImage: "umbrella.fill")
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(accent)
                         .lineLimit(1)
                 }
             } else {
-                Text(info.error ?? "読み込み中…").font(.caption).foregroundStyle(.secondary)
+                Text(info.error ?? String(localized: "読み込み中…")).font(.caption).foregroundStyle(.secondary)
             }
         }
     }
@@ -60,21 +60,21 @@ struct TodaySection: View {
             if settings.infoDisaster {
                 statusRow(icon: recent == nil ? "checkmark.shield" : "exclamationmark.triangle.fill",
                           alert: recent != nil,
-                          text: recent?.title ?? "\(settings.weatherPrefecture)：警報・強い揺れなし")
+                          text: recent?.title ?? String(localized: "\(settings.weatherPrefecture)：警報・強い揺れなし"))
             }
             if settings.infoTrains {
                 statusRow(icon: trouble.isEmpty ? "tram" : "tram.fill", alert: !trouble.isEmpty,
-                          text: settings.trainLines.isEmpty ? "路線が未設定"
-                            : info.trains == nil ? (info.failed.contains("trains") ? "運行情報を取得できません" : "読み込み中…")
-                            : (trouble.isEmpty ? "平常運転" : trouble.joined(separator: "・")))
+                          text: settings.trainLines.isEmpty ? String(localized: "路線が未設定")
+                            : info.trains == nil ? (info.failed.contains("trains") ? String(localized: "運行情報を取得できません") : String(localized: "読み込み中…"))
+                            : (trouble.isEmpty ? String(localized: "平常運転") : trouble.joined(separator: String(localized: "・"))))
                 .contextMenu {
                     // Quick way to drop a line that keeps showing up.
                     let names = Array(Set((info.trains ?? []).filter(\.isTrouble).map(\.name))).sorted()
                     ForEach(names, id: \.self) { name in
-                        Button("「\(name)」を見ない") { info.unwatch(name) }
+                        Button(String(localized: "「\(name)」を見ない")) { info.unwatch(name) }
                     }
                     if !names.isEmpty { Divider() }
-                    Button("見る路線を選ぶ…") { AppDelegate.shared.openSettings(tab: "情報連携") }
+                    Button(String(localized: "見る路線を選ぶ…")) { AppDelegate.shared.openSettings(tab: String(localized: "情報連携")) }
                 }
             }
         }
@@ -97,11 +97,11 @@ struct TodaySection: View {
             heading(settings.newsFeed.label)
             if info.news.isEmpty {
                 if info.failed.contains("news") {
-                    Label("ニュースを取得できませんでした",
+                    Label(String(localized: "ニュースを取得できませんでした"),
                           systemImage: "exclamationmark.triangle.fill")
                         .font(.caption).foregroundStyle(.orange)
                 } else {
-                    Text("読み込み中…").font(.caption).foregroundStyle(.secondary)
+                    Text(String(localized: "読み込み中…")).font(.caption).foregroundStyle(.secondary)
                 }
             }
             ForEach(info.news.prefix(3)) { item in
@@ -122,10 +122,10 @@ struct TodaySection: View {
     private var noticesCard: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                heading("最近のお知らせ")
+                heading(String(localized: "最近のお知らせ"))
                 Spacer()
                 if !hub.history.isEmpty {
-                    Button("消去") { hub.clear() }.buttonStyle(.borderless).font(.caption).foregroundStyle(.secondary)
+                    Button(String(localized: "消去")) { hub.clear() }.buttonStyle(.borderless).font(.caption).foregroundStyle(.secondary)
                 }
             }
             ForEach(Array(hub.history.prefix(3))) { msg in

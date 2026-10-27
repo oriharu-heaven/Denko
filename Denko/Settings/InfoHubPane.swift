@@ -78,28 +78,28 @@ struct InfoHubPane: View {
         /// One sentence for the top of the detail page.
         var blurb: String {
             switch self {
-            case .weather: return "いまの天気と、この先の雨をお知らせします。"
-            case .disaster: return "気象庁の情報から、強い揺れ・津波・地元の警報をすぐに流します。"
-            case .news: return "選んだ配信元の見出しを一覧に表示します。"
-            case .trains: return "見ている路線で遅延や運転見合わせが出たら、すぐに流します。"
-            case .fx: return "主な通貨の参考レートと、大きな値動きをお知らせします。"
-            case .claudeCode: return "許可待ち・入力待ちと、応答の完了を掲示板に流します。"
-            case .codex: return "作業の完了を掲示板に流します。"
-            case .aiUsage: return "Claude・Codex の利用枠を表示します。"
-            case .github: return "レビュー依頼やメンションを流します。"
-            case .rss: return "好きなサイトの新着を流します。"
+            case .weather: return String(localized: "いまの天気と、この先の雨をお知らせします。")
+            case .disaster: return String(localized: "気象庁の情報から、強い揺れ・津波・地元の警報をすぐに流します。")
+            case .news: return String(localized: "選んだ配信元の見出しを一覧に表示します。")
+            case .trains: return String(localized: "見ている路線で遅延や運転見合わせが出たら、すぐに流します。")
+            case .fx: return String(localized: "主な通貨の参考レートと、大きな値動きをお知らせします。")
+            case .claudeCode: return String(localized: "許可待ち・入力待ちと、応答の完了を掲示板に流します。")
+            case .codex: return String(localized: "作業の完了を掲示板に流します。")
+            case .aiUsage: return String(localized: "Claude・Codex の利用枠を表示します。")
+            case .github: return String(localized: "レビュー依頼やメンションを流します。")
+            case .rss: return String(localized: "好きなサイトの新着を流します。")
             }
         }
         var title: String {
             switch self {
-            case .weather: return "天気"
-            case .disaster: return "防災"
-            case .news: return "ニュース"
-            case .trains: return "運行情報"
-            case .fx: return "為替"
+            case .weather: return String(localized: "天気")
+            case .disaster: return String(localized: "防災")
+            case .news: return String(localized: "ニュース")
+            case .trains: return String(localized: "運行情報")
+            case .fx: return String(localized: "為替")
             case .claudeCode: return "Claude Code"
             case .codex: return "Codex"
-            case .aiUsage: return "AI の使用量"
+            case .aiUsage: return String(localized: "AI の使用量")
             case .github: return "GitHub"
             case .rss: return "RSS"
             }
@@ -145,27 +145,27 @@ struct InfoHubPane: View {
 
     private var overview: some View {
         Form {
-            Section("今日の情報") {
+            Section(String(localized: "今日の情報")) {
                 ForEach(Feed.today) { row($0) }
             }
 
-            Section("コーディング・AI") {
+            Section(String(localized: "コーディング・AI")) {
                 ForEach(Feed.coding) { row($0) }
             }
 
-            Section("そのほか") {
+            Section(String(localized: "そのほか")) {
                 ForEach(Feed.others) { row($0) }
             }
 
             Section {
-                DisclosureGroup("情報の出典") {
+                DisclosureGroup(String(localized: "情報の出典")) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("天気: Open-Meteo（open-meteo.com、CC BY 4.0）")
-                        Text("防災: \(DisasterFeed.attribution)")
-                        Text("ニュース: 選んだ配信元（NHK・Yahoo!ニュース・Google ニュース・BBC など）")
-                        Text("運行情報: 公共交通オープンデータセンター")
+                        Text(String(localized: "天気: Open-Meteo（open-meteo.com、CC BY 4.0）"))
+                        Text(String(localized: "防災: \(DisasterFeed.attribution)"))
+                        Text(String(localized: "ニュース: 選んだ配信元（NHK・Yahoo!ニュース・Google ニュース・BBC など）"))
+                        Text(String(localized: "運行情報: 公共交通オープンデータセンター"))
                         Text(TrainFeed.attribution).foregroundStyle(.tertiary)
-                        Text("為替: Frankfurter（欧州中央銀行の参考レート）")
+                        Text(String(localized: "為替: Frankfurter（欧州中央銀行の参考レート）"))
                     }
                     .font(.caption).foregroundStyle(.secondary)
                 }
@@ -186,11 +186,11 @@ struct InfoHubPane: View {
                 Button {
                     place.useCurrentLocation()
                 } label: {
-                    if place.isLocating { ProgressView().controlSize(.small) } else { Text("現在地を使う") }
+                    if place.isLocating { ProgressView().controlSize(.small) } else { Text(String(localized: "現在地を使う")) }
                 }
                 .disabled(place.isLocating)
             }
-            TextField("地域を変更", text: $place.query, prompt: Text("市区町村名（例: 渋谷区、大阪市）"))
+            TextField(String(localized: "地域を変更"), text: $place.query, prompt: Text(String(localized: "市区町村名（例: 渋谷区、大阪市）")))
                 .onSubmit { Task { await place.choose(place.query) } }
             if !place.suggestions.isEmpty && !place.query.isEmpty {
                 ForEach(place.suggestions) { s in
@@ -211,7 +211,7 @@ struct InfoHubPane: View {
                 HStack {
                     Label(error, systemImage: "exclamationmark.triangle.fill").font(.caption).foregroundStyle(.orange)
                     if error.contains("許可") {
-                        Button("システム設定を開く") {
+                        Button(String(localized: "システム設定を開く")) {
                             NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_LocationServices")!)
                         }
                         .controlSize(.small)
@@ -241,14 +241,14 @@ struct InfoHubPane: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel([f.title, on ? summary(f) : offText(f)].compactMap { $0 }.joined(separator: "、"))
-            .accessibilityHint("詳しい設定を開きます")
+            .accessibilityHint(String(localized: "詳しい設定を開きます"))
             Toggle(f.title, isOn: isOn(f)).toggleStyle(.switch).labelsHidden().controlSize(.small)
                 .disabled(!isAvailable(f))
             Button { detail = f } label: {
                 Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("\(f.title)の詳しい設定")
+            .accessibilityLabel(String(localized: "\(f.title)の詳しい設定"))
         }
     }
 
@@ -278,8 +278,8 @@ struct InfoHubPane: View {
                     case .news: newsOptions
                     case .trains: trainOptions
                     case .fx: fxOptions
-                    case .claudeCode: LabeledContent("変更するファイル", value: "~/.claude/settings.json")
-                    case .codex: LabeledContent("変更するファイル", value: "~/.codex/config.toml")
+                    case .claudeCode: LabeledContent(String(localized: "変更するファイル"), value: "~/.claude/settings.json")
+                    case .codex: LabeledContent(String(localized: "変更するファイル"), value: "~/.codex/config.toml")
                     case .aiUsage: aiOptions
                     case .github: githubOptions
                     case .rss: rssOptions
@@ -298,11 +298,11 @@ struct InfoHubPane: View {
         .safeAreaInset(edge: .top, spacing: 0) {
             HStack {
                 Button { detail = nil } label: {
-                    Label("情報連携", systemImage: "chevron.left")
+                    Label(String(localized: "情報連携"), systemImage: "chevron.left")
                 }
                 .buttonStyle(.borderless)
                 .keyboardShortcut("[", modifiers: .command)
-                .help("戻る（⌘[ または esc）")
+                .help(String(localized: "戻る（⌘[ または esc）"))
                 Spacer()
             }
             .padding(.horizontal, 20)
@@ -342,9 +342,9 @@ struct InfoHubPane: View {
     /// What's on, chosen or wrong — nil when the row's title and switch already say it.
     private func summary(_ f: Feed) -> String? {
         switch f {
-        case .trains: return settings.trainLines.isEmpty ? "路線が未設定" : nil
-        case .fx: return settings.fxPairs.isEmpty ? "通貨ペアが未設定" : nil
-        case .rss: return settings.rssFeeds.isEmpty ? "フィードが未設定" : nil
+        case .trains: return settings.trainLines.isEmpty ? String(localized: "路線が未設定") : nil
+        case .fx: return settings.fxPairs.isEmpty ? String(localized: "通貨ペアが未設定") : nil
+        case .rss: return settings.rssFeeds.isEmpty ? String(localized: "フィードが未設定") : nil
         default: return nil
         }
     }
@@ -361,9 +361,9 @@ struct InfoHubPane: View {
 
     private func offText(_ f: Feed) -> String? {
         switch f {
-        case .claudeCode: return AIProvider.claude.isDetected ? "未連携" : "この Mac では見つかりません"
-        case .codex: return CodexNotify.isAvailable ? "未連携" : "この Mac では見つかりません"
-        case .github: return hasGitHubToken ? "オフ" : "トークンが未設定"
+        case .claudeCode: return AIProvider.claude.isDetected ? String(localized: "未連携") : String(localized: "この Mac では見つかりません")
+        case .codex: return CodexNotify.isAvailable ? String(localized: "未連携") : String(localized: "この Mac では見つかりません")
+        case .github: return hasGitHubToken ? String(localized: "オフ") : String(localized: "トークンが未設定")
         default: return nil
         }
     }
@@ -394,9 +394,9 @@ struct InfoHubPane: View {
             }
         }
         if settings.aiProviders.contains(.claude) {
-            LabeledContent("Claude Code のステータスライン") {
-                if statusLineInstalled { Text("連携済み").foregroundStyle(.secondary) }
-                else { Button("連携する") { setStatusLine(true) } }
+            LabeledContent(String(localized: "Claude Code のステータスライン")) {
+                if statusLineInstalled { Text(String(localized: "連携済み")).foregroundStyle(.secondary) }
+                else { Button(String(localized: "連携する")) { setStatusLine(true) } }
             }
         }
         if let statusLineError { Text(statusLineError).font(.caption).foregroundStyle(.secondary) }
@@ -407,7 +407,7 @@ struct InfoHubPane: View {
             if on { try ClaudeStatusLine.install(endpoint: server.endpoint) } else { try ClaudeStatusLine.uninstall() }
             statusLineError = nil
         } catch {
-            statusLineError = "Claude Code の設定を変更できませんでした: \(error.localizedDescription)"
+            statusLineError = String(localized: "Claude Code の設定を変更できませんでした: \(error.localizedDescription)")
         }
         statusLineInstalled = ClaudeStatusLine.isInstalled(endpoint: server.endpoint)
     }
@@ -417,9 +417,9 @@ struct InfoHubPane: View {
     private var githubOptions: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                SecureField("トークン", text: $githubToken, prompt: Text(hasGitHubToken ? "保存済み" : "ghp_… / github_pat_…"))
+                SecureField(String(localized: "トークン"), text: $githubToken, prompt: Text(hasGitHubToken ? String(localized: "保存済み") : "ghp_… / github_pat_…"))
                     .textFieldStyle(.roundedBorder)
-                Button("保存") {
+                Button(String(localized: "保存")) {
                     AppDelegate.shared.github.setToken(githubToken)
                     githubToken = ""
                     hasGitHubToken = AppDelegate.shared.github.hasToken
@@ -428,7 +428,7 @@ struct InfoHubPane: View {
                 }
                 .disabled(githubToken.isEmpty)
                 if hasGitHubToken {
-                    Button("削除") {
+                    Button(String(localized: "削除")) {
                         AppDelegate.shared.github.setToken(nil)
                         hasGitHubToken = false
                         settings.githubEnabled = false
@@ -446,18 +446,18 @@ struct InfoHubPane: View {
                     Spacer()
                     Button { settings.rssFeeds.removeAll { $0 == feed } } label: { Image(systemName: "minus.circle") }
                         .buttonStyle(.borderless)
-                        .accessibilityLabel("削除")
+                        .accessibilityLabel(String(localized: "削除"))
                 }
             }
             HStack {
-                TextField("フィード URL", text: $newFeed, prompt: Text("https://…/feed.xml"))
+                TextField(String(localized: "フィード URL"), text: $newFeed, prompt: Text("https://…/feed.xml"))
                     .textFieldStyle(.roundedBorder)
                     .onSubmit(addFeed)
-                Button("追加", action: addFeed)
+                Button(String(localized: "追加"), action: addFeed)
                     .disabled(URL(string: newFeed)?.scheme?.hasPrefix("http") != true)
             }
-            Picker("確認する間隔", selection: $settings.rssMinutes) {
-                ForEach([15, 30, 60, 180], id: \.self) { Text("\($0) 分").tag($0) }
+            Picker(String(localized: "確認する間隔"), selection: $settings.rssMinutes) {
+                ForEach([15, 30, 60, 180], id: \.self) { Text(String(localized: "\($0) 分")).tag($0) }
             }
             .frame(maxWidth: 260)
         }
@@ -475,13 +475,13 @@ struct InfoHubPane: View {
         let alert = NSAlert()
         alert.messageText = title
         alert.informativeText = text
-        alert.addButton(withTitle: "連携する")
-        alert.addButton(withTitle: "キャンセル")
+        alert.addButton(withTitle: String(localized: "連携する"))
+        alert.addButton(withTitle: String(localized: "キャンセル"))
         return alert.runModal() == .alertFirstButtonReturn
     }
 
     private func installHooks() {
-        guard confirm("Claude Code と連携しますか？", "~/.claude/settings.json にフックを追加します。元のファイルは同じフォルダにバックアップされます。") else { return }
+        guard confirm(String(localized: "Claude Code と連携しますか？"), String(localized: "~/.claude/settings.json にフックを追加します。元のファイルは同じフォルダにバックアップされます。")) else { return }
         do { try ClaudeCodeHooks.install(endpoint: server.endpoint); hookError = nil } catch { hookError = error.localizedDescription }
         hooksInstalled = ClaudeCodeHooks.isInstalled(endpoint: server.endpoint)
     }
@@ -492,7 +492,7 @@ struct InfoHubPane: View {
     }
 
     private func installCodex() {
-        guard confirm("Codex と連携しますか？", "~/.codex/config.toml に、作業完了を Denko に知らせる notify の設定を1行追加します。元のファイルは同じフォルダにバックアップされます。") else { return }
+        guard confirm(String(localized: "Codex と連携しますか？"), String(localized: "~/.codex/config.toml に、作業完了を Denko に知らせる notify の設定を1行追加します。元のファイルは同じフォルダにバックアップされます。")) else { return }
         do { try CodexNotify.install(endpoint: server.endpoint); hookError = nil } catch { hookError = error.localizedDescription }
         codexInstalled = CodexNotify.isInstalled(endpoint: server.endpoint)
     }
@@ -513,7 +513,7 @@ struct InfoHubPane: View {
                         .font(.system(size: 26)).foregroundStyle(accent)
                     VStack(alignment: .leading) {
                         Text("\(settings.weatherPlace)　\(Int(w.temperature.rounded()))° \(WeatherCode.text(w.code))")
-                        Text("最高 \(Int(w.high.rounded()))°　最低 \(Int(w.low.rounded()))°　降水 \(w.rainChance)%")
+                        Text(String(localized: "最高 \(Int(w.high.rounded()))°　最低 \(Int(w.low.rounded()))°　降水 \(w.rainChance)%"))
                             .font(.caption).foregroundStyle(.secondary)
                     }
                 }
@@ -523,31 +523,31 @@ struct InfoHubPane: View {
 
     @ViewBuilder
     private var disasterOptions: some View {
-note("緊急地震速報には対応していません")
+note(String(localized: "緊急地震速報には対応していません"))
     }
 
     @ViewBuilder
     private var newsOptions: some View {
-        Picker("配信元", selection: Binding(
+        Picker(String(localized: "配信元"), selection: Binding(
             get: { settings.newsFeed.sourceID },
             set: { settings.newsFeed = NewsChoice($0) })) {
-            Section("国内") {
+            Section(String(localized: "国内")) {
                 ForEach(NewsCatalog.sources.filter { !$0.overseas }) { Text($0.name).tag($0.id) }
             }
-            Section("海外") {
+            Section(String(localized: "海外")) {
                 ForEach(NewsCatalog.sources.filter(\.overseas)) { Text($0.name).tag($0.id) }
             }
         }
         let src = settings.newsFeed.source
         if src.categories.count > 1 {
-            Picker("カテゴリ", selection: Binding(
+            Picker(String(localized: "カテゴリ"), selection: Binding(
                 get: { settings.newsFeed.categoryID },
                 set: { settings.newsFeed = NewsChoice("\(src.id)/\($0)") })) {
                 ForEach(src.categories) { Text($0.label).tag($0.id) }
             }
         }
         if !info.news.isEmpty {
-            LabeledContent("いまの見出し") {
+            LabeledContent(String(localized: "いまの見出し")) {
                 Text(info.news.first?.title ?? "").foregroundStyle(.secondary).lineLimit(2).multilineTextAlignment(.trailing)
             }
         }
@@ -557,7 +557,7 @@ note("緊急地震速報には対応していません")
     private var trainOptions: some View {
         watchedLines
         linePicker
-        DisclosureGroup("東京メトロ・横浜市営など") { odptKeyRow }
+        DisclosureGroup(String(localized: "東京メトロ・横浜市営など")) { odptKeyRow }
     }
 
     /// The lines being watched, each with a button to stop watching it.
@@ -565,8 +565,8 @@ note("緊急地震速報には対応していません")
     private var watchedLines: some View {
         if settings.trainLines.isEmpty {
         } else {
-            LabeledContent("見ている路線（\(settings.trainLines.count)）") {
-                Button("すべて外す") { settings.trainLines = [] }.controlSize(.small)
+            LabeledContent(String(localized: "見ている路線（\(settings.trainLines.count)）")) {
+                Button(String(localized: "すべて外す")) { settings.trainLines = [] }.controlSize(.small)
             }
         }
         ForEach(settings.trainLines, id: \.self) { name in
@@ -575,9 +575,9 @@ note("緊急地震速報には対応していません")
                 VStack(alignment: .leading, spacing: 1) {
                     Text(name)
                     if let line {
-                        Text("\(line.company)・\(line.status)").font(.caption).foregroundStyle(.secondary)
+                        Text(String(localized: "\(line.company)・\(line.status)")).font(.caption).foregroundStyle(.secondary)
                     } else if !info.allTrainLines.isEmpty {
-                        Text("公開データなし")
+                        Text(String(localized: "公開データなし"))
                             .font(.caption).foregroundStyle(.secondary)
                     }
                 }
@@ -588,8 +588,8 @@ note("緊急地震速報には対応していません")
                     Image(systemName: "minus.circle.fill").foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)
-                .help("この路線を見ない")
-                .accessibilityLabel("\(name)を見ない")
+                .help(String(localized: "この路線を見ない"))
+                .accessibilityLabel(String(localized: "\(name)を見ない"))
             }
         }
     }
@@ -597,16 +597,16 @@ note("緊急地震速報には対応していません")
     /// A search field, then region → company → line.
     @ViewBuilder
     private var linePicker: some View {
-        TextField("路線を探す", text: $lineSearch, prompt: Text("路線名（例: 山手線、大阪環状線、銀座線）"))
+        TextField(String(localized: "路線を探す"), text: $lineSearch, prompt: Text(String(localized: "路線名（例: 山手線、大阪環状線、銀座線）")))
         if info.allTrainLines.isEmpty {
             HStack(spacing: 8) {
                 ProgressView().controlSize(.small)
-                Text("全国の路線を読み込んでいます…").font(.caption).foregroundStyle(.secondary)
+                Text(String(localized: "全国の路線を読み込んでいます…")).font(.caption).foregroundStyle(.secondary)
             }
         } else if !lineSearch.trimmingCharacters(in: .whitespaces).isEmpty {
             let q = lineSearch.trimmingCharacters(in: .whitespaces)
             let hits = info.allTrainLines.filter { $0.name.localizedCaseInsensitiveContains(q) || $0.company.contains(q) }
-            if hits.isEmpty { note("「\(q)」に合う路線はありません。") }
+            if hits.isEmpty { note(String(localized: "「\(q)」に合う路線はありません。")) }
             ForEach(hits.prefix(30)) { line in lineToggle(line, showPlace: true) }
         } else {
             ForEach(TrainFeed.regions, id: \.self) { region in
@@ -632,7 +632,7 @@ note("緊急地震速報には対応していません")
                         }
                     } label: {
                         LabeledContent(region) {
-                            Text(picked > 0 ? "\(picked) 路線を選択中" : "\(inRegion.count) 路線").foregroundStyle(.secondary)
+                            Text(picked > 0 ? String(localized: "\(picked) 路線を選択中") : String(localized: "\(inRegion.count) 路線")).foregroundStyle(.secondary)
                         }
                     }
                 }
@@ -648,17 +648,17 @@ note("緊急地震速報には対応していません")
                 else { settings.trainLines.removeAll { $0 == line.name } }
             })) {
             Text(label ?? line.name)
-            if showPlace { Text("\(line.region)・\(line.company)") }
+            if showPlace { Text(String(localized: "\(line.region)・\(line.company)")) }
         }
     }
 
     private var odptKeyRow: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
-                SecureField("ODPT アクセストークン", text: $odptKey,
-                            prompt: Text(hasODPTKey ? "登録済み（変更する場合は入力）" : "東京メトロ・私鉄も見るとき（任意）"))
+                SecureField(String(localized: "ODPT アクセストークン"), text: $odptKey,
+                            prompt: Text(hasODPTKey ? String(localized: "登録済み（変更する場合は入力）") : String(localized: "東京メトロ・私鉄も見るとき（任意）")))
                     .textFieldStyle(.roundedBorder)
-                Button("保存") {
+                Button(String(localized: "保存")) {
                     Keychain.save(odptKey, account: TrainFeed.keychainAccount)
                     odptKey = ""
                     hasODPTKey = TrainFeed.hasKey
@@ -666,14 +666,14 @@ note("緊急地震速報には対応していません")
                 }
                 .disabled(odptKey.isEmpty)
                 if hasODPTKey {
-                    Button("削除") {
+                    Button(String(localized: "削除")) {
                         Keychain.save(nil, account: TrainFeed.keychainAccount)
                         hasODPTKey = false
                         Task { await info.refreshTrains() }
                     }
                 }
             }
-            Link("トークンを無料で取得（公共交通オープンデータセンター）", destination: URL(string: "https://developer.odpt.org/")!)
+            Link(String(localized: "トークンを無料で取得（公共交通オープンデータセンター）"), destination: URL(string: "https://developer.odpt.org/")!)
                 .font(.caption)
         }
     }
@@ -688,9 +688,9 @@ note("緊急地震速報には対応していません")
                                           : settings.fxPairs.filter { $0 != pair }
                 }))
         }
-        Picker("大きく動いたらお知らせ", selection: $settings.fxAlertPercent) {
-            Text("流さない").tag(0.0)
-            ForEach([0.5, 1.0, 2.0], id: \.self) { Text(String(format: "前日比 %.1f%% 以上", $0)).tag($0) }
+        Picker(String(localized: "大きく動いたらお知らせ"), selection: $settings.fxAlertPercent) {
+            Text(String(localized: "流さない")).tag(0.0)
+            ForEach([0.5, 1.0, 2.0], id: \.self) { Text(String(format: String(localized: "前日比 %.1f%% 以上"), $0)).tag($0) }
         }
     }
 

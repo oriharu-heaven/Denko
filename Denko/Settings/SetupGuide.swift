@@ -8,15 +8,15 @@ import SwiftUI
 @MainActor
 enum SetupStep: String, CaseIterable, Identifiable {
     case place, trains, agents, claudeUsage, launchAtLogin
-    var id: String { rawValue }
+    nonisolated var id: String { rawValue }
 
     var title: String {
         switch self {
-        case .place: return "住んでいる地域"
-        case .trains: return "見る路線"
-        case .agents: return "コーディングエージェントと連携"
-        case .claudeUsage: return "Claude の使用量"
-        case .launchAtLogin: return "ログイン時に起動"
+        case .place: return String(localized: "住んでいる地域")
+        case .trains: return String(localized: "見る路線")
+        case .agents: return String(localized: "コーディングエージェントと連携")
+        case .claudeUsage: return String(localized: "Claude の使用量")
+        case .launchAtLogin: return String(localized: "ログイン時に起動")
         }
     }
 
@@ -43,9 +43,9 @@ enum SetupStep: String, CaseIterable, Identifiable {
     /// Button label while the step isn't done.
     var action: String {
         switch self {
-        case .place, .trains: return "選ぶ…"
-        case .agents, .claudeUsage: return "連携する"
-        case .launchAtLogin: return "オンにする"
+        case .place, .trains: return String(localized: "選ぶ…")
+        case .agents, .claudeUsage: return String(localized: "連携する")
+        case .launchAtLogin: return String(localized: "オンにする")
         }
     }
 
@@ -80,9 +80,9 @@ enum SetupStep: String, CaseIterable, Identifiable {
     func perform(_ s: AppSettings) throws {
         switch self {
         case .place:
-            AppDelegate.shared.openSettings(tab: "情報連携", feed: .weather)
+            AppDelegate.shared.openSettings(tab: String(localized: "情報連携"), feed: .weather)
         case .trains:
-            AppDelegate.shared.openSettings(tab: "情報連携", feed: .trains)
+            AppDelegate.shared.openSettings(tab: String(localized: "情報連携"), feed: .trains)
         case .agents:
             if AIProvider.claude.isDetected { try ClaudeCodeHooks.install(endpoint: endpoint) }
             if CodexNotify.isAvailable { try CodexNotify.install(endpoint: endpoint) }
@@ -137,7 +137,7 @@ struct SetupPane: View {
                             }
                             if step.isDone(settings) {
                                 Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
-                                    .accessibilityLabel("完了")
+                                    .accessibilityLabel(String(localized: "完了"))
                             } else {
                                 Button(step.action) {
                                     do { try step.perform(settings); error = nil }

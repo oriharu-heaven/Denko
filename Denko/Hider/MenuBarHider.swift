@@ -56,7 +56,7 @@ final class MenuBarHider: NSResponder, ObservableObject {
         toggle.button?.setAccessibilityIdentifier("cuob-toggle")
         divider.button?.setAccessibilityIdentifier("cuob-divider")
         alwaysDivider.button?.setAccessibilityIdentifier("cuob-always")
-        toggle.button?.toolTip = "クリックで隠した項目を表示（⌥クリックで「常に隠す」も）"
+        toggle.button?.toolTip = String(localized: "クリックで隠した項目を表示（⌥クリックで「常に隠す」も）")
         if let b = toggle.button {
             b.addTrackingArea(NSTrackingArea(rect: .zero,
                                              options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
@@ -117,7 +117,7 @@ final class MenuBarHider: NSResponder, ObservableObject {
     @objc private func toggleClicked() {
         let event = NSApp.currentEvent
         if event?.type == .rightMouseUp {
-            let item = NSMenuItem(title: isHiddenSectionShown ? "隠す" : "隠した項目を表示",
+            let item = NSMenuItem(title: isHiddenSectionShown ? String(localized: "隠す") : String(localized: "隠した項目を表示"),
                                   action: #selector(toggleFromMenu), keyEquivalent: "")
             item.target = self
             StatusMenu.show(on: toggle, extra: [item])
@@ -367,7 +367,7 @@ final class MenuBarHider: NSResponder, ObservableObject {
     }
 
     private func symbol(_ name: String) -> NSImage? {
-        let img = NSImage(systemSymbolName: name, accessibilityDescription: "隠した項目")?
+        let img = NSImage(systemSymbolName: name, accessibilityDescription: String(localized: "隠した項目"))?
             .withSymbolConfiguration(.init(pointSize: 14, weight: .semibold))
         img?.isTemplate = true
         return img

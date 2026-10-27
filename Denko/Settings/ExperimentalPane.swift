@@ -11,11 +11,11 @@ struct ExperimentalPane: View {
     var body: some View {
         Form {
             Section("Claude") {
-                Toggle("使用量をリアルタイムで取得", isOn: gated($settings.experimentalRealtimeClaude) {
+                Toggle(String(localized: "使用量をリアルタイムで取得"), isOn: gated($settings.experimentalRealtimeClaude) {
                     add(.claude)
                 })
                 if settings.experimentalRealtimeClaude {
-                    Picker("ログイン", selection: $settings.experimentalClaudeSessionKey) {
+                    Picker(String(localized: "ログイン"), selection: $settings.experimentalClaudeSessionKey) {
                         Text("Claude Code").tag(false)
                         Text("claude.ai").tag(true)
                     }
@@ -23,11 +23,11 @@ struct ExperimentalPane: View {
                     if settings.experimentalClaudeSessionKey {
                         LabeledContent {
                             HStack {
-                                SecureField("セッションキー", text: $sessionKey,
-                                            prompt: Text(hasSessionKey ? "保存済み" : "sessionKey"))
+                                SecureField(String(localized: "セッションキー"), text: $sessionKey,
+                                            prompt: Text(hasSessionKey ? String(localized: "保存済み") : "sessionKey"))
                                     .labelsHidden()
                                     .frame(width: 180)
-                                Button("保存") {
+                                Button(String(localized: "保存")) {
                                     Keychain.save(sessionKey.trimmingCharacters(in: .whitespacesAndNewlines),
                                                   account: ClaudeUsageAPI.sessionKeyAccount)
                                     sessionKey = ""
@@ -37,23 +37,23 @@ struct ExperimentalPane: View {
                                 .disabled(sessionKey.isEmpty)
                             }
                         } label: {
-                            Text("セッションキー")
+                            Text(String(localized: "セッションキー"))
                         }
                     }
                 }
             }
             Section("Gemini") {
-                Toggle("使用量を表示", isOn: gated($settings.experimentalGemini) {
+                Toggle(String(localized: "使用量を表示"), isOn: gated($settings.experimentalGemini) {
                     add(.gemini)
                 })
             }
-            Section("運行情報") {
-                Toggle("JR・東京メトロ・私鉄", isOn: gated($settings.experimentalTrainPages) {
+            Section(String(localized: "運行情報")) {
+                Toggle(String(localized: "JR・東京メトロ・私鉄"), isOn: gated($settings.experimentalTrainPages) {
                     Task { await AppDelegate.shared.info.refreshTrains(everything: true) }
                 })
             }
-            Section("ニュース") {
-                Toggle("NHK のニュース速報", isOn: gated($settings.experimentalNHKFlash) {
+            Section(String(localized: "ニュース")) {
+                Toggle(String(localized: "NHK のニュース速報"), isOn: gated($settings.experimentalNHKFlash) {
                     settings.infoNews = true
                 })
             }
@@ -81,10 +81,10 @@ struct ExperimentalPane: View {
     private static func confirm() -> Bool {
         let alert = NSAlert()
         alert.alertStyle = .warning
-        alert.messageText = "実験的な機能を使いますか？"
-        alert.informativeText = "公開されていない方法で情報を取得します。予告なく動かなくなったり、各サービスの規約に反したりすることがあります。自己責任で使ってください。"
-        alert.addButton(withTitle: "自己責任で使う")
-        alert.addButton(withTitle: "やめる")
+        alert.messageText = String(localized: "実験的な機能を使いますか？")
+        alert.informativeText = String(localized: "公開されていない方法で情報を取得します。予告なく動かなくなったり、各サービスの規約に反したりすることがあります。自己責任で使ってください。")
+        alert.addButton(withTitle: String(localized: "自己責任で使う"))
+        alert.addButton(withTitle: String(localized: "やめる"))
         return alert.runModal() == .alertFirstButtonReturn
     }
 }

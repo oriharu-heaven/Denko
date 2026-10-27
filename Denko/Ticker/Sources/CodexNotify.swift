@@ -33,7 +33,7 @@ enum CodexNotify {
     enum InstallError: LocalizedError {
         case otherNotify
         var errorDescription: String? {
-            "~/.codex/config.toml にはすでに別の notify 設定があります。上書きしないので、INTEGRATIONS.md の手順で手動で追加してください。"
+            String(localized: "~/.codex/config.toml にはすでに別の notify 設定があります。上書きしないので、INTEGRATIONS.md の手順で手動で追加してください。")
         }
     }
 

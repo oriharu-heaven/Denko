@@ -24,7 +24,7 @@ enum TextStrip {
 
     /// Tag (and "緊急のお知らせ" when urgent) centred in `width`, for the heading.
     static func heading(tag: String, urgent: Bool, width: CGFloat, style: Style) -> CGImage? {
-        let parts: [(String, NSColor, NSFont)] = urgent ? [("緊急のお知らせ", .labelColor, mainFont(style))] : []
+        let parts: [(String, NSColor, NSFont)] = urgent ? [(String(localized: "緊急のお知らせ"), .labelColor, mainFont(style))] : []
         return draw(tag: tag, urgent: urgent, parts: parts, style: style, width: width).image
     }
 
