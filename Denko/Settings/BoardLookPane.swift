@@ -4,55 +4,50 @@ import SwiftUI
 struct BoardLookPane: View {
     @ObservedObject var settings: AppSettings
 
+    @State private var showLevels = false
+
     var body: some View {
         Form {
             Section {
                 BoardPreview(settings: settings)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 4)
-                HStack {
-                    Text("試しに流す").font(.callout).foregroundStyle(.secondary)
-                    Spacer()
-                    Button("ふつう") {
-                        AppDelegate.shared.hub.post(.system, title: "テスト表示です", body: "電光掲示板は正常に動いています", force: .normal)
+                LabeledContent("テスト") {
+                    HStack {
+                        Button("ふつう") {
+                            AppDelegate.shared.hub.post(.system, title: "テスト表示です", force: .normal)
+                        }
+                        Button("緊急") {
+                            AppDelegate.shared.hub.post(.system, title: "緊急表示のテストです", force: .urgent)
+                        }
                     }
-                    Button("緊急") {
-                        AppDelegate.shared.hub.post(.system, title: "緊急表示のテストです", force: .urgent)
-                    }
-                    Button("今日の情報") { AppDelegate.shared.info.roll() }
                 }
-                .controlSize(.small)
             }
 
-            Section {
-                Picker("流れる速さ", selection: $settings.tickerSpeed) {
+            Section("流し方") {
+                Picker("速さ", selection: $settings.tickerSpeed) {
                     Text("ゆっくり").tag(30.0)
                     Text("ふつう").tag(45.0)
                     Text("はやい").tag(60.0)
                 }
-                Picker("1 件あたりの表示回数", selection: $settings.tickerRepeat) {
-                    ForEach(1...3, id: \.self) { Text("\($0) 回").tag($0) }
-                }
-                Toggle("流す前に見出し（◆ 天気 ◆ など）を出す", isOn: $settings.showHeading)
-                Picker("メニューバー全体に流す", selection: Binding(
+                .pickerStyle(.segmented)
+                Picker("メニューバー全体", selection: Binding(
                     get: { !settings.fullBarUrgent ? 0 : (settings.fullBarAll ? 2 : 1) },
                     set: { settings.fullBarUrgent = $0 > 0; settings.fullBarAll = $0 == 2 })) {
-                    Text("すべてのお知らせ").tag(2)
+                    Text("すべて").tag(2)
                     Text("緊急だけ").tag(1)
+                    Text("使わない").tag(0)
+                }
+                .pickerStyle(.segmented)
+                Picker("今日の情報", selection: $settings.infoRollMinutes) {
                     Text("流さない").tag(0)
+                    Text("15分ごと").tag(15)
+                    Text("1時間ごと").tag(60)
                 }
-                Picker("緊急のお知らせの速さ", selection: $settings.urgentSpeed) {
-                    Text("ふつうと同じ").tag(1.0)
-                    Text("1.5 倍").tag(1.5)
-                    Text("2.5 倍").tag(2.5)
-                    Text("4 倍").tag(4.0)
-                }
-                Toggle("緊急のお知らせを点滅させる", isOn: $settings.urgentBlink)
-            } header: {
-                Text("流し方")
+                .pickerStyle(.segmented)
             }
 
-            Section {
+            Section("見た目") {
                 LabeledContent("光の色") {
                     SwatchRow(
                         items: AccentPreset.allCases.filter { $0 != .custom }.map { ($0.rawValue, Color(nsColor: $0.ledColor), $0.label) },
@@ -64,66 +59,40 @@ struct BoardLookPane: View {
                             settings.accent = .custom
                         })
                 }
-                LabeledContent("盤面の色") {
-                    SwatchRow(
-                        items: BoardBase.presets.map { ($0.rawValue, Color(nsColor: $0.color(customHex: "")), $0.label) },
-                        selected: settings.boardBase.rawValue,
-                        customColor: NSColor(hexString: settings.boardBaseCustom) ?? .black,
-                        select: { settings.boardBase = BoardBase(rawValue: $0) ?? .black },
-                        pickCustom: { color in
-                            settings.boardBaseCustom = color.hexString
-                            settings.boardBase = .custom
-                        })
-                }
                 Picker("ドットの形", selection: $settings.dotShape) {
                     ForEach(DotShape.allCases) { Text($0.label).tag($0) }
                 }
                 .pickerStyle(.segmented)
-                Picker("ドットの大きさ", selection: $settings.dotSize) {
-                    Text("小").tag(0.68)
-                    Text("中").tag(0.87)
-                    Text("大").tag(1.0)
-                }
-                .pickerStyle(.segmented)
-                Picker("消えているドット", selection: $settings.unlitDots) {
-                    Text("見せない").tag(0.0)
-                    Text("うっすら").tag(0.07)
-                    Text("はっきり").tag(0.16)
-                }
-                .pickerStyle(.segmented)
-            } header: {
-                Text("見た目")
             }
 
-            NoticeLevelsSection(settings: settings)
-
-            Section {
-                Picker("集中モード中の動作", selection: $settings.focusBehavior) {
+            Section("お知らせ") {
+                LabeledContent("種類ごとの流し方") {
+                    Button("変更…") { showLevels = true }
+                }
+                Picker("集中モード中", selection: $settings.focusBehavior) {
                     ForEach(FocusBehavior.allCases) { Text($0.label).tag($0) }
                 }
+                .pickerStyle(.segmented)
                 if !FocusWatcher.isAuthorized && settings.focusBehavior != .same {
-                    Button("集中モードの連動を許可…") {
-                        FocusWatcher.requestAuthorization { _ in }
+                    LabeledContent("集中モードとの連動") {
+                        Button("許可…") { FocusWatcher.requestAuthorization { _ in } }
                     }
                 }
-                LabeledContent("いまの状態") {
-                    let effective = FocusChoice.current != .same ? FocusChoice.current
-                        : (FocusWatcher.isFocused ? settings.focusBehavior : .same)
-                    Text(effective == .same ? "いつもどおり流しています"
-                         : effective == .urgentOnly ? "集中モード：緊急だけ流しています" : "集中モード：流していません")
-                        .foregroundStyle(.secondary)
-                }
-                Button("集中モードの設定を開く…") {
-                    NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.Focus-Settings.extension")!)
-                }
-                Toggle("全画面のアプリ（発表・動画など）の間は緊急だけ流す", isOn: $settings.quietInFullScreen)
-            } header: {
-                Text("集中モード")
+                Toggle("全画面のアプリの間は緊急だけ", isOn: $settings.quietInFullScreen)
             }
-
-
         }
         .formStyle(.grouped)
+        .sheet(isPresented: $showLevels) {
+            VStack(spacing: 0) {
+                Form { NoticeLevelsSection(settings: settings) }.formStyle(.grouped)
+                HStack {
+                    Spacer()
+                    Button("完了") { showLevels = false }.keyboardShortcut(.defaultAction)
+                }
+                .padding(12)
+            }
+            .frame(width: 480, height: 520)
+        }
     }
 }
 

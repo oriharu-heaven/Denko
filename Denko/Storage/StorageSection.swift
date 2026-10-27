@@ -65,8 +65,6 @@ struct StorageSection: View {
     /// the reason is explained and the dialogs don't close this panel), not from here.
     private var modeFooter: some View {
         HStack(spacing: 8) {
-            Text(settings.storageMode == .full ? "書類やデスクトップも含めて調べています" : "アプリ・キャッシュなどを調べています")
-                .font(.caption).foregroundStyle(.secondary)
             Spacer()
             if settings.storageMode != .full {
                 Button("詳しく調べる…") { AppDelegate.shared.openSettings() }
@@ -194,10 +192,6 @@ private struct FindingRow: View {
                     .font(.callout.monospacedDigit().weight(.semibold))
                     .foregroundStyle(finding.size >= 5_000_000_000 ? accent : .primary)
             }
-            Text(finding.detail)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
             HStack(spacing: 10) {
                 switch finding.action {
                 case .trash:
@@ -218,7 +212,6 @@ private struct FindingRow: View {
                         copied = true
                     }
                     .help(cmd)
-                    Text(cmd).font(.caption2.monospaced()).foregroundStyle(.tertiary).lineLimit(1)
                 }
                 Spacer()
                 if let url = finding.revealURL {
@@ -229,5 +222,6 @@ private struct FindingRow: View {
             .font(.caption)
         }
         .padding(.vertical, 9)
+        .help(finding.detail)
     }
 }

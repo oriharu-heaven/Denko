@@ -44,14 +44,14 @@ enum Snapshot {
         for scheme in [ColorScheme.light, .dark] {
             let suffix = scheme == .dark ? "dark" : "light"
             let settingsPanes: [(String, AnyView, CGFloat)] = [
-                ("settings-setup", AnyView(SetupPane(settings: s)), 600),
-                ("settings-experimental", AnyView(ExperimentalPane(settings: s)), 600),
-                ("settings-general", AnyView(GeneralPane(settings: s)), 900),
-                ("settings-board", AnyView(BoardLookPane(settings: s)), 1700),
-                ("settings-dashboard", AnyView(MenuBarPane(settings: s)), 1300),
-                ("settings-info", AnyView(InfoHubPane(settings: s)), 1300),
-                ("settings-info-news", AnyView(InfoHubPane(settings: s, detail: .news)), 900),
-                ("settings-info-trains", AnyView(InfoHubPane(settings: s, detail: .trains)), 900),
+                ("settings-setup", AnyView(SetupPane(settings: s)), 680),
+                ("settings-experimental", AnyView(ExperimentalPane(settings: s)), 680),
+                ("settings-general", AnyView(GeneralPane(settings: s)), 680),
+                ("settings-board", AnyView(BoardLookPane(settings: s)), 680),
+                ("settings-dashboard", AnyView(MenuBarPane(settings: s)), 680),
+                ("settings-info", AnyView(InfoHubPane(settings: s)), 680),
+                ("settings-info-news", AnyView(InfoHubPane(settings: s, detail: .news)), 680),
+                ("settings-info-trains", AnyView(InfoHubPane(settings: s, detail: .trains)), 680),
             ]
             for (name, view, height) in settingsPanes {
                 save(AnyView(Tinted(settings: s, content: view.frame(width: 520, height: height))), name, suffix, scheme)

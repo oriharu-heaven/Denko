@@ -1,10 +1,12 @@
 import AppKit
 import SwiftUI
 
-/// 実験的: sources without a published feed or API, off by default. The first switch turned
+/// 実験: sources without a published feed or API, off by default. The first switch turned
 /// on asks once for the user's agreement that they use these at their own risk.
 struct ExperimentalPane: View {
     @ObservedObject var settings: AppSettings
+    @State private var sessionKey = ""
+    @State private var hasSessionKey = Keychain.exists(account: ClaudeUsageAPI.sessionKeyAccount)
 
     var body: some View {
         Form {
@@ -12,6 +14,33 @@ struct ExperimentalPane: View {
                 Toggle("使用量をリアルタイムで取得", isOn: gated($settings.experimentalRealtimeClaude) {
                     add(.claude)
                 })
+                if settings.experimentalRealtimeClaude {
+                    Picker("ログイン", selection: $settings.experimentalClaudeSessionKey) {
+                        Text("Claude Code").tag(false)
+                        Text("claude.ai").tag(true)
+                    }
+                    .pickerStyle(.segmented)
+                    if settings.experimentalClaudeSessionKey {
+                        LabeledContent {
+                            HStack {
+                                SecureField("セッションキー", text: $sessionKey,
+                                            prompt: Text(hasSessionKey ? "保存済み" : "sessionKey"))
+                                    .labelsHidden()
+                                    .frame(width: 180)
+                                Button("保存") {
+                                    Keychain.save(sessionKey.trimmingCharacters(in: .whitespacesAndNewlines),
+                                                  account: ClaudeUsageAPI.sessionKeyAccount)
+                                    sessionKey = ""
+                                    hasSessionKey = Keychain.exists(account: ClaudeUsageAPI.sessionKeyAccount)
+                                    Task { await AppDelegate.shared.usageStore.fetchNow() }
+                                }
+                                .disabled(sessionKey.isEmpty)
+                            }
+                        } label: {
+                            Text("セッションキー")
+                        }
+                    }
+                }
             }
             Section("Gemini") {
                 Toggle("使用量を表示", isOn: gated($settings.experimentalGemini) {

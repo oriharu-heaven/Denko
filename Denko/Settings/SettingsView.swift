@@ -27,7 +27,7 @@ enum SettingsWindow {
         add("掲示板", "", height: 760, BoardLookPane(settings: settings), image: BoardIcon.image())
         add("メニューバー", "menubar.rectangle", height: 760, MenuBarPane(settings: settings))
         add("情報連携", "point.3.connected.trianglepath.dotted", height: 760, InfoHubPane(settings: settings))
-        add("実験的", "flask", height: 760, ExperimentalPane(settings: settings))
+        add("実験", "flask", height: 760, ExperimentalPane(settings: settings))
         if Features.sleepPrevention {
             add("スリープ防止", "cup.and.saucer", height: 330, AwakePane(settings: settings, awake: awake))
         }
@@ -88,23 +88,21 @@ struct GeneralPane: View {
                     ForEach(StorageMode.allCases) { Text($0.label).tag($0) }
                 }
                 if settings.storageMode == .full {
-                    Button("フルディスクアクセスの設定を開く…") {
-                        NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles")!)
+                    LabeledContent("フルディスクアクセス") {
+                        Button("開く…") {
+                            NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles")!)
+                        }
                     }
                 }
             } header: {
                 Text("ストレージ")
             }
             Section {
-                Toggle("自動で確認", isOn: Binding(
-                    get: { updater.automaticallyChecks }, set: { updater.automaticallyChecks = $0 }))
-                Toggle("自動でダウンロード", isOn: Binding(
-                    get: { updater.automaticallyDownloads }, set: { updater.automaticallyDownloads = $0 }))
-                    .disabled(!updater.automaticallyChecks)
-                HStack {
-                    Text("バージョン \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?")")
-                        .foregroundStyle(.secondary)
-                    Spacer()
+                // Checking automatically also downloads, so there's one switch.
+                Toggle("自動で更新", isOn: Binding(
+                    get: { updater.automaticallyChecks },
+                    set: { updater.automaticallyChecks = $0; updater.automaticallyDownloads = $0 }))
+                LabeledContent("バージョン \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?")") {
                     Button("今すぐ確認") { updater.checkForUpdates() }.disabled(!updater.canCheck)
                 }
             } header: {
@@ -112,7 +110,9 @@ struct GeneralPane: View {
             }
             Section {
                 Toggle("キャラクターを互換描画にする", isOn: $settings.compatibleCatRendering)
-                Button("はじめにの画面をもう一度表示…") { AppDelegate.shared.showOnboarding() }
+                LabeledContent("はじめに") {
+                    Button("表示…") { AppDelegate.shared.showOnboarding() }
+                }
             } header: {
                 Text("困ったとき")
             }
@@ -160,28 +160,15 @@ struct MenuBarPane: View {
                         ForEach(CharacterKind.allCases) { Text($0.label).tag($0) }
                     }
                     .pickerStyle(.segmented)
-                    Toggle("バッテリー駆動中は動きを止める", isOn: $settings.pauseOnBattery)
                 }
-                Toggle("クリックした部分のタブを開く", isOn: $settings.openTabAtClick)
-            } header: {
-                Text("メニューバーに表示する情報")
             }
 
             Section {
                 Toggle("CPU", isOn: $settings.showCPUGauge)
                 Toggle("メモリ", isOn: $settings.showMemoryGauge)
-                Toggle("通信（↑ 送信・↓ 受信）", isOn: $settings.showNetworkGauge)
-                Picker("CPU・メモリの表示", selection: $settings.gaugeStyle) {
-                    ForEach(GaugeStyle.allCases) { Text($0.label).tag($0) }
-                }
-                .disabled(!settings.showCPUGauge && !settings.showMemoryGauge)
-                Toggle("数値（%）も表示", isOn: $settings.gaugeNumbers)
-                    .disabled(!settings.showCPUGauge && !settings.showMemoryGauge)
-                Toggle("いちばん使っているアプリ", isOn: $settings.showTopApp)
-                Toggle("アプリアイコンをカラーで表示", isOn: $settings.colorAppIcons)
-                    .disabled(!settings.showTopApp)
+                Toggle("通信", isOn: $settings.showNetworkGauge)
             } header: {
-                Text("Mac 全体の使用状況")
+                Text("Mac")
             }
 
             if !settings.aiProviders.isEmpty {
@@ -199,20 +186,17 @@ struct MenuBarPane: View {
                         }
                     }
                 }
-                Picker("リング横の数値", selection: $settings.claudeNumbers) {
-                    ForEach(ClaudeNumbers.allCases) { Text($0.label).tag($0) }
-                }
                 // Claude normally arrives with every Claude Code reply; this paces Codex's logs
                 // and, under 実験的, Claude's real-time requests.
                 if settings.aiProviders.contains(.codex) || settings.experimentalRealtimeClaude {
                     Picker("更新間隔", selection: Binding(
                         get: { AppDelegate.shared.ai.claude.refreshMinutes },
                         set: { AppDelegate.shared.ai.claude.refreshMinutes = $0 })) {
-                        ForEach([1, 2, 5, 10, 15, 30], id: \.self) { Text("\($0)分").tag($0) }
+                        ForEach([1, 5, 15], id: \.self) { Text("\($0)分").tag($0) }
                     }
                 }
             } header: {
-                Text("AI の使用量")
+                Text("AI")
             }
             }
 
@@ -259,16 +243,6 @@ private struct IconPreview: View {
             .accessibilityLabel("メニューバーの表示プレビュー")
     }
 }
-
-// MARK: - 掲示板
-
-enum Integrations {
-    static func docs(anchor: String?) -> URL {
-        URL(string: "https://github.com/oriharu-heaven/Denko/blob/main/INTEGRATIONS.md" + (anchor.map { "#\($0)" } ?? ""))!
-    }
-}
-
-// MARK: - 今日
 
 // MARK: - スリープ防止
 

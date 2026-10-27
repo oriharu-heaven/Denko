@@ -22,6 +22,10 @@ final class UsageStore: ObservableObject {
             scheduleRealtime()
         }
     }
+    /// 実験: use the saved claude.ai session key instead of Claude Code's login.
+    var useSessionKey = false {
+        didSet { if useSessionKey != oldValue && realtime { Task { await fetchNow() } } }
+    }
     @Published private(set) var apiError: String?
     private var timer: Timer?
 
@@ -35,7 +39,9 @@ final class UsageStore: ObservableObject {
 
     init() {
         let d = UserDefaults.standard
-        refreshMinutes = d.object(forKey: "refreshMinutes") as? Int ?? 1
+        // The choices are 1 / 5 / 15 minutes; older builds offered more.
+        let saved = d.object(forKey: "refreshMinutes") as? Int ?? 1
+        refreshMinutes = [1, 5, 15].min { abs($0 - saved) < abs($1 - saved) } ?? 1
         if let data = d.data(forKey: Self.storeKey) {
             snapshot = try? JSONDecoder().decode(UsageSnapshot.self, from: data)
         }
@@ -65,7 +71,7 @@ final class UsageStore: ObservableObject {
     func fetchNow() async {
         guard realtime, !Snapshot.isActive else { return }
         do {
-            store(try await ClaudeUsageAPI.fetch())
+            store(try await ClaudeUsageAPI.fetch(useSessionKey: useSessionKey))
             apiError = nil
         } catch {
             apiError = error.localizedDescription

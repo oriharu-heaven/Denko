@@ -105,13 +105,12 @@ extension AppDelegate {
         let s = settings
         s.infoWeather = c.today
         s.infoNews = c.today
-        s.infoTrends = c.today
         s.announceNews = c.today
         s.announceRain = c.today
         s.announceMorning = c.today
         s.infoTrains = c.trains
         s.announceTrains = c.trains
-        s.infoRollMinutes = (c.today || c.trains) ? 15 : 0
+        s.infoRollMinutes = (c.today || c.trains) ? 60 : 0
         s.showCPUGauge = c.mac
         s.showMemoryGauge = c.mac
         s.showNetworkGauge = c.mac

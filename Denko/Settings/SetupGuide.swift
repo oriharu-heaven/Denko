@@ -62,8 +62,8 @@ enum SetupStep: String, CaseIterable, Identifiable {
 
     func isDone(_ s: AppSettings) -> Bool {
         switch self {
-        // The built-in place (東京) is never saved, so any saved one was chosen.
-        case .place: return UserDefaults.standard.object(forKey: "weatherPlace") != nil
+        // 東京 until the user picks another place, so there's always one.
+        case .place: return true
         case .trains: return !s.trainLines.isEmpty
         case .agents:
             return (!AIProvider.claude.isDetected || ClaudeCodeHooks.isInstalled(endpoint: endpoint))
@@ -80,7 +80,7 @@ enum SetupStep: String, CaseIterable, Identifiable {
     func perform(_ s: AppSettings) throws {
         switch self {
         case .place:
-            AppDelegate.shared.openSettings(tab: "情報連携")
+            AppDelegate.shared.openSettings(tab: "情報連携", feed: .weather)
         case .trains:
             AppDelegate.shared.openSettings(tab: "情報連携", feed: .trains)
         case .agents:
@@ -132,6 +132,9 @@ struct SetupPane: View {
                             SettingsIcon(symbol: step.symbol, color: step.color)
                             Text(step.title)
                             Spacer()
+                            if step == .place {
+                                Text(settings.weatherPlace).foregroundStyle(.secondary)
+                            }
                             if step.isDone(settings) {
                                 Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
                                     .accessibilityLabel("完了")

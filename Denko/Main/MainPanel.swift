@@ -55,6 +55,8 @@ struct MainPanel: View {
     @ObservedObject var settings: AppSettings
     let storage: StorageAnalyzer
 
+    static let contentHeight: CGFloat = 340
+
     static func intervalLabel(_ s: Double) -> String {
         s < 1 ? "\(Int(s * 1000))ms" : "\(Int(s))秒ごと"
     }
@@ -76,7 +78,7 @@ struct MainPanel: View {
                 if let metric = state.tab.metric {
                     SystemSection(monitor: monitor, apps: apps, settings: settings, state: state, metric: metric)
                 } else if state.tab == .disk {
-                    StorageSection(analyzer: storage, settings: settings)
+                    ScrollView { StorageSection(analyzer: storage, settings: settings) }
                 } else if state.tab == .today {
                     TodaySection(info: AppDelegate.shared.info, hub: AppDelegate.shared.hub, settings: settings)
                 } else {
@@ -84,6 +86,8 @@ struct MainPanel: View {
                 }
             }
             .panelSection()
+            // Every tab the same size, so the buttons below never move.
+            .frame(height: Self.contentHeight, alignment: .top)
 
             Divider()
             if Features.sleepPrevention {
@@ -99,19 +103,11 @@ struct MainPanel: View {
                     Button {
                         AppDelegate.shared.openSettings(tab: "セットアップ")
                     } label: {
-                        Label("セットアップ（残り \(left)）", systemImage: "checklist")
+                        Label("\(left)", systemImage: "checklist")
                     }
                     .foregroundStyle(settings.accent.color)
-                }
-                // Activity Monitor only makes sense for CPU / memory / network.
-                if state.tab.metric != nil {
-                    Button {
-                        NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/Utilities/Activity Monitor.app"))
-                    } label: {
-                        Image(systemName: "arrow.up.forward.app")
-                    }
-                    .help("アクティビティモニタを開く")
-                    .accessibilityLabel("アクティビティモニタを開く")
+                    .help("セットアップ")
+                    .accessibilityLabel("セットアップ、残り\(left)")
                 }
                 Spacer()
                 // Quick pause for meetings: only urgent notices play until then.
@@ -136,8 +132,7 @@ struct MainPanel: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
         }
-        // 今日 is a small dashboard and gets more room.
-        .frame(width: state.tab == .today ? 540 : 320)
+        .frame(width: 360)
         .tint(settings.accent.color)
         .onAppear { if !tabs.contains(state.tab) { state.tab = .cpu } }
     }

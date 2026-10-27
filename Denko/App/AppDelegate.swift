@@ -46,8 +46,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in self?.showOnboarding() }
         }
         Keychain.migrateLegacy(accounts: [GitHubSource.keychainAccount, TrainFeed.keychainAccount])
-        // Earlier builds could keep a claude.ai session key; this version never uses one.
-        if Keychain.exists(account: "claude.ai-sessionKey") { Keychain.save(nil, account: "claude.ai-sessionKey") }
         // New status items are inserted to the left of existing ones, so creation order
         // gives the initial layout: [always-hidden ┆ hidden ┊ ‹] [LED board] [frog + Claude]
         // Notifications play on the main item itself (board takeover), so there's no
@@ -60,7 +58,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         wireSources()
         _ = info
         TestMode.start(self)
-        settings.$infoWeather.combineLatest(settings.$infoNews, settings.$infoTrends)
+        settings.$infoWeather.combineLatest(settings.$infoNews)
             .dropFirst()
             .sink { [weak self] _ in DispatchQueue.main.async { self?.info.schedule() } }
             .store(in: &bag)
@@ -101,6 +99,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                 self?.settings.aiProviders.removeAll { $0 == .gemini }
                 self?.settings.menuBarAI.removeAll { $0 == .gemini }
             }
+            .store(in: &bag)
+        settings.$experimentalClaudeSessionKey
+            .sink { [weak self] in self?.usageStore.useSessionKey = $0 }
             .store(in: &bag)
         settings.$experimentalRealtimeClaude.combineLatest(settings.$aiProviders)
             .sink { [weak self] on, providers in self?.usageStore.realtime = on && providers.contains(.claude) }

@@ -102,10 +102,9 @@ final class AppSettings: ObservableObject {
     @Published var tickerRepeat: Int { didSet { d.set(tickerRepeat, forKey: "tickerRepeat") } }
 
 
-    // 今日 (weather / news / trends)
+    // 今日 (weather / news)
     @Published var infoWeather: Bool { didSet { d.set(infoWeather, forKey: "infoWeather") } }
     @Published var infoNews: Bool { didSet { d.set(infoNews, forKey: "infoNews") } }
-    @Published var infoTrends: Bool { didSet { d.set(infoTrends, forKey: "infoTrends") } }
     @Published var weatherPlace: String { didSet { d.set(weatherPlace, forKey: "weatherPlace") } }
     @Published var weatherLatitude: Double { didSet { d.set(weatherLatitude, forKey: "weatherLatitude") } }
     @Published var weatherLongitude: Double { didSet { d.set(weatherLongitude, forKey: "weatherLongitude") } }
@@ -124,6 +123,8 @@ final class AppSettings: ObservableObject {
     @Published var experimentalNHKFlash: Bool { didSet { d.set(experimentalNHKFlash, forKey: "experimentalNHKFlash") } }
     /// Ask Anthropic for Claude's usage every minute with Claude Code's login (undocumented API).
     @Published var experimentalRealtimeClaude: Bool { didSet { d.set(experimentalRealtimeClaude, forKey: "experimentalRealtimeClaude") } }
+    /// Real-time Claude usage from a pasted claude.ai session key instead of Claude Code's login.
+    @Published var experimentalClaudeSessionKey: Bool { didSet { d.set(experimentalClaudeSessionKey, forKey: "experimentalClaudeSessionKey") } }
     /// Gemini's quota through the Gemini CLI's login (Google's internal API).
     @Published var experimentalGemini: Bool { didSet { d.set(experimentalGemini, forKey: "experimentalGemini") } }
     /// The user has agreed to the 実験的 notice once.
@@ -134,7 +135,7 @@ final class AppSettings: ObservableObject {
     @Published var fxPairs: [String] { didSet { d.set(fxPairs, forKey: "fxPairs") } }
     /// Announce when a pair moves this much (%) from the previous close. 0 = never.
     @Published var fxAlertPercent: Double { didSet { d.set(fxAlertPercent, forKey: "fxAlertPercent") } }
-    /// Minutes between periodic weather / news / trends rolls on the board (0 = off).
+    /// Minutes between periodic weather / news rolls on the board (0 = off).
     @Published var infoRollMinutes: Int { didSet { d.set(infoRollMinutes, forKey: "infoRollMinutes") } }
     /// Urgent messages take over the whole menu bar.
     @Published var fullBarUrgent: Bool { didSet { d.set(fullBarUrgent, forKey: "fullBarUrgent") } }
@@ -312,7 +313,6 @@ final class AppSettings: ObservableObject {
 
         infoWeather = bool("infoWeather", true)
         infoNews = bool("infoNews", true)
-        infoTrends = bool("infoTrends", true)
         weatherPlace = d.string(forKey: "weatherPlace") ?? "東京"
         weatherLatitude = d.object(forKey: "weatherLatitude") as? Double ?? 35.6812
         weatherLongitude = d.object(forKey: "weatherLongitude") as? Double ?? 139.7671
@@ -326,12 +326,15 @@ final class AppSettings: ObservableObject {
         experimentalNHKFlash = bool("experimentalNHKFlash", false)
         experimentalRealtimeClaude = bool("experimentalRealtimeClaude", false)
         experimentalGemini = bool("experimentalGemini", false)
+        experimentalClaudeSessionKey = bool("experimentalClaudeSessionKey", false)
         experimentalAccepted = bool("experimentalAccepted", false)
         announceTrains = bool("announceTrains", true)
         infoFX = bool("infoFX", true)
         fxPairs = d.stringArray(forKey: "fxPairs") ?? ["USDJPY", "EURJPY"]
         fxAlertPercent = d.object(forKey: "fxAlertPercent") as? Double ?? 1.0
-        infoRollMinutes = d.object(forKey: "infoRollMinutes") as? Int ?? 60
+        // The choices are off / 15 / 60 minutes; older builds offered more.
+        let roll = d.object(forKey: "infoRollMinutes") as? Int ?? 60
+        infoRollMinutes = [0, 15, 60].min { abs($0 - roll) < abs($1 - roll) } ?? 60
         fullBarUrgent = bool("fullBarUrgent", true)
         fullBarAll = bool("fullBarAll", false)
 

@@ -20,7 +20,6 @@ struct InfoHubPane: View {
     @State private var newFeed = ""
     @State private var statusLineInstalled = false
     @State private var statusLineError: String?
-    @State private var copied: String?
     @State private var lineSearch = ""
 
     private var server: LocalNotifyServer { AppDelegate.shared.notifyServer }
@@ -37,16 +36,14 @@ struct InfoHubPane: View {
     }
 
     enum Feed: String, CaseIterable, Identifiable {
-        case weather, disaster, news, trends, trains, fx
-        case claudeCode, codex, otherAgents, aiUsage
-        case github, rss, webhook
+        case weather, disaster, news, trains, fx
+        case claudeCode, codex, aiUsage
+        case github, rss
         var id: String { rawValue }
 
-        static let today: [Feed] = [.weather, .disaster, .news, .trends, .trains, .fx]
-        static let coding: [Feed] = [.claudeCode, .codex, .otherAgents, .aiUsage]
-        static let others: [Feed] = [.github, .rss, .webhook]
-        /// Tiles that only describe how to connect (no on/off of their own).
-        var isGuide: Bool { self == .otherAgents }
+        static let today: [Feed] = [.weather, .disaster, .news, .trains, .fx]
+        static let coding: [Feed] = [.claudeCode, .codex, .aiUsage]
+        static let others: [Feed] = [.github, .rss]
 
         /// Filled glyph for the colored icon square (System Settings style).
         var filledSymbol: String {
@@ -54,15 +51,12 @@ struct InfoHubPane: View {
             case .weather: return "cloud.sun.fill"
             case .disaster: return "exclamationmark.triangle.fill"
             case .news: return "newspaper.fill"
-            case .trends: return "chart.line.uptrend.xyaxis"
             case .trains: return "tram.fill"
             case .fx: return "yensign"
             case .claudeCode, .codex: return "terminal.fill"
-            case .otherAgents: return "puzzlepiece.extension.fill"
             case .aiUsage: return "gauge.with.dots.needle.67percent"
             case .github: return "arrow.triangle.branch"
             case .rss: return "dot.radiowaves.up.forward"
-            case .webhook: return "link"
             }
         }
 
@@ -71,16 +65,13 @@ struct InfoHubPane: View {
             case .weather: return .blue
             case .disaster: return .red
             case .news: return .orange
-            case .trends: return .purple
             case .trains: return .green
             case .fx: return .teal
             case .claudeCode: return .brown
             case .codex: return .gray
-            case .otherAgents: return .indigo
             case .aiUsage: return .pink
             case .github: return Color(white: 0.2)
             case .rss: return .orange
-            case .webhook: return .gray
             }
         }
 
@@ -90,16 +81,13 @@ struct InfoHubPane: View {
             case .weather: return "いまの天気と、この先の雨をお知らせします。"
             case .disaster: return "気象庁の情報から、強い揺れ・津波・地元の警報をすぐに流します。"
             case .news: return "選んだ配信元の見出しを一覧に表示します。"
-            case .trends: return "いま検索が急に増えている言葉を表示します。"
             case .trains: return "見ている路線で遅延や運転見合わせが出たら、すぐに流します。"
             case .fx: return "主な通貨の参考レートと、大きな値動きをお知らせします。"
             case .claudeCode: return "許可待ち・入力待ちと、応答の完了を掲示板に流します。"
             case .codex: return "作業の完了を掲示板に流します。"
-            case .otherAgents: return "フックや作業後のコマンドから、どのエージェントでもつなげられます。"
             case .aiUsage: return "Claude・Codex の利用枠を表示します。"
             case .github: return "レビュー依頼やメンションを流します。"
             case .rss: return "好きなサイトの新着を流します。"
-            case .webhook: return "スクリプトやショートカットから掲示板に送れます（コーディングエージェントの連携とは別です）。"
             }
         }
         var title: String {
@@ -107,16 +95,13 @@ struct InfoHubPane: View {
             case .weather: return "天気"
             case .disaster: return "防災"
             case .news: return "ニュース"
-            case .trends: return "トレンド"
             case .trains: return "運行情報"
             case .fx: return "為替"
             case .claudeCode: return "Claude Code"
             case .codex: return "Codex"
-            case .otherAgents: return "そのほかのエージェント"
             case .aiUsage: return "AI の使用量"
             case .github: return "GitHub"
             case .rss: return "RSS"
-            case .webhook: return "Webhook"
             }
         }
         var symbol: String {
@@ -124,15 +109,12 @@ struct InfoHubPane: View {
             case .weather: return "cloud.sun"
             case .disaster: return "exclamationmark.triangle"
             case .news: return "newspaper"
-            case .trends: return "chart.line.uptrend.xyaxis"
             case .trains: return "tram"
             case .fx: return "yensign.circle"
             case .claudeCode, .codex: return "terminal"
-            case .otherAgents: return "puzzlepiece.extension"
             case .aiUsage: return "gauge.with.dots.needle.67percent"
             case .github: return "arrow.triangle.branch"
             case .rss: return "dot.radiowaves.up.forward"
-            case .webhook: return "link"
             }
         }
     }
@@ -163,22 +145,8 @@ struct InfoHubPane: View {
 
     private var overview: some View {
         Form {
-            Section {
-                locationRow
-            } header: {
-                Text("地域")
-            }
-
             Section("今日の情報") {
                 ForEach(Feed.today) { row($0) }
-            }
-
-            Section {
-                Picker("定期的に流す", selection: $settings.infoRollMinutes) {
-                    Text("流さない").tag(0)
-                    ForEach([5, 15, 30, 60], id: \.self) { Text("\($0)分ごと").tag($0) }
-                }
-                Button("今すぐ流す") { info.roll() }
             }
 
             Section("コーディング・AI") {
@@ -195,7 +163,6 @@ struct InfoHubPane: View {
                         Text("天気: Open-Meteo（open-meteo.com、CC BY 4.0）")
                         Text("防災: \(DisasterFeed.attribution)")
                         Text("ニュース: 選んだ配信元（NHK・Yahoo!ニュース・Google ニュース・BBC など）")
-                        Text("トレンド: Google トレンド")
                         Text("運行情報: 公共交通オープンデータセンター")
                         Text(TrainFeed.attribution).foregroundStyle(.tertiary)
                         Text("為替: Frankfurter（欧州中央銀行の参考レート）")
@@ -264,7 +231,7 @@ struct InfoHubPane: View {
                     SettingsIcon(symbol: f.filledSymbol, color: f.tint)
                     VStack(alignment: .leading, spacing: 1) {
                         Text(f.title)
-                        if let caption = on || f.isGuide ? summary(f) : offText(f) {
+                        if let caption = on ? summary(f) : offText(f) {
                             Text(caption).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                         }
                     }
@@ -273,12 +240,10 @@ struct InfoHubPane: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel([f.title, on || f.isGuide ? summary(f) : offText(f)].compactMap { $0 }.joined(separator: "、"))
+            .accessibilityLabel([f.title, on ? summary(f) : offText(f)].compactMap { $0 }.joined(separator: "、"))
             .accessibilityHint("詳しい設定を開きます")
-            if !f.isGuide {
-                Toggle(f.title, isOn: isOn(f)).toggleStyle(.switch).labelsHidden().controlSize(.small)
-                    .disabled(!isAvailable(f))
-            }
+            Toggle(f.title, isOn: isOn(f)).toggleStyle(.switch).labelsHidden().controlSize(.small)
+                .disabled(!isAvailable(f))
             Button { detail = f } label: {
                 Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
             }
@@ -300,10 +265,8 @@ struct InfoHubPane: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     Spacer()
-                    if !f.isGuide {
-                        Toggle(f.title, isOn: isOn(f)).toggleStyle(.switch).labelsHidden()
-                            .disabled(!isAvailable(f))
-                    }
+                    Toggle(f.title, isOn: isOn(f)).toggleStyle(.switch).labelsHidden()
+                        .disabled(!isAvailable(f))
                 }
                 .padding(.vertical, 4)
             }
@@ -313,16 +276,13 @@ struct InfoHubPane: View {
                     case .weather: weatherOptions
                     case .disaster: disasterOptions
                     case .news: newsOptions
-                    case .trends: EmptyView()
                     case .trains: trainOptions
                     case .fx: fxOptions
                     case .claudeCode: LabeledContent("変更するファイル", value: "~/.claude/settings.json")
                     case .codex: LabeledContent("変更するファイル", value: "~/.codex/config.toml")
-                    case .otherAgents: otherAgentsOptions
                     case .aiUsage: aiOptions
                     case .github: githubOptions
                     case .rss: rssOptions
-                    case .webhook: webhookOptions
                     }
                     if let hookError, f == .claudeCode || f == .codex {
                         Label(hookError, systemImage: "exclamationmark.triangle.fill").font(.caption).foregroundStyle(.orange)
@@ -357,12 +317,10 @@ struct InfoHubPane: View {
         case .weather: return $settings.infoWeather
         case .disaster: return $settings.infoDisaster
         case .news: return $settings.infoNews
-        case .trends: return $settings.infoTrends
         case .trains: return $settings.infoTrains
         case .fx: return $settings.infoFX
         case .claudeCode: return Binding(get: { hooksInstalled }, set: { $0 ? installHooks() : uninstallHooks() })
         case .codex: return Binding(get: { codexInstalled }, set: { $0 ? installCodex() : uninstallCodex() })
-        case .otherAgents: return .constant(true)
         case .aiUsage: return Binding(get: { !settings.aiProviders.isEmpty }, set: { on in
             if on {
                 let found = AIProvider.allCases.filter(\.isDetected)
@@ -378,21 +336,16 @@ struct InfoHubPane: View {
             AppDelegate.shared.github.setEnabled(settings.githubEnabled)
         })
         case .rss: return $settings.rssEnabled
-        case .webhook: return $settings.notifyServerEnabled
         }
     }
 
     /// What's on, chosen or wrong — nil when the row's title and switch already say it.
     private func summary(_ f: Feed) -> String? {
         switch f {
-        case .weather:
-            return info.weather.map { "\(settings.weatherPlace)　\(Int($0.temperature.rounded()))° \(WeatherCode.text($0.code))" } ?? settings.weatherPlace
-        case .disaster, .trends, .claudeCode, .codex, .otherAgents, .github, .webhook: return nil
-        case .news: return settings.newsFeed.label
-        case .trains: return settings.trainLines.isEmpty ? "路線を選んでください" : "\(settings.trainLines.count) 路線"
-        case .fx: return settings.fxPairs.isEmpty ? "通貨ペア未選択" : settings.fxPairs.map { "\($0.prefix(3))/\($0.suffix(3))" }.joined(separator: "・")
-        case .aiUsage: return settings.aiProviders.map(\.name).joined(separator: "・")
-        case .rss: return "\(settings.rssFeeds.count) 件のフィード"
+        case .trains: return settings.trainLines.isEmpty ? "路線が未設定" : nil
+        case .fx: return settings.fxPairs.isEmpty ? "通貨ペアが未設定" : nil
+        case .rss: return settings.rssFeeds.isEmpty ? "フィードが未設定" : nil
+        default: return nil
         }
     }
 
@@ -416,22 +369,9 @@ struct InfoHubPane: View {
     }
 
     /// Tiles whose options are needed to turn them on (tokens, explanations).
-    private static let optionsWhileOff: Set<Feed> = [.claudeCode, .codex, .otherAgents, .aiUsage, .github]
+    private static let optionsWhileOff: Set<Feed> = [.claudeCode, .codex, .aiUsage, .github]
 
     // MARK: - Coding & AI
-
-    private var otherAgentsOptions: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Button(copyLabel("受け付け用の URL をコピー", server.endpoint)) { copy(server.endpoint) }
-                Button(copyLabel("完了を送るコマンドをコピー", "curl -s -X POST '\(server.endpoint)?source=agent&agent=Gemini&event=done'")) {
-                    copy("curl -s -X POST '\(server.endpoint)?source=agent&agent=Gemini&event=done'")
-                }
-                Spacer()
-                Link("やり方を見る", destination: Integrations.docs(anchor: "coding-agents"))
-            }
-        }
-    }
 
     @ViewBuilder
     private var aiOptions: some View {
@@ -523,31 +463,6 @@ struct InfoHubPane: View {
         }
     }
 
-    private var webhookOptions: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(server.endpoint).font(.caption.monospaced()).textSelection(.enabled)
-                .lineLimit(1).truncationMode(.middle)
-            HStack {
-                Button(copyLabel("URL をコピー", server.endpoint)) { copy(server.endpoint) }
-                Button(copyLabel("curl の例をコピー", "curl -X POST '\(server.endpoint)?title=ビルド完了'")) {
-                    copy("curl -X POST '\(server.endpoint)?title=ビルド完了'")
-                }
-                Spacer()
-                Link("やり方を見る", destination: Integrations.docs(anchor: nil))
-            }
-        }
-    }
-
-    private func copy(_ text: String) {
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(text, forType: .string)
-        copied = text
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { if copied == text { copied = nil } }
-    }
-
-    /// Button label that briefly says it worked.
-    private func copyLabel(_ title: String, _ text: String) -> String { copied == text ? "コピーしました" : title }
-
     private func addFeed() {
         let f = newFeed.trimmingCharacters(in: .whitespaces)
         guard URL(string: f)?.scheme?.hasPrefix("http") == true, !settings.rssFeeds.contains(f) else { return }
@@ -590,7 +505,8 @@ struct InfoHubPane: View {
     // MARK: - Today
 
     private var weatherOptions: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 12) {
+            locationRow
             if let w = info.weather {
                 HStack(spacing: 10) {
                     Image(systemName: WeatherCode.symbol(w.code)).symbolRenderingMode(.hierarchical)
@@ -607,22 +523,7 @@ struct InfoHubPane: View {
 
     @ViewBuilder
     private var disasterOptions: some View {
-        LabeledContent("緊急で流すもの") {
-            VStack(alignment: .trailing, spacing: 2) {
-                Text("震度5弱以上の地震")
-                Text("\(settings.weatherPrefecture)で震度4以上の地震")
-                Text("津波警報・注意報、噴火速報")
-            }
-            .foregroundStyle(.secondary)
-        }
-        LabeledContent("ふつうに流すもの") {
-            VStack(alignment: .trailing, spacing: 2) {
-                Text("震度4の地震、\(settings.weatherPrefecture)で震度3の地震")
-                Text("\(settings.weatherPrefecture)の気象警報・土砂災害警戒情報")
-            }
-            .foregroundStyle(.secondary)
-        }
-        note("緊急地震速報には対応していません")
+note("緊急地震速報には対応していません")
     }
 
     @ViewBuilder

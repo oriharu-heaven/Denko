@@ -1,7 +1,7 @@
 import CoreLocation
 import Foundation
 
-/// "今日" feed: weather (Open-Meteo), top news (Yahoo!ニュース), and trending searches
+/// "今日" feed: weather (Open-Meteo) and top news
 /// (Google トレンド). New news / coming rain / the morning forecast are also announced on
 /// the board through the notification hub.
 @MainActor
@@ -37,15 +37,8 @@ final class InfoStore: ObservableObject {
         let date: Date?
     }
 
-    struct Trend: Identifiable, Equatable {
-        let id: String
-        let word: String
-        let traffic: String?
-    }
-
     @Published private(set) var weather: Weather?
     @Published private(set) var news: [NewsItem] = []
-    @Published private(set) var trends: [Trend] = []
     @Published private(set) var error: String?
     /// Feeds whose last fetch failed ("news", "trains"), so the panel can say so instead of
     /// showing "読み込み中…" forever.
@@ -87,7 +80,6 @@ final class InfoStore: ObservableObject {
             // 実験的: NHK's breaking-news flag has no published feed.
             if settings.experimentalNHKFlash { every(5 * 60) { [weak self] in await self?.refreshFlash() } }
         }
-        if settings.infoTrends { every(30 * 60) { [weak self] in await self?.refreshTrends() } }
         if settings.infoDisaster {
             // Quakes / tsunami every minute (an unchanged feed is a tiny 304), warnings less often.
             every(60) { [weak self] in await self?.refreshDisaster(feed: "eqvol.xml") }
@@ -170,9 +162,6 @@ final class InfoStore: ObservableObject {
                 .joined(separator: "  ")))
         }
         if fresh.count > 1 { cards.append((.news, fresh[1].title)) }
-        if settings.infoTrends, !trends.isEmpty {
-            cards.append((.today, "トレンド " + trends.prefix(5).map(\.word).joined(separator: "・")))
-        }
         return cards
     }
 
@@ -185,9 +174,6 @@ final class InfoStore: ObservableObject {
         }
         if settings.infoNews, !unshownNews.isEmpty {
             cards.append("ニュース " + unshownNews.prefix(3).map(\.title).joined(separator: " ／ "))
-        }
-        if settings.infoTrends, !trends.isEmpty {
-            cards.append("トレンド " + trends.prefix(5).map(\.word).joined(separator: "・"))
         }
         if settings.infoTrains, let trains {
             let trouble = trains.filter(\.isTrouble)
@@ -205,7 +191,6 @@ final class InfoStore: ObservableObject {
     func refreshAll() async {
         if settings.infoWeather { await refreshWeather() }
         if settings.infoNews { await refreshNews() }
-        if settings.infoTrends { await refreshTrends() }
         if settings.infoTrains { await refreshTrains() }
         if settings.infoFX { await refreshFX() }
     }
@@ -429,21 +414,6 @@ final class InfoStore: ObservableObject {
         }
         newsPrimed = true
     }
-
-    // MARK: - Trends (Google トレンド の急上昇ワード)
-
-    func refreshTrends() async {
-        guard let url = URL(string: "https://trends.google.co.jp/trending/rss?geo=JP"),
-              let (data, _) = try? await URLSession.shared.data(from: url) else { return }
-        // The JP feed also carries foreign match-ups ("persib bandung vs dewa united"):
-        // drop Latin-only phrases of three or more words.
-        let looksForeign: (String) -> Bool = { w in
-            let latinOnly = w.unicodeScalars.allSatisfy { $0.isASCII }
-            return latinOnly && w.split(separator: " ").count >= 3
-        }
-        trends = TrendParser.parse(data).filter { !looksForeign($0.word) }.prefix(12)
-            .map { Trend(id: $0.word, word: $0.word, traffic: $0.traffic) }
-    }
 }
 
 /// Major news sources (Japan and overseas) with their public RSS / Atom feeds.
@@ -627,39 +597,3 @@ enum WeatherCode {
     }
 }
 
-/// Google Trends RSS: <item><title>word</title><ht:approx_traffic>2000+</ht:approx_traffic>…
-final class TrendParser: NSObject, XMLParserDelegate {
-    private var out: [(word: String, traffic: String?)] = []
-    private var inItem = false
-    private var title = "", traffic: String?
-    private var text = ""
-
-    static func parse(_ data: Data) -> [(word: String, traffic: String?)] {
-        let p = TrendParser()
-        let parser = XMLParser(data: data)
-        parser.delegate = p
-        parser.parse()
-        return p.out
-    }
-
-    func parser(_ parser: XMLParser, didStartElement name: String, namespaceURI: String?,
-                qualifiedName qName: String?, attributes: [String: String] = [:]) {
-        text = ""
-        if name == "item" { inItem = true; title = ""; traffic = nil }
-    }
-
-    func parser(_ parser: XMLParser, foundCharacters string: String) { text += string }
-
-    func parser(_ parser: XMLParser, didEndElement name: String, namespaceURI: String?, qualifiedName qName: String?) {
-        let v = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard inItem else { return }
-        switch qName ?? name {
-        case "title": if title.isEmpty { title = v }
-        case "ht:approx_traffic": traffic = v
-        case "item":
-            if !title.isEmpty { out.append((title, traffic)) }
-            inItem = false
-        default: break
-        }
-    }
-}
