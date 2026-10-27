@@ -2,20 +2,32 @@ import Foundation
 import SwiftUI
 
 /// Claude's usage limits as Claude Code last reported them to its status line
-/// (see ClaudeStatusLine). Nothing is fetched over the network; the latest report is kept
-/// across launches.
+/// (see ClaudeStatusLine), or — with 実験的 → リアルタイム on — as Anthropic reports them every
+/// few minutes (ClaudeUsageAPI). The newest report wins and is kept across launches.
 @MainActor
 final class UsageStore: ObservableObject {
     @Published private(set) var snapshot: UsageSnapshot?
     @Published private(set) var lastUpdated: Date?
 
-    /// How often Codex's local logs are re-read (Claude updates whenever Claude Code reports).
+    /// How often Codex's logs are re-read and, with リアルタイム on, Claude's usage is fetched.
     @Published var refreshMinutes: Int {
-        didSet { UserDefaults.standard.set(refreshMinutes, forKey: "refreshMinutes") }
+        didSet { UserDefaults.standard.set(refreshMinutes, forKey: "refreshMinutes"); scheduleRealtime() }
     }
 
+    /// 実験的: poll the usage API too (set from AppSettings).
+    var realtime = false {
+        didSet {
+            guard realtime != oldValue else { return }
+            apiError = nil
+            scheduleRealtime()
+        }
+    }
+    @Published private(set) var apiError: String?
+    private var timer: Timer?
+
     var lastError: String? {
-        snapshot == nil ? "まだ届いていません" : nil
+        if realtime, let apiError { return apiError }
+        return snapshot == nil ? "まだ届いていません" : nil
     }
 
     private static let storeKey = "claudeStatusLineUsage"
@@ -33,6 +45,34 @@ final class UsageStore: ObservableObject {
     /// A status line report from Claude Code (the JSON it passes to its status line).
     func receive(statusLine json: [String: Any]) {
         guard let snap = UsageSnapshot(statusLine: json) else { return }
+        store(snap)
+    }
+
+    private func scheduleRealtime() {
+        timer?.invalidate()
+        timer = nil
+        guard realtime else { return }
+        let t = Timer(timeInterval: TimeInterval(max(1, refreshMinutes) * 60), repeats: true) { [weak self] _ in
+            Task { await self?.fetchNow() }
+        }
+        t.tolerance = 10
+        RunLoop.main.add(t, forMode: .common)
+        timer = t
+        Task { await fetchNow() }
+    }
+
+    /// 実験的 → リアルタイム: one request to the usage API.
+    func fetchNow() async {
+        guard realtime, !Snapshot.isActive else { return }
+        do {
+            store(try await ClaudeUsageAPI.fetch())
+            apiError = nil
+        } catch {
+            apiError = error.localizedDescription
+        }
+    }
+
+    private func store(_ snap: UsageSnapshot) {
         lastUpdated = Date()
         if snap != snapshot { snapshot = snap }
         let d = UserDefaults.standard

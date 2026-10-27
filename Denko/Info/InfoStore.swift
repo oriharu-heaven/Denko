@@ -84,6 +84,8 @@ final class InfoStore: ObservableObject {
         if settings.infoWeather { every(30 * 60) { [weak self] in await self?.refreshWeather() } }
         if settings.infoNews {
             every(settings.performance.newsSeconds) { [weak self] in await self?.refreshNews() }
+            // 実験的: NHK's breaking-news flag has no published feed.
+            if settings.experimentalNHKFlash { every(5 * 60) { [weak self] in await self?.refreshFlash() } }
         }
         if settings.infoTrends { every(30 * 60) { [weak self] in await self?.refreshTrends() } }
         if settings.infoDisaster {
@@ -208,6 +210,28 @@ final class InfoStore: ObservableObject {
         if settings.infoFX { await refreshFX() }
     }
 
+    // MARK: - ニュース速報 (NHK)
+
+    private var seenFlash = Set<String>()
+    private var flashPrimed = false
+    private var flashModified: String?
+
+    func refreshFlash() async {
+        var req = URLRequest(url: NHKFlash.url)
+        req.timeoutInterval = 15
+        if let m = flashModified { req.setValue(m, forHTTPHeaderField: "If-Modified-Since") }
+        guard let (data, resp) = try? await URLSession.shared.data(for: req),
+              let http = resp as? HTTPURLResponse, http.statusCode == 200 else { return }
+        flashModified = http.value(forHTTPHeaderField: "Last-Modified")
+        let reports = NHKFlash.reports(String(decoding: data, as: UTF8.self))
+        let fresh = reports.filter { seenFlash.insert($0.id).inserted }
+        defer { flashPrimed = true }
+        guard flashPrimed else { return }
+        for r in fresh {
+            hub.post(.news, kind: .newsBreaking, title: "NHK速報　" + r.text, url: r.link)
+        }
+    }
+
     // MARK: - 防災 (気象庁)
 
     private let disaster = DisasterFeed()
@@ -241,7 +265,7 @@ final class InfoStore: ObservableObject {
         // Nothing picked yet: nothing to read until the user chooses lines.
         if !everything && settings.trainLines.isEmpty { trains = []; troubleKeys = []; return }
         let regions = everything ? nil : watchedRegions
-        guard let result = await TrainFeed.fetch(regions: regions) else { failed.insert("trains"); return }
+        guard let result = await TrainFeed.fetch(regions: regions, unofficial: settings.experimentalTrainPages) else { failed.insert("trains"); return }
         failed.remove("trains")
         if let regions {
             // Keep the other regions' lines for the settings list.
@@ -544,6 +568,29 @@ struct NewsChoice: Equatable {
     var category: NewsCatalog.Category { source.categories.first { $0.id == categoryID } ?? source.categories[0] }
     var url: String { category.url }
     var label: String { source.categories.count > 1 ? "\(source.name)・\(category.label)" : source.name }
+}
+
+/// NHK's breaking-news flag (a ~100-byte XML): polled every minute for 速報.
+enum NHKFlash {
+    static let url = URL(string: "https://news.web.nhk/sokuho/news/sokuho_news.xml")!
+
+    /// (id, text, link) of each report currently flagged.
+    static func reports(_ xml: String) -> [(id: String, text: String, link: URL?)] {
+        guard xml.contains("flag=\"1\"") || xml.contains("<report") else { return [] }
+        return xml.components(separatedBy: "<report").dropFirst().compactMap { chunk in
+            let body = chunk.components(separatedBy: "</report>").first ?? chunk
+            func attr(_ name: String) -> String? {
+                guard let r = body.range(of: "\(name)=\"") else { return nil }
+                let rest = body[r.upperBound...]
+                return rest.firstIndex(of: "\"").map { String(rest[..<$0]) }
+            }
+            let lines = body.components(separatedBy: "<line>").dropFirst()
+                .compactMap { $0.components(separatedBy: "</line>").first }
+            let text = lines.joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !text.isEmpty else { return nil }
+            return (attr("id") ?? attr("date") ?? text, text, attr("link").flatMap(URL.init(string:)))
+        }
+    }
 }
 
 /// WMO weather codes → Japanese text and SF Symbol.

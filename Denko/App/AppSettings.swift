@@ -116,6 +116,18 @@ final class AppSettings: ObservableObject {
     @Published var infoTrains: Bool { didSet { d.set(infoTrains, forKey: "infoTrains") } }
     /// Lines to watch, by name (e.g. "山手線"). Empty = none (the user picks their own lines).
     @Published var trainLines: [String] { didSet { d.set(trainLines, forKey: "trainLines") } }
+
+    // 実験的: unofficial sources, off by default and used at the user's own risk.
+    /// Read JR・東京メトロ・私鉄 status from the companies' own pages (no published feed).
+    @Published var experimentalTrainPages: Bool { didSet { d.set(experimentalTrainPages, forKey: "experimentalTrainPages") } }
+    /// NHK's breaking-news flag (no published feed).
+    @Published var experimentalNHKFlash: Bool { didSet { d.set(experimentalNHKFlash, forKey: "experimentalNHKFlash") } }
+    /// Ask Anthropic for Claude's usage every minute with Claude Code's login (undocumented API).
+    @Published var experimentalRealtimeClaude: Bool { didSet { d.set(experimentalRealtimeClaude, forKey: "experimentalRealtimeClaude") } }
+    /// Gemini's quota through the Gemini CLI's login (Google's internal API).
+    @Published var experimentalGemini: Bool { didSet { d.set(experimentalGemini, forKey: "experimentalGemini") } }
+    /// The user has agreed to the 実験的 notice once.
+    @Published var experimentalAccepted: Bool { didSet { d.set(experimentalAccepted, forKey: "experimentalAccepted") } }
     @Published var announceTrains: Bool { didSet { d.set(announceTrains, forKey: "announceTrains") } }
     @Published var infoFX: Bool { didSet { d.set(infoFX, forKey: "infoFX") } }
     /// e.g. ["USDJPY", "EURJPY"]
@@ -287,7 +299,14 @@ final class AppSettings: ObservableObject {
 
 
         tickerEnabled = bool("tickerEnabled", true)
-        tickerSpeed = d.object(forKey: "tickerSpeed") as? Double ?? 30
+        // Speeds were raised one step (20/30/45 → 30/45/60); keep each saved choice's label.
+        var savedSpeed = d.object(forKey: "tickerSpeed") as? Double
+        if !d.bool(forKey: "tickerSpeedV2") {
+            savedSpeed = savedSpeed.map { [20.0: 30.0, 30.0: 45.0, 45.0: 60.0][$0] ?? $0 }
+            if let savedSpeed { d.set(savedSpeed, forKey: "tickerSpeed") }
+            d.set(true, forKey: "tickerSpeedV2")
+        }
+        tickerSpeed = savedSpeed ?? 45
         tickerRepeat = d.object(forKey: "tickerRepeat") as? Int ?? 1
 
 
@@ -303,6 +322,11 @@ final class AppSettings: ObservableObject {
         announceMorning = bool("announceMorning", true)
         infoTrains = bool("infoTrains", true)
         trainLines = d.stringArray(forKey: "trainLines") ?? []
+        experimentalTrainPages = bool("experimentalTrainPages", false)
+        experimentalNHKFlash = bool("experimentalNHKFlash", false)
+        experimentalRealtimeClaude = bool("experimentalRealtimeClaude", false)
+        experimentalGemini = bool("experimentalGemini", false)
+        experimentalAccepted = bool("experimentalAccepted", false)
         announceTrains = bool("announceTrains", true)
         infoFX = bool("infoFX", true)
         fxPairs = d.stringArray(forKey: "fxPairs") ?? ["USDJPY", "EURJPY"]

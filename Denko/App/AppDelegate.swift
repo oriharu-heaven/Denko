@@ -74,6 +74,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             .dropFirst()
             .sink { [weak self] _ in DispatchQueue.main.async { self?.info.schedule() } }
             .store(in: &bag)
+        settings.$experimentalTrainPages.combineLatest(settings.$experimentalNHKFlash).dropFirst()
+            .sink { [weak self] _ in DispatchQueue.main.async { self?.info.schedule() } }
+            .store(in: &bag)
         settings.$trainLines.dropFirst().debounce(for: .seconds(1), scheduler: DispatchQueue.main)
             .sink { [weak self] _ in Task { await self?.info.refreshTrains() } }
             .store(in: &bag)
@@ -92,6 +95,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // The endpoint always runs so coding agents keep reaching the board; the Webhook
         // switch only decides whether plain script / Shortcuts posts are accepted.
         notifyServer.onClaudeStatusLine = { [weak self] in self?.usageStore.receive(statusLine: $0) }
+        // Turning Gemini off under 実験的 also takes it off the menu bar and panel.
+        settings.$experimentalGemini.dropFirst().filter { !$0 }
+            .sink { [weak self] _ in
+                self?.settings.aiProviders.removeAll { $0 == .gemini }
+                self?.settings.menuBarAI.removeAll { $0 == .gemini }
+            }
+            .store(in: &bag)
+        settings.$experimentalRealtimeClaude.combineLatest(settings.$aiProviders)
+            .sink { [weak self] on, providers in self?.usageStore.realtime = on && providers.contains(.claude) }
+            .store(in: &bag)
         settings.$notifyPort.removeDuplicates()
             .sink { [weak self] port in
                 guard let self else { return }
@@ -129,6 +142,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                 self?.onboardingWindow?.close()
                 self?.onboardingWindow = nil
                 self?.applyOnboarding(choices)
+                // What はじめに couldn't do itself (lines, permissions …) is next in セットアップ.
+                self?.openSettings(tab: "セットアップ")
             })
             let w = NSWindow(contentViewController: host)
             w.styleMask = [.titled, .closable]
@@ -145,18 +160,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     @objc func menuOpenSettings() { openSettings() }
 
-    /// `tab`: the toolbar tab to show (its title, e.g. "情報連携").
-    func openSettings(tab: String? = nil) {
+    /// `tab`: the toolbar tab to show (its title, e.g. "情報連携"); `feed`: a 情報連携 page to open.
+    /// With no tab, a finished セットアップ steps aside for 一般.
+    func openSettings(tab: String? = nil, feed: InfoHubPane.Feed? = nil) {
+        let isNew = settingsWindow == nil
         if settingsWindow == nil {
             let window = SettingsWindow.make(settings: settings, ai: ai, awake: awake, hider: hider)
             window.delegate = self
             window.center()
             settingsWindow = window
         }
-        if let tab, let tabs = settingsWindow?.contentViewController as? NSTabViewController,
-           let index = tabs.tabViewItems.firstIndex(where: { $0.label == tab }) {
+        let wanted = tab ?? (isNew && SetupStep.remaining(settings).isEmpty ? "一般" : nil)
+        if let wanted, let tabs = settingsWindow?.contentViewController as? NSTabViewController,
+           let index = tabs.tabViewItems.firstIndex(where: { $0.label == wanted }) {
             tabs.selectedTabViewItemIndex = index
         }
+        SettingsRouter.shared.infoDetail = feed
         settingsWindow?.makeKeyAndOrderFront(nil)
         MainMenu.updateActivationPolicy()
         NSApp.activate(ignoringOtherApps: true)

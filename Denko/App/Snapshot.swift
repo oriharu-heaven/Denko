@@ -44,6 +44,8 @@ enum Snapshot {
         for scheme in [ColorScheme.light, .dark] {
             let suffix = scheme == .dark ? "dark" : "light"
             let settingsPanes: [(String, AnyView, CGFloat)] = [
+                ("settings-setup", AnyView(SetupPane(settings: s)), 600),
+                ("settings-experimental", AnyView(ExperimentalPane(settings: s)), 600),
                 ("settings-general", AnyView(GeneralPane(settings: s)), 900),
                 ("settings-board", AnyView(BoardLookPane(settings: s)), 1700),
                 ("settings-dashboard", AnyView(MenuBarPane(settings: s)), 1300),

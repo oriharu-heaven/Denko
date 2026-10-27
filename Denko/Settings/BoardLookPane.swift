@@ -26,9 +26,9 @@ struct BoardLookPane: View {
 
             Section {
                 Picker("流れる速さ", selection: $settings.tickerSpeed) {
-                    Text("ゆっくり").tag(20.0)
-                    Text("ふつう").tag(30.0)
-                    Text("はやい").tag(45.0)
+                    Text("ゆっくり").tag(30.0)
+                    Text("ふつう").tag(45.0)
+                    Text("はやい").tag(60.0)
                 }
                 Picker("1 件あたりの表示回数", selection: $settings.tickerRepeat) {
                     ForEach(1...3, id: \.self) { Text("\($0) 回").tag($0) }

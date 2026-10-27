@@ -34,4 +34,17 @@ struct UsageSnapshot: Codable, Equatable {
         sevenDay = window("seven_day")
         if fiveHour == nil && sevenDay == nil { return nil }
     }
+
+    /// Reads the usage API's JSON (`five_hour` / `seven_day`: `utilization` 0–100,
+    /// `resets_at` as ISO 8601). Used by 実験的 → リアルタイム.
+    init?(api json: [String: Any]) {
+        func window(_ key: String) -> UsageWindow? {
+            guard let w = json[key] as? [String: Any],
+                  let used = (w["utilization"] as? NSNumber)?.doubleValue else { return nil }
+            return UsageWindow(utilization: used, resetsAt: (w["resets_at"] as? String).flatMap(UsageWindow.parseDate))
+        }
+        fiveHour = window("five_hour")
+        sevenDay = window("seven_day")
+        if fiveHour == nil && sevenDay == nil { return nil }
+    }
 }

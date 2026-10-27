@@ -2,7 +2,7 @@ import Combine
 import Foundation
 
 enum AIProvider: String, CaseIterable, Identifiable, Codable {
-    case claude, codex
+    case claude, codex, gemini
     var id: String { rawValue }
 
     /// Whether this service seems to be used on this Mac (no secrets are read).
@@ -11,6 +11,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         switch self {
         case .claude: return FileManager.default.fileExists(atPath: home.appendingPathComponent(".claude").path)
         case .codex: return FileManager.default.fileExists(atPath: home.appendingPathComponent(".codex").path)
+        case .gemini: return FileManager.default.fileExists(atPath: home.appendingPathComponent(".gemini").path)
         }
     }
 
@@ -18,6 +19,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         switch self {
         case .claude: return "Claude"
         case .codex: return "Codex"
+        case .gemini: return "Gemini"
         }
     }
 
@@ -26,6 +28,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         switch self {
         case .claude: return "Cl"
         case .codex: return "Cx"
+        case .gemini: return "Gm"
         }
     }
 
@@ -33,6 +36,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         switch self {
         case .claude: return "circle.hexagongrid"
         case .codex: return "chevron.left.forwardslash.chevron.right"
+        case .gemini: return "diamond"
         }
     }
 
@@ -40,13 +44,22 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
     var defaultLabels: (outer: String, inner: String) {
         switch self {
         case .claude, .codex: return ("5時間枠", "週間")
+        case .gemini: return ("1日", "1日（ほかのモデル）")
         }
+    }
+
+    /// The services the user can turn on: Gemini only with 実験的 → Gemini on.
+    @MainActor
+    static func offered(_ settings: AppSettings) -> [AIProvider] {
+        let gemini = settings.experimentalGemini
+        return allCases.filter { $0 != .gemini || gemini }
     }
 
     var sourceNote: String {
         switch self {
         case .claude: return "Claude Code がステータスラインに知らせる使用量から取得。Claude Code を使うと更新されます"
         case .codex: return "Codex CLI のローカル記録（~/.codex/sessions）から取得。Codex を使うと更新されます"
+        case .gemini: return "Gemini CLI のログインで Google の利用枠を取得（実験的）"
         }
     }
 }
@@ -157,6 +170,7 @@ final class AIUsageStore: ObservableObject {
         guard !Snapshot.isActive else { return }
         isLoading = true
         defer { isLoading = false }
+        await claude.fetchNow()
         syncClaude()
         await refreshOthers()
     }
@@ -184,16 +198,18 @@ final class AIUsageStore: ObservableObject {
 
     private func refreshOthers() async {
         guard !Snapshot.isActive else { return }
-        guard settings.aiProviders.contains(.codex) else {
-            usage[.codex] = nil
-            errors[.codex] = nil
-            return
-        }
-        do {
-            usage[.codex] = try await CodexUsage.fetch()
-            errors[.codex] = nil
-        } catch {
-            errors[.codex] = error.localizedDescription
+        for p in [AIProvider.codex, .gemini] {
+            guard settings.aiProviders.contains(p), p != .gemini || settings.experimentalGemini else {
+                usage[p] = nil
+                errors[p] = nil
+                continue
+            }
+            do {
+                usage[p] = try await (p == .codex ? CodexUsage.fetch() : GeminiUsage.fetch())
+                errors[p] = nil
+            } catch {
+                errors[p] = error.localizedDescription
+            }
         }
     }
 }

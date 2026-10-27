@@ -21,11 +21,13 @@ enum SettingsWindow {
             item.image = image ?? NSImage(systemSymbolName: symbol, accessibilityDescription: title)
             tabs.addTabViewItem(item)
         }
-        // 一般 → the board's look → what it shows while idle → what flows into it.
+        // セットアップ → 一般 → the board's look → what it shows while idle → what flows into it.
+        add("セットアップ", "checklist", height: 600, SetupPane(settings: settings))
         add("一般", "gearshape", height: 600, GeneralPane(settings: settings))
         add("掲示板", "", height: 760, BoardLookPane(settings: settings), image: BoardIcon.image())
         add("メニューバー", "menubar.rectangle", height: 760, MenuBarPane(settings: settings))
         add("情報連携", "point.3.connected.trianglepath.dotted", height: 760, InfoHubPane(settings: settings))
+        add("実験的", "flask", height: 760, ExperimentalPane(settings: settings))
         if Features.sleepPrevention {
             add("スリープ防止", "cup.and.saucer", height: 330, AwakePane(settings: settings, awake: awake))
         }
@@ -200,9 +202,10 @@ struct MenuBarPane: View {
                 Picker("リング横の数値", selection: $settings.claudeNumbers) {
                     ForEach(ClaudeNumbers.allCases) { Text($0.label).tag($0) }
                 }
-                // Claude arrives with every Claude Code reply; only Codex's logs are re-read.
-                if settings.aiProviders.contains(.codex) {
-                    Picker("Codex の更新間隔", selection: Binding(
+                // Claude normally arrives with every Claude Code reply; this paces Codex's logs
+                // and, under 実験的, Claude's real-time requests.
+                if settings.aiProviders.contains(.codex) || settings.experimentalRealtimeClaude {
+                    Picker("更新間隔", selection: Binding(
                         get: { AppDelegate.shared.ai.claude.refreshMinutes },
                         set: { AppDelegate.shared.ai.claude.refreshMinutes = $0 })) {
                         ForEach([1, 2, 5, 10, 15, 30], id: \.self) { Text("\($0)分").tag($0) }

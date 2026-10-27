@@ -304,7 +304,7 @@ final class MainStatusController: NSObject, NSPopoverDelegate, NSViewToolTipOwne
             renderLED(c, button: button)
             return
         }
-        boardLayer.isHidden = announcing == nil
+        boardLayer.isHidden = !noticeOnItem
         let r = IconRenderer.render(c, appearance: button.effectiveAppearance, compatible: compat,
                                     icon: { [apps, settings] in apps.icon(for: $0, grayscale: !settings.colorAppIcons) })
         characterFrames = r.characterFrames
@@ -315,14 +315,14 @@ final class MainStatusController: NSObject, NSPopoverDelegate, NSViewToolTipOwne
         if fullFrames.isEmpty {
             // Only touch the button image when the width changes.
             setPlaceholder(r.base.size, on: button)
-            contentLayer.isHidden = announcing != nil
+            contentLayer.isHidden = noticeOnItem
             contentLayer.contents = r.base.cgImage(forProposedRect: nil, context: nil, hints: nil)
         } else {
             placeholderSize = .zero
             contentLayer.isHidden = true
             button.image = fullFrames[frameIndex]
         }
-        characterLayer.isHidden = characterFrames.isEmpty || announcing != nil
+        characterLayer.isHidden = characterFrames.isEmpty || noticeOnItem
         characterLayer.contents = characterFrames.isEmpty ? nil : characterFrames[frameIndex]
         positionCharacter()
         updateAccessibilityLabel(button)
@@ -364,7 +364,7 @@ final class MainStatusController: NSObject, NSPopoverDelegate, NSViewToolTipOwne
         boardLayer.isHidden = false
         contentLayer.contents = LEDRenderer.staticStrip(for: text, accent: settings.boardNSColor,
                                                         boardWidth: placeholderSize.width)
-        contentLayer.isHidden = announcing != nil
+        contentLayer.isHidden = noticeOnItem
         characterLayer.isHidden = true
         updateAccessibilityLabel(button)
     }
@@ -385,8 +385,8 @@ final class MainStatusController: NSObject, NSPopoverDelegate, NSViewToolTipOwne
         boardLayer.contents = boardImage(width: max(o.width, placeholderSize.width))
         boardLayer.isHidden = false
         contentLayer.contents = o.content
-        contentLayer.isHidden = announcing != nil
-        characterLayer.isHidden = characterFrames.isEmpty || announcing != nil
+        contentLayer.isHidden = noticeOnItem
+        characterLayer.isHidden = characterFrames.isEmpty || noticeOnItem
         characterLayer.contents = characterFrames.isEmpty ? nil : characterFrames[frameIndex]
         positionCharacter()
         updateAccessibilityLabel(button)
@@ -407,7 +407,7 @@ final class MainStatusController: NSObject, NSPopoverDelegate, NSViewToolTipOwne
     private func setPlaceholder(_ size: NSSize, on button: NSStatusBarButton) {
         dashboardSize = size
         var s = size
-        if announcing != nil { s.width = max(s.width, Self.minAnnounceWidth) }
+        if noticeOnItem { s.width = max(s.width, Self.minAnnounceWidth) }
         if placeholderSize != s || button.image == nil {
             placeholderSize = s
             button.image = NSImage(size: s)
@@ -573,6 +573,10 @@ final class MainStatusController: NSObject, NSPopoverDelegate, NSViewToolTipOwne
 
     // MARK: - Announcements (station-style board takeover)
 
+    /// A notice is scrolling on the item itself. While one plays across the whole menu bar
+    /// instead, the item keeps showing the dashboard (seen when the board steps aside).
+    private var noticeOnItem: Bool { announcing != nil && !fullBar.isShowing }
+
     /// A notification takes over the item: a heading (blinking if urgent), then the message
     /// scrolls past one dot column at a time, then the dashboard comes back.
     private func messageArrived(urgent: Bool) {
@@ -650,6 +654,8 @@ final class MainStatusController: NSObject, NSPopoverDelegate, NSViewToolTipOwne
                          passes: msg.urgent ? settings.tickerRepeat : 1) { [weak self] in
                 self?.playNextAnnouncement()
             }
+            // Draw the dashboard now, so it's there whenever the board steps aside.
+            rebuild(force: true)
             return
         }
         announcing = msg

@@ -116,7 +116,7 @@ extension AppDelegate {
         s.showMemoryGauge = c.mac
         s.showNetworkGauge = c.mac
         if !c.mac && s.boardIdle == .dashboard && !c.ai { s.boardIdle = .clock }
-        let detected = AIProvider.allCases.filter(\.isDetected)
+        let detected = AIProvider.offered(s).filter(\.isDetected)
         s.aiProviders = c.ai ? (detected.isEmpty ? [.claude] : detected) : []
         s.menuBarAI = s.aiProviders
         if c.dev { s.notifyServerEnabled = true }

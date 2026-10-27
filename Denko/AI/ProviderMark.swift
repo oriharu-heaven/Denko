@@ -8,6 +8,7 @@ enum ProviderMark {
         switch provider {
         case .claude: return "C"
         case .codex: return ">_"
+        case .gemini: return "G"
         }
     }
 

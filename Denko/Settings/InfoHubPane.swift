@@ -147,6 +147,11 @@ struct InfoHubPane: View {
                 overview
             }
         }
+        // セットアップ (or another button) asked for a particular page.
+        .onReceive(SettingsRouter.shared.$infoDetail.compactMap { $0 }) { feed in
+            detail = feed
+            SettingsRouter.shared.infoDetail = nil
+        }
         .onAppear {
             hooksInstalled = ClaudeCodeHooks.isInstalled(endpoint: server.endpoint)
             statusLineInstalled = ClaudeStatusLine.isInstalled(endpoint: server.endpoint)
@@ -430,7 +435,7 @@ struct InfoHubPane: View {
 
     @ViewBuilder
     private var aiOptions: some View {
-        ForEach(AIProvider.allCases) { p in
+        ForEach(AIProvider.offered(settings)) { p in
             Toggle(isOn: Binding(
                 get: { settings.aiProviders.contains(p) },
                 set: { on in

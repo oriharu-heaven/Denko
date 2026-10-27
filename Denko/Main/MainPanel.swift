@@ -94,6 +94,15 @@ struct MainPanel: View {
             HStack {
                 Button("設定…") { AppDelegate.shared.openSettings() }
                     .keyboardShortcut(",", modifiers: .command)
+                let left = SetupStep.remainingCount(settings)
+                if left > 0 {
+                    Button {
+                        AppDelegate.shared.openSettings(tab: "セットアップ")
+                    } label: {
+                        Label("セットアップ（残り \(left)）", systemImage: "checklist")
+                    }
+                    .foregroundStyle(settings.accent.color)
+                }
                 // Activity Monitor only makes sense for CPU / memory / network.
                 if state.tab.metric != nil {
                     Button {

@@ -22,11 +22,13 @@
 		3DBD3B851613112EED5E21E4 /* StorageSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B94A8F070CAD835F098D4133 /* StorageSection.swift */; };
 		4C2147A00F38A6D778570870 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C4C02A0F16E89660131D1C8 /* main.swift */; };
 		4C250B5025FA85BDFA1D39FC /* SleepPreventer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7D8B26615C09DACB309F15C /* SleepPreventer.swift */; };
+		4D69301DDAA194C4608B4084 /* ExperimentalPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 116CF40F98E77218FDFB6465 /* ExperimentalPane.swift */; };
 		55C0A9FE71A43EE2CA61BE04 /* ClaudeCodeHooks.swift in Sources */ = {isa = PBXBuildFile; fileRef = C937154FBBC1A2E1B5742BCA /* ClaudeCodeHooks.swift */; };
 		58E3C2313C6EA973FF4F5415 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A01B24F2053A722A2D66454 /* AppSettings.swift */; };
 		5A286E7EB1E1EEC95D933926 /* AIUsageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B0DBBD21A0E132B6F186735 /* AIUsageStore.swift */; };
 		5BB4324F4B4DEDFA8A75995E /* FullBarAnnouncer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62648E8059E6F60644DAE73A /* FullBarAnnouncer.swift */; };
 		607A5B2E9B3D49F69D973D61 /* LocalNotifyServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D32BE732D265E06F920F5DC8 /* LocalNotifyServer.swift */; };
+		608338949208F764C288B7B7 /* ClaudeUsageAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0455FE292CAFBD550D3BD8C2 /* ClaudeUsageAPI.swift */; };
 		60CD4E19FDF37FF26660BE3D /* IconRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73CEBB7C164CBF86DE8D8175 /* IconRenderer.swift */; };
 		670C27E2E540ADF72B7B7790 /* StatusMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 979FB85E3740E876D1AA3018 /* StatusMenu.swift */; };
 		6E437FA2EFA62207973FB950 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9FDB264E72B9BA6794B69F7 /* Theme.swift */; };
@@ -53,7 +55,9 @@
 		DE56C671860D327458B2F6F2 /* InfoStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 284AB041BD33DBF034EFF0FF /* InfoStore.swift */; };
 		E0822BA3C682D2D028189924 /* AISection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8606697AEA7116CA30AA8E12 /* AISection.swift */; };
 		E2C31AA5223B310BA347F461 /* SystemMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D8038606F5B4006606D5175 /* SystemMonitor.swift */; };
+		E3B48AB745645353B23FCBE0 /* GeminiUsage.swift in Sources */ = {isa = PBXBuildFile; fileRef = AABE37B17323C93E9982D4DE /* GeminiUsage.swift */; };
 		EBA3C4A1AD4C1209F05CD26C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F75CFC4048A1A6B9663DC371 /* Assets.xcassets */; };
+		EDCCFB1BE040A097AC444295 /* SetupGuide.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA6C785F5504E079D1D51DDD /* SetupGuide.swift */; };
 		F19139F641ABE037519A831C /* BoardStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25A22B7AED4855DB11B8A0E9 /* BoardStyle.swift */; };
 		F61956ECDBB8C206FE291FF2 /* SystemSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6CC968D753BE3E3C6ABCCB7 /* SystemSection.swift */; };
 		F81F2B2266AAB55DE6898B7E /* MenuBarHider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EB09F95404AD5E8DCD0E667 /* MenuBarHider.swift */; };
@@ -61,9 +65,11 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0455FE292CAFBD550D3BD8C2 /* ClaudeUsageAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeUsageAPI.swift; sourceTree = "<group>"; };
 		081B34298B5415A9DA0AEF42 /* TestMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestMode.swift; sourceTree = "<group>"; };
 		08A962562AB8F7FC3C0422F0 /* TodaySection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodaySection.swift; sourceTree = "<group>"; };
 		0EC1B80D792A6577C0AF04CE /* DisasterFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisasterFeed.swift; sourceTree = "<group>"; };
+		116CF40F98E77218FDFB6465 /* ExperimentalPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExperimentalPane.swift; sourceTree = "<group>"; };
 		1B8B08991014069545CF65FC /* UsageStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageStore.swift; sourceTree = "<group>"; };
 		1D8038606F5B4006606D5175 /* SystemMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMonitor.swift; sourceTree = "<group>"; };
 		21252AAA40B01F66A8DBF4FA /* InfoHubPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoHubPane.swift; sourceTree = "<group>"; };
@@ -97,10 +103,12 @@
 		9868812F1A2229DDCA888AB0 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		9EB09F95404AD5E8DCD0E667 /* MenuBarHider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarHider.swift; sourceTree = "<group>"; };
 		A6CC968D753BE3E3C6ABCCB7 /* SystemSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemSection.swift; sourceTree = "<group>"; };
+		AABE37B17323C93E9982D4DE /* GeminiUsage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiUsage.swift; sourceTree = "<group>"; };
 		ADD1886BA4E762338B06E255 /* Updater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Updater.swift; sourceTree = "<group>"; };
 		B6452A996FF284124E02A2C5 /* UsageModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageModels.swift; sourceTree = "<group>"; };
 		B852D1D274825CD50A1FF66F /* TickerPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TickerPanel.swift; sourceTree = "<group>"; };
 		B94A8F070CAD835F098D4133 /* StorageSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageSection.swift; sourceTree = "<group>"; };
+		BA6C785F5504E079D1D51DDD /* SetupGuide.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupGuide.swift; sourceTree = "<group>"; };
 		C0D8AB55EF4344EA21AC4737 /* PlaceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceService.swift; sourceTree = "<group>"; };
 		C937154FBBC1A2E1B5742BCA /* ClaudeCodeHooks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeCodeHooks.swift; sourceTree = "<group>"; };
 		D32BE732D265E06F920F5DC8 /* LocalNotifyServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalNotifyServer.swift; sourceTree = "<group>"; };
@@ -193,6 +201,7 @@
 			children = (
 				8606697AEA7116CA30AA8E12 /* AISection.swift */,
 				7B0DBBD21A0E132B6F186735 /* AIUsageStore.swift */,
+				AABE37B17323C93E9982D4DE /* GeminiUsage.swift */,
 				7A15D6B2A19A6BCC75034782 /* ProviderMark.swift */,
 			);
 			path = AI;
@@ -218,6 +227,7 @@
 		6882D2BBB851EC56A20E3E86 /* Claude */ = {
 			isa = PBXGroup;
 			children = (
+				0455FE292CAFBD550D3BD8C2 /* ClaudeUsageAPI.swift */,
 				2F2850A66D2693A96206363A /* Keychain.swift */,
 				B6452A996FF284124E02A2C5 /* UsageModels.swift */,
 				1B8B08991014069545CF65FC /* UsageStore.swift */,
@@ -285,8 +295,10 @@
 			isa = PBXGroup;
 			children = (
 				DC03A233B994E80BA77A837C /* BoardLookPane.swift */,
+				116CF40F98E77218FDFB6465 /* ExperimentalPane.swift */,
 				21252AAA40B01F66A8DBF4FA /* InfoHubPane.swift */,
 				9868812F1A2229DDCA888AB0 /* SettingsView.swift */,
+				BA6C785F5504E079D1D51DDD /* SetupGuide.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -383,11 +395,14 @@
 				F19139F641ABE037519A831C /* BoardStyle.swift in Sources */,
 				55C0A9FE71A43EE2CA61BE04 /* ClaudeCodeHooks.swift in Sources */,
 				8175A115109742F2EB4C34AB /* ClaudeStatusLine.swift in Sources */,
+				608338949208F764C288B7B7 /* ClaudeUsageAPI.swift in Sources */,
 				15CC6598AF4B0F719862A2DA /* CodexNotify.swift in Sources */,
 				AE74B438ABD0E2054A0BD618 /* DisasterFeed.swift in Sources */,
+				4D69301DDAA194C4608B4084 /* ExperimentalPane.swift in Sources */,
 				AE72E37D3B5A1162CE800877 /* FeedSources.swift in Sources */,
 				1B897EAA8FA42666416A3876 /* FocusFilter.swift in Sources */,
 				5BB4324F4B4DEDFA8A75995E /* FullBarAnnouncer.swift in Sources */,
+				E3B48AB745645353B23FCBE0 /* GeminiUsage.swift in Sources */,
 				60CD4E19FDF37FF26660BE3D /* IconRenderer.swift in Sources */,
 				BA7341F5463A31C2FCE05C97 /* InfoHubPane.swift in Sources */,
 				DE56C671860D327458B2F6F2 /* InfoStore.swift in Sources */,
@@ -406,6 +421,7 @@
 				AD3B0363AB5CEA98BF45864A /* PlaceService.swift in Sources */,
 				B571D1D2659F7BD55C999930 /* ProviderMark.swift in Sources */,
 				3063EF888D6E4DAD52B9555B /* SettingsView.swift in Sources */,
+				EDCCFB1BE040A097AC444295 /* SetupGuide.swift in Sources */,
 				4C250B5025FA85BDFA1D39FC /* SleepPreventer.swift in Sources */,
 				7133274F5EDD3406EBB89F24 /* Snapshot.swift in Sources */,
 				670C27E2E540ADF72B7B7790 /* StatusMenu.swift in Sources */,
