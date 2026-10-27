@@ -62,6 +62,7 @@ cat > "$BUILD/ExportOptions.plist" <<PLIST
 PLIST
 xcodebuild -exportArchive -archivePath "$ARCHIVE" -exportOptionsPlist "$BUILD/ExportOptions.plist" \
   -exportPath "$EXPORT" | grep -E "error:|EXPORT" || true
+[[ -d "$EXPORT/$APP_NAME.app" ]] || { echo "書き出しに失敗しました（Apple の時刻サーバーに届かないときは、少し待ってもう一度実行してください）" >&2; exit 1; }
 
 echo "▶ DMG 作成"
 STAGE="$BUILD/dmg"
