@@ -42,3 +42,7 @@ brew install --cask oriharu-heaven/tap/denko
 緊急地震速報（揺れる前の警報）には対応していません。防災情報は参考として使い、公的な情報も確認してください。
 
 Denko は非公式アプリで、Anthropic・OpenAI・Google・鉄道各社・気象庁とは関係ありません。
+
+## ライセンス
+
+[MIT License](LICENSE)
