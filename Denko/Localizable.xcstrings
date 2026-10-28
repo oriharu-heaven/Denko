@@ -1128,6 +1128,16 @@
         }
       }
     },
+    "claude.ai にログイン" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in to claude.ai"
+          }
+        }
+      }
+    },
     "Codex CLI のローカル記録（~/.codex/sessions）から取得。Codex を使うと更新されます" : {
       "localizations" : {
         "en" : {
@@ -2491,6 +2501,7 @@
       }
     },
     "セッションキー" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3246,12 +3257,32 @@
         }
       }
     },
+    "ログアウト" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign Out"
+          }
+        }
+      }
+    },
     "ログイン" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sign-in"
+          }
+        }
+      }
+    },
+    "ログイン…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign In…"
           }
         }
       }
@@ -3302,6 +3333,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Open at login"
+          }
+        }
+      }
+    },
+    "ログイン済み" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signed in"
           }
         }
       }

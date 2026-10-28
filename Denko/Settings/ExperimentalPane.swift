@@ -5,7 +5,6 @@ import SwiftUI
 /// on asks once for the user's agreement that they use these at their own risk.
 struct ExperimentalPane: View {
     @ObservedObject var settings: AppSettings
-    @State private var sessionKey = ""
     @State private var hasSessionKey = Keychain.exists(account: ClaudeUsageAPI.sessionKeyAccount)
 
     var body: some View {
@@ -21,23 +20,23 @@ struct ExperimentalPane: View {
                     }
                     .pickerStyle(.segmented)
                     if settings.experimentalClaudeSessionKey {
-                        LabeledContent {
-                            HStack {
-                                SecureField(String(localized: "セッションキー"), text: $sessionKey,
-                                            prompt: Text(hasSessionKey ? String(localized: "保存済み") : "sessionKey"))
-                                    .labelsHidden()
-                                    .frame(width: 180)
-                                Button(String(localized: "保存")) {
-                                    Keychain.save(sessionKey.trimmingCharacters(in: .whitespacesAndNewlines),
-                                                  account: ClaudeUsageAPI.sessionKeyAccount)
-                                    sessionKey = ""
-                                    hasSessionKey = Keychain.exists(account: ClaudeUsageAPI.sessionKeyAccount)
-                                    Task { await AppDelegate.shared.usageStore.fetchNow() }
+                        LabeledContent("claude.ai") {
+                            if hasSessionKey {
+                                HStack {
+                                    Text(String(localized: "ログイン済み")).foregroundStyle(.secondary)
+                                    Button(String(localized: "ログアウト")) {
+                                        Keychain.save(nil, account: ClaudeUsageAPI.sessionKeyAccount)
+                                        hasSessionKey = false
+                                    }
                                 }
-                                .disabled(sessionKey.isEmpty)
+                            } else {
+                                Button(String(localized: "ログイン…")) {
+                                    ClaudeWebLogin.shared.start {
+                                        hasSessionKey = true
+                                        Task { await AppDelegate.shared.usageStore.fetchNow() }
+                                    }
+                                }
                             }
-                        } label: {
-                            Text(String(localized: "セッションキー"))
                         }
                     }
                 }
